@@ -39,15 +39,23 @@ class GlobalConfigController extends Controller
         }
 
         $mode = $request->query('mode');
+
         $pluginSlug = $request->query('plugin_slug');
 
-        if (!$pluginSlug || !$mode) {
-            return new \Illuminate\Http\JsonResponse([
-                'status' => Response::HTTP_OK,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message' => 'Parameters missing',
-            ], Response::HTTP_OK, ['Content-Type' => 'application/json']);
+        if (!$pluginSlug || !is_array($pluginSlug)) {
+            return $this->buildJsonResponse(
+                Response::HTTP_NOT_FOUND,
+                $request,
+                'Plugin slug must be an array and cannot be empty'
+            );
+        }
+
+        if (!$mode) {
+            return $this->buildJsonResponse(
+                Response::HTTP_NOT_FOUND,
+                $request,
+                'Mode cannot be empty'
+            );
         }
 
         try {
@@ -55,7 +63,7 @@ class GlobalConfigController extends Controller
 
             if ($globalConfigs->isEmpty()) {
                 return $this->buildJsonResponse(
-                    Response::HTTP_OK,
+                    Response::HTTP_NOT_FOUND,
                     $request,
                     'Data Not Found'
                 );
@@ -81,7 +89,7 @@ class GlobalConfigController extends Controller
     private function getGlobalConfigs($mode,$pluginSlug)
     {
         return GlobalConfig::where('appfiy_global_config.mode', $mode)
-            ->where('appfiy_global_config.plugin_slug', $pluginSlug)
+            ->whereIn('appfiy_global_config.plugin_slug', $pluginSlug)
             ->where('appfiy_global_config.is_active', 1)
             ->leftJoin('currency', 'currency.id', '=', 'appfiy_global_config.currency_id')
             ->select([
@@ -103,6 +111,7 @@ class GlobalConfigController extends Controller
             'mode' => $global['mode'],
             'name' => $global['name'],
             'slug' => $global['slug'],
+            'plugin_slug' => $global['plugin_slug'],
             'image_url' => $global['image'] ? config('app.image_public_path') . $global['image'] : null,
             'is_active' => $global['is_active'] == 1 ? "yes" : "no",
             'is_upcoming' => $global['is_upcoming'] == 1,

@@ -112,29 +112,29 @@ class ThemeController extends Controller
         }
         try{
             $themeSlug = $request->query('slug');
-            $pluginSlug = $request->query('plugin_slug');
 
-            if (!$themeSlug || !$pluginSlug) {
-                return new \Illuminate\Http\JsonResponse([
-                    'status' => Response::HTTP_OK,
+            if (!$themeSlug) {
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
                     'url' => $request->getUri(),
                     'method' => $request->getMethod(),
-                    'message' => 'Parameters missing',
-                ], Response::HTTP_OK, ['Content-Type' => 'application/json']);
+                    'message' => 'Theme slug missing',
+                ], Response::HTTP_NOT_FOUND);
             }
 
-            $theme = Theme::where('slug',$themeSlug)->where('plugin_slug',$pluginSlug)->first();
+            $theme = Theme::where('slug',$themeSlug)->first();
 
             if (!$theme) {
-                return new \Illuminate\Http\JsonResponse([
-                    'status' => Response::HTTP_OK,
+                return response()->json([
+                    'status' => Response::HTTP_NOT_FOUND,
                     'url' => $request->getUri(),
                     'method' => $request->getMethod(),
                     'message' => 'Theme not found',
-                ], Response::HTTP_OK, ['Content-Type' => 'application/json']);
+                ], Response::HTTP_NOT_FOUND);
             }
 
             $themeID = $theme->id;
+            $pluginSlug = $theme->plugin_slug;
 
             // Fetch theme data with relationships and necessary conditions
             $data = Theme::select([
@@ -187,6 +187,7 @@ class ThemeController extends Controller
             // Construct theme data array with defaults and conditionals
             $themeData = [
                 'theme_name' => $data->name ?? 'Default Theme Name',
+                'plugin_slug' => $pluginSlug,
                 'background_color' => $data->background_color ?? '#FFFFFF',
                 'font_family' => $data->font_family ?? 'Arial',
                 'text_color' => $data->text_color ?? '#000000',
@@ -520,11 +521,11 @@ class ThemeController extends Controller
                 return $response;
             }
             $response = new JsonResponse([
-                'status' => Response::HTTP_OK,
+                'status' => Response::HTTP_NOT_FOUND,
                 'url' => $request->getUri(),
                 'method' => $request->getMethod(),
                 'message' => 'Data Not Found',
-            ], Response::HTTP_OK);
+            ], Response::HTTP_NOT_FOUND);
             $response->headers->set('Content-Type', 'application/json');
             return $response;
         }catch(Exception $ex){
