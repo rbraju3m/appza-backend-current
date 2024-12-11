@@ -19,6 +19,7 @@ class ThemeResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'plugin_slug' => $this->plugin_slug,
             'created' => $this->created_at ? $this->created_at->format('d-M-Y') : null,
             'background_color' => $this->background_color,
             'font_family' => $this->font_family,

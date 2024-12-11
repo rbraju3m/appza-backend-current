@@ -44,10 +44,23 @@ class ThemeController extends Controller
             ], Response::HTTP_UNAUTHORIZED);
         }
 
+        $plugin_slug = $request->query('plugin_slug');
+
+        if (!$plugin_slug || !is_array($plugin_slug)) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
+                'url' => $request->getUri(),
+                'method' => $request->getMethod(),
+                'message' => 'Plugin slug must be an array and cannot be empty',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+
         try {
             // Fetch active themes with their photo gallery
             $themes = Theme::active()
                 ->whereNull('deleted_at')
+                ->whereIn('plugin_slug', (array) $plugin_slug)
                 ->with('photoGallery')
                 ->orderBy('sort_order')
                 ->get();
