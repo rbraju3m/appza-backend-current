@@ -37,7 +37,27 @@
 
                                 <div class="row">
 
-                                    <div class="form-group row">
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.Plugin')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            <input type="hidden" name="plugin_slug" value="{{$theme->plugin_slug}}">
+                                            {{ html()
+                                                ->select('plugin_slug', $pluginDropdown, $theme->plugin_slug)
+                                                ->class('form-control form-select js-example-basic-single')
+                                                ->attribute('aria-describedby', 'basic-addon2')
+                                                ->placeholder(__('messages.choosePlugin'))
+                                                ->attribute('disabled',true)
+                                            }}
+                                            <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mg-top">
                                         <div class="col-sm-2">
                                             <label for="" class="form-label">{{__('messages.name')}}</label>
                                             <span class="textRed">*</span>
@@ -98,29 +118,11 @@
                                                 ->select('drawer_id', $drawers, $theme->drawer_id)
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->attribute('aria-describedby', 'basic-addon2')
-                                                ->placeholder(__('messages.chooseNavbar'))
+                                                ->placeholder(__('messages.chooseDrawer'))
                                             }}
                                             <span class="textRed">{!! $errors->first('drawer_id') !!}</span>
                                         </div>
                                     </div>
-
-                                    <div class="form-group row mg-top">
-                                        <div class="col-sm-2">
-                                            <label for="" class="form-label">{{__('messages.Plugin')}}</label>
-                                            <span class="textRed">*</span>
-                                        </div>
-
-                                        <div class="col-sm-10">
-                                            {{ html()
-                                                ->select('plugin_slug', $pluginDropdown, $theme->plugin_slug)
-                                                ->class('form-control form-select js-example-basic-single')
-                                                ->attribute('aria-describedby', 'basic-addon2')
-                                                ->placeholder(__('messages.choosePlugin'))
-                                            }}
-                                            <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
-                                        </div>
-                                    </div>
-
 
 
                                     <div class="form-group row mg-top">

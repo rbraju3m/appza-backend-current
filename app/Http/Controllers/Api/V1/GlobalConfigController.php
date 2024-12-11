@@ -69,9 +69,9 @@ class GlobalConfigController extends Controller
                 );
             }
 
-            $data = $globalConfigs->map(function ($global) use ($pluginSlug) {
+            $data = $globalConfigs->map(function ($global) {
                 $generalData = $this->generateGeneralData($global);
-                $generalData['components'] = $this->getComponentsData($global['id'],$pluginSlug);
+                $generalData['components'] = $this->getComponentsData($global['id'],$global['plugin_slug']);
                 return $generalData;
             });
 

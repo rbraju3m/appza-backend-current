@@ -46,9 +46,9 @@
                                             <tr>
                                                 <td>{{$i}}</td>
                                                 <td>{{$theme->theme_name}}</td>
-                                                <td>{{$theme['appbar']->name}}</td>
-                                                <td>{{$theme['navbar']->name}}</td>
-                                                <td>{{$theme['drawer']->name}}</td>
+                                                <td>{{$theme['appbar']?$theme['appbar']->name:null}}</td>
+                                                <td>{{$theme['navbar']?$theme['navbar']->name:null}}</td>
+                                                <td>{{$theme['drawer']?$theme['drawer']->name:null}}</td>
 
                                                 <td>
                                                     <div class="btn-group" role="group" aria-label="Basic outlined example">

@@ -55,9 +55,9 @@ class ThemeController extends Controller
     public function create()
     {
         $dropdowns = [
-            'appbars' => GlobalConfig::getDropdown('appbar'),
-            'navbars' => GlobalConfig::getDropdown('navbar'),
-            'drawers' => GlobalConfig::getDropdown('drawer'),
+//            'appbars' => GlobalConfig::getDropdown('appbar'),
+//            'navbars' => GlobalConfig::getDropdown('navbar'),
+//            'drawers' => GlobalConfig::getDropdown('drawer'),
             'pluginDropdown' => SupportsPlugin::getPluginDropdown(),
         ];
 
@@ -75,16 +75,16 @@ class ThemeController extends Controller
         // Validate the incoming request
         $this->validate($request, [
             'name' => 'required|unique:appfiy_theme,name',
-            'appbar_id' => 'required',
-            'navbar_id' => 'required',
-            'drawer_id' => 'required',
+//            'appbar_id' => 'required',
+//            'navbar_id' => 'required',
+//            'drawer_id' => 'required',
             'plugin_slug' => 'required',
         ], [
             'name.required' => __('messages.enterThemeName'),
             'name.unique' => __('messages.themeNameMustbeUnique'),
-            'appbar_id.required' => __('messages.chooseAppbar'),
-            'navbar_id.required' => __('messages.chooseNavbar'),
-            'drawer_id.required' => __('messages.chooseDrawer'),
+//            'appbar_id.required' => __('messages.chooseAppbar'),
+//            'navbar_id.required' => __('messages.chooseNavbar'),
+//            'drawer_id.required' => __('messages.chooseDrawer'),
             'plugin_slug.required' => __('messages.choosePlugin'),
         ]);
 
@@ -101,16 +101,16 @@ class ThemeController extends Controller
                 : null;
 
             // Store combined appbar, navbar, drawer IDs as JSON
-            $appbarNavbarDrawer = [$input['appbar_id'], $input['navbar_id'], $input['drawer_id']];
-            $input['appbar_navbar_drawer'] = json_encode($appbarNavbarDrawer);
+//            $appbarNavbarDrawer = [$input['appbar_id'], $input['navbar_id'], $input['drawer_id']];
+//            $input['appbar_navbar_drawer'] = json_encode($appbarNavbarDrawer);
 
             // Create Theme
             $theme = Theme::create($input);
 
             // Create ThemeConfig for each global configuration
-            foreach ($appbarNavbarDrawer as $configId) {
+            /*foreach ($appbarNavbarDrawer as $configId) {
                 $this->createThemeConfig($theme->id, $configId);
-            }
+            }*/
 
             // Create ThemePage and components
             $this->createThemePagesAndComponents($theme, $input['background_color']);
@@ -119,7 +119,8 @@ class ThemeController extends Controller
 
             // Redirect on success
             Session::flash('message', __('messages.CreateMessage'));
-            return redirect()->route('theme_assign_component', $theme->id);
+            return redirect()->route('theme_edit', $theme->id);
+//            return redirect()->route('theme_assign_component', $theme->id);
         } catch (\Exception $e) {
             DB::rollback();
             Session::flash('danger', $e->getMessage());
@@ -158,7 +159,7 @@ class ThemeController extends Controller
 
     protected function createThemePagesAndComponents($theme, $backgroundColor)
     {
-        $pages = Page::where('is_active', 1)->get();
+        $pages = Page::where('is_active', 1)->where('plugin_slug',$theme->plugin_slug)->get();
 
         foreach ($pages as $page) {
             $themePage = ThemePage::create([
@@ -332,9 +333,9 @@ class ThemeController extends Controller
 
         // Retrieve dropdown options for appbars, navbars, and drawers
         $dropdowns = [
-            'appbars' => GlobalConfig::getDropdown('appbar'),
-            'navbars' => GlobalConfig::getDropdown('navbar'),
-            'drawers' => GlobalConfig::getDropdown('drawer'),
+            'appbars' => GlobalConfig::getDropdown('appbar',$theme->plugin_slug),
+            'navbars' => GlobalConfig::getDropdown('navbar',$theme->plugin_slug),
+            'drawers' => GlobalConfig::getDropdown('drawer',$theme->plugin_slug),
             'pluginDropdown' => SupportsPlugin::getPluginDropdown(),
         ];
 

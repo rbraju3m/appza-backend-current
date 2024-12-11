@@ -51,7 +51,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-group row mg-top">
+                                    {{--<div class="form-group row mg-top">
                                         <div class="col-sm-2">
                                             <label for="" class="form-label">{{__('messages.appbar')}}</label>
                                             <span class="textRed">*</span>
@@ -66,9 +66,9 @@
                                             }}
                                             <span class="textRed">{!! $errors->first('appbar_id') !!}</span>
                                         </div>
-                                    </div>
+                                    </div>--}}
 
-                                    <div class="form-group row mg-top">
+                                    {{--<div class="form-group row mg-top">
                                         <div class="col-sm-2">
                                             <label for="" class="form-label">{{__('messages.navbar')}}</label>
                                             <span class="textRed">*</span>
@@ -83,9 +83,9 @@
                                             }}
                                             <span class="textRed">{!! $errors->first('navbar_id') !!}</span>
                                         </div>
-                                    </div>
+                                    </div>--}}
 
-                                    <div class="form-group row mg-top">
+                                    {{--<div class="form-group row mg-top">
                                         <div class="col-sm-2">
                                             <label for="" class="form-label">{{__('messages.drawer')}}</label>
                                             <span class="textRed">*</span>
@@ -100,7 +100,7 @@
                                             }}
                                             <span class="textRed">{!! $errors->first('drawer_id') !!}</span>
                                         </div>
-                                    </div>
+                                    </div>--}}
 
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">

@@ -89,6 +89,7 @@ class PageComponentController extends Controller
                         'appfiy_component_type.slug as component_group_slug',
                         'appfiy_component_type.icon as component_group_icon',
                         'appfiy_component.deleted_at as deleted_at',
+                        'appfiy_component.plugin_slug',
                     ])
                     ->join('appfiy_layout_type', 'appfiy_layout_type.id', '=', 'appfiy_component.layout_type_id')
                     ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -147,8 +148,8 @@ class PageComponentController extends Controller
                         $componentGeneral['is_active'] = $pageComponent['is_active'] == 1 ? true : false;
 
                         // Add Customize Properties
-                        $componentGeneral['properties'] = $this->addComponentProperties($pageComponent, $pageSlug,$pluginSlug);
-                        $componentGeneral['customize_properties'] = $this->addComponentProperties($pageComponent, $pageSlug,$pluginSlug);
+                        $componentGeneral['properties'] = $this->addComponentProperties($pageComponent, $pageSlug,$pageComponent['plugin_slug']);
+                        $componentGeneral['customize_properties'] = $this->addComponentProperties($pageComponent, $pageSlug,$pageComponent['plugin_slug']);
 
                         // Add BannerSliderHorizontal items
                         if ('BannerSliderHorizontal' === $pageComponent['layout_type']) {
@@ -200,7 +201,7 @@ class PageComponentController extends Controller
             'icon_code' => $pageComponent['icon_code'],
             'event' => $pageComponent['event'],
             'scope' => json_decode($pageComponent['scope']),
-            'class_type' => $pluginPrefix.$pageComponent['product_type'],
+            'class_type' => $pageComponent['product_type']?$pluginPrefix.$pageComponent['product_type']:null,
             'is_multiple'=>$pageComponent['is_multiple'],
             'selected_design' => $pageComponent['selected_design'],
             'selected_category' => null,
