@@ -39,13 +39,22 @@ class PageComponentController extends Controller
         $pageSlug = $request->query('page_slug');
         $pluginSlug = $request->query('plugin_slug');
 
-        if (!$pageSlug || !$pluginSlug) {
-            return new JsonResponse([
-                'status' => Response::HTTP_OK,
+        if (!$pluginSlug || !is_array($pluginSlug)) {
+            return response()->json([
+                'status' => Response::HTTP_NOT_FOUND,
                 'url' => $request->getUri(),
                 'method' => $request->getMethod(),
-                'message' => 'Parameters missing',
-            ], Response::HTTP_OK, ['Content-Type' => 'application/json']);
+                'message' => 'Plugin slug must be an array and cannot be empty',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$pageSlug) {
+            return new JsonResponse([
+                'status' => Response::HTTP_NOT_FOUND,
+                'url' => $request->getUri(),
+                'method' => $request->getMethod(),
+                'message' => 'Page slug cannot be empty',
+            ], Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
         }
 
         try {
@@ -84,7 +93,7 @@ class PageComponentController extends Controller
                     ->join('appfiy_layout_type', 'appfiy_layout_type.id', '=', 'appfiy_component.layout_type_id')
                     ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
                     ->where('appfiy_component.scope', 'like', '%' . $pageSlug . '%')
-                    ->where('appfiy_component.plugin_slug',$pluginSlug)
+                    ->whereIn('appfiy_component.plugin_slug',$pluginSlug)
                     ->where('appfiy_component.is_active', 1)
                     ->whereNull('appfiy_component.deleted_at')
                     ->get()->toArray();
@@ -168,11 +177,11 @@ class PageComponentController extends Controller
                 ], Response::HTTP_OK, ['Content-Type' => 'application/json'], JSON_UNESCAPED_SLASHES);
             } else {
                 return new JsonResponse([
-                    'status' => Response::HTTP_OK,
+                    'status' => Response::HTTP_NOT_FOUND,
                     'url' => $request->getUri(),
                     'method' => $request->getMethod(),
-                    'message' => 'Data Not Found',
-                ], Response::HTTP_OK, ['Content-Type' => 'application/json']);
+                    'message' => 'Page Not Found',
+                ], Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
             }
         } catch (Exception $ex) {
             return response()->json([
