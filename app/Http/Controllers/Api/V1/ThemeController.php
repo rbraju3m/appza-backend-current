@@ -446,13 +446,14 @@ class ThemeController extends Controller
                             'appfiy_component.image',
                             'image_url',
                             'appfiy_component.is_multiple',
+                            'appfiy_component.plugin_slug',
                             'appfiy_component_type.name as group_name',
                         ])
                         ->join('appfiy_component','appfiy_component.id','=','appfiy_theme_component.component_id')
                         ->join('appfiy_component_type','appfiy_component_type.id','=','appfiy_component.component_type_id')
                         ->join('appfiy_layout_type','appfiy_layout_type.id','=','appfiy_component.layout_type_id')
                         ->where('appfiy_theme_component.theme_id', $themeID)
-                        ->where('appfiy_component.plugin_slug', $pluginSlug)
+                        ->whereIn('appfiy_component.plugin_slug', [$pluginSlug,'wordpress'])
                         ->where('appfiy_theme_component.theme_page_id', $page['id'])
                         ->where('appfiy_theme_component.selected_id', 1)
                         ->orderBy('sort_ordering')
@@ -554,6 +555,13 @@ class ThemeController extends Controller
     // Function to build component general properties
     private function buildPageComponentGeneralProperties($pagesComponent,$pluginSlug) {
         $getPluginPrefix = SupportsPlugin::getPluginPrefix($pluginSlug);
+        $componentPluginSlug = $pagesComponent['plugin_slug'];
+        if ($componentPluginSlug=='wordpress'){
+            $classType = 'WPCore_'.$pagesComponent['product_type'];
+        }else{
+            $classType = $getPluginPrefix.$pagesComponent['product_type'];
+        }
+
         $componentProperties = [
             'label' => $pagesComponent['label'],
             'group_name' => $pagesComponent['group_name'],
@@ -561,7 +569,7 @@ class ThemeController extends Controller
             'icon_code' => $pagesComponent['icon_code'],
             'event' => $pagesComponent['event'],
             'scope' => json_decode($pagesComponent['scope']),
-            'class_type' => $pagesComponent['product_type']?$getPluginPrefix.$pagesComponent['product_type']:null,
+            'class_type' => $pagesComponent['product_type']?$classType:null,
             'web_icon' => $pagesComponent['web_icon'],
             'is_multiple' => $pagesComponent['is_multiple'],
             'selected_design' => $pagesComponent['selected_design'],

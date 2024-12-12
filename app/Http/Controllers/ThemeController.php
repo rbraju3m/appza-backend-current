@@ -159,7 +159,7 @@ class ThemeController extends Controller
 
     protected function createThemePagesAndComponents($theme, $backgroundColor)
     {
-        $pages = Page::where('is_active', 1)->where('plugin_slug',$theme->plugin_slug)->get();
+        $pages = Page::where('is_active', 1)->whereIn('plugin_slug',[$theme->plugin_slug,'wordpress'])->get();
 
         foreach ($pages as $page) {
             $themePage = ThemePage::create([
@@ -172,7 +172,7 @@ class ThemeController extends Controller
             ]);
 
             $components = Component::where('scope', 'LIKE', '%' . $page->slug . '%')
-                ->where('plugin_slug',$theme->plugin_slug)
+                ->whereIn('plugin_slug',[$theme->plugin_slug,'wordpress'])
                 ->where('is_active', 1)
                 ->where('is_upcoming', 0)
                 ->get();
