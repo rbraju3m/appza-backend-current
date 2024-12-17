@@ -207,6 +207,8 @@ return [
     'componentType' => 'Component Group',
     'chooseComponentType' => 'Choose component type',
     'Plugin' => 'Plugin',
+    'DefaultPage' => 'Default Page',
+    'chooseDefaultPage' => 'Choose default Page',
     'BackgroundColor' => 'Background Color',
     'fontFamily' => 'Font Family',
     'chooseFontFamily' => 'Choose font family',

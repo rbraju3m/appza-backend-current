@@ -219,6 +219,7 @@ class GlobalConfigController extends Controller
                 'component_position' => $component['component_position'],
                 'name' => $component['name'],
                 'slug' => $component['slug'],
+                'support_extension' => $component['plugin_slug'],
                 'is_upcoming' => $component['is_upcoming'] == 1,
                 'image_url' => $component['image'] ? config('app.image_public_path') . $component['image'] : null,
                 'is_active' => $component['is_active'] == 1,

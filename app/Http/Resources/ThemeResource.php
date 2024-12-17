@@ -37,6 +37,7 @@ class ThemeResource extends JsonResource
                     ? config('app.image_public_path') . $photoGallery->image
                     : null;
             })->filter()->toArray(), // Map and remove null image URLs
+            'default_active_page_slug' => $this->default_page,
         ];
     }
 }

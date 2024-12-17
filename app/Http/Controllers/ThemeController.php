@@ -337,6 +337,9 @@ class ThemeController extends Controller
             'navbars' => GlobalConfig::getDropdown('navbar',$theme->plugin_slug),
             'drawers' => GlobalConfig::getDropdown('drawer',$theme->plugin_slug),
             'pluginDropdown' => SupportsPlugin::getPluginDropdown(),
+            'pages' => Page::where('is_active', 1)
+                ->whereIn('plugin_slug', [$theme->plugin_slug])
+                ->pluck('name', 'slug'),
         ];
 
         return view('theme.edit', array_merge($dropdowns, compact('theme')));
@@ -357,6 +360,7 @@ class ThemeController extends Controller
             'navbar_id' => 'required',
             'drawer_id' => 'required',
             'plugin_slug' => 'required',
+            'default_page' => 'required',
         ], [
             'name.required' => __('messages.enterThemeName'),
             'name.unique' => __('messages.themeNameMustbeUnique'),
@@ -364,6 +368,7 @@ class ThemeController extends Controller
             'navbar_id.required' => __('messages.chooseNavbar'),
             'drawer_id.required' => __('messages.chooseDrawer'),
             'plugin_slug.required' => __('messages.choosePlugin'),
+            'default_page.required' => __('messages.chooseDefaultPage'),
         ]);
 
         try {
@@ -394,7 +399,7 @@ class ThemeController extends Controller
         $input = $request->only([
             'name', 'appbar_id', 'navbar_id', 'drawer_id', 'background_color',
             'font_family', 'text_color', 'font_size', 'transparent',
-            'dashboard_page', 'login_page', 'login_modal','plugin_slug'
+            'dashboard_page', 'login_page', 'login_modal','plugin_slug','default_page'
         ]);
 
         // Append additional fields

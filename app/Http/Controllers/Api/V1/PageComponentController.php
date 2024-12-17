@@ -137,6 +137,7 @@ class PageComponentController extends Controller
                         }
 
                         $componentGeneral['page_id'] = null;
+                        $componentGeneral['support_extension'] = $pageComponent['plugin_slug'];
                         $componentGeneral['unique_id'] = substr(md5(mt_rand()), 0, 10);
                         $componentGeneral['name'] = $pageComponent['name'];
                         $componentGeneral['slug'] = $pageComponent['slug'];

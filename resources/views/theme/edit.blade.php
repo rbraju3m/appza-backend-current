@@ -57,6 +57,24 @@
                                         </div>
                                     </div>
 
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.DefaultPage')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            {{ html()
+                                                ->select('default_page', $pages, $theme->default_page)
+                                                ->class('form-control form-select js-example-basic-single')
+                                                ->attribute('aria-describedby', 'basic-addon2')
+                                                ->placeholder(__('messages.chooseDefaultPage'))
+                                            }}
+                                            <span class="textRed">{!! $errors->first('default_page') !!}</span>
+                                        </div>
+                                    </div>
+
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">
                                             <label for="" class="form-label">{{__('messages.name')}}</label>

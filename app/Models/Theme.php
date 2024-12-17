@@ -14,7 +14,7 @@ class Theme extends Model
     public $timestamps = true;
     protected $guarded = ['id'];
     protected $dates = ['deleted_at','created_at', 'updated_at'];
-    protected $fillable = ['name','slug', 'image', 'appbar_id', 'navbar_id', 'drawer_id', 'appbar_navbar_drawer','background_color','font_family','text_color','font_size','transparent','dashboard_page','login_page','login_modal','sort_order','plugin_slug'];
+    protected $fillable = ['name','slug', 'image', 'appbar_id', 'navbar_id', 'drawer_id', 'appbar_navbar_drawer','background_color','font_family','text_color','font_size','transparent','dashboard_page','login_page','login_modal','sort_order','plugin_slug','default_page'];
 
     public function scopeActive($query)
     {

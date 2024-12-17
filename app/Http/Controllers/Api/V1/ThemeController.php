@@ -149,6 +149,7 @@ class ThemeController extends Controller
                 'appfiy_theme.login_page',
                 'appfiy_theme.login_modal',
                 'appfiy_theme.image',
+                'appfiy_theme.default_page',
             ])
                 ->with([
                     'globalConfig' => function ($query) use ($pluginSlug) {
@@ -188,6 +189,7 @@ class ThemeController extends Controller
             $themeData = [
                 'theme_name' => $data->name ?? 'Default Theme Name',
                 'plugin_slug' => $pluginSlug,
+                'default_active_page_slug' => $data->default_page,
                 'background_color' => $data->background_color ?? '#FFFFFF',
                 'font_family' => $data->font_family ?? 'Arial',
                 'text_color' => $data->text_color ?? '#000000',
@@ -317,6 +319,7 @@ class ThemeController extends Controller
                                 'appfiy_component.selected_design',
                                 'appfiy_component.details_page',
                                 'appfiy_component.transparent',
+                                'appfiy_component.plugin_slug',
                                 'appfiy_component_type.name as group_name',
                             ])
                             ->join('appfiy_layout_type','appfiy_layout_type.id','=','appfiy_component.layout_type_id')
@@ -385,6 +388,7 @@ class ThemeController extends Controller
                                 'component_position' => $component['component_position'],
                                 'name' => $component['name'],
                                 'slug' => $component['slug'],
+                                'support_extension' => $component['plugin_slug'],
                                 'corresponding_page_slug' => $component['slug'],
                                 'image_url' => config('app.image_public_path') . $component['image'],
                                 'is_active' => 'true',
@@ -622,6 +626,7 @@ class ThemeController extends Controller
         return [
             'name' => $pagesComponent['name'],
             'slug' => $pagesComponent['slug'],
+            'support_extension' => $pagesComponent['plugin_slug'],
             'component_image' => $pagesComponent['image'] ? config('app.image_public_path') . $pagesComponent['image'] : null,
             'image_url' => $pagesComponent['image_url'] ? config('app.image_public_path') . $pagesComponent['image_url'] : null,
             'is_active' => $pagesComponent['is_active'] == 1,
