@@ -39,13 +39,18 @@
                                     </th>
                                 </tr>
                                 </thead>
+                                @php
+                                    $currentPage = $components->currentPage();
+                                    $perPage = $components->perPage();
+                                    $serial = ($currentPage - 1) * $perPage + 1;
+                                @endphp
 
                                 @if(isset($components) && count($components)>0)
                                     <tbody>
                                         @php $i=1; @endphp
                                         @foreach($components as $component)
                                             <tr>
-                                                <td>{{$i}}</td>
+                                                <td>{{$serial++}}</td>
                                                 <td>{{$component->name}}</td>
                                                 <td>{{$component->slug}}</td>
                                                 <td>{{$component->label}}</td>

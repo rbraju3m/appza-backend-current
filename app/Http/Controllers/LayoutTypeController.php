@@ -14,7 +14,7 @@ class LayoutTypeController extends Controller
      */
     public function index()
     {
-        $layoutTypes = LayoutType::where('is_active',1)->paginate(20);
+        $layoutTypes = LayoutType::where('is_active',1)->orderByDesc('id')->paginate(20);
         return view('layout-type/index',compact('layoutTypes'));
     }
 }

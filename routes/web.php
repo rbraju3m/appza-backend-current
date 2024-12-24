@@ -5,6 +5,7 @@ use App\Http\Controllers\ComponentGroupController;
 use App\Http\Controllers\GlobalConfigController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LayoutTypeController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\StyleGroupController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Auth;
@@ -115,5 +116,19 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('/gallery/image/{id}',[ThemeController::class, 'photoGalleryImageDelete'])->name('theme_gallery_image_delete');
     });
     /*theme route end*/
+
+    /* page route start */
+    Route::prefix('page')->group(function () {
+        Route::get('list',[PageController::class,'index'])->name('page_list');
+        Route::get('create',[PageController::class,'create'])->name('page_add');
+        Route::POST('store',[PageController::class,'store'])->name('page_store');
+
+//        Route::get('edit/{id}',[GlobalConfigController::class, 'edit'])->name('global_config_edit');
+//        Route::PATCH('update/{id}',[GlobalConfigController::class, 'update'])->name('global_config_update');
+//        Route::get('assign-component',[GlobalConfigController::class, 'globalConfigAssignComponent'])->name('global_config_assign_component');
+//        Route::get('assign-component-position',[GlobalConfigController::class, 'globalConfigAssignComponentPosition'])->name('global_config_assign_component_position');
+//        Route::POST('plugin-slug/update',[GlobalConfigController::class, 'updatePluginSlug'])->name('plugin_slug_update_config');
+    });
+    /* page route end */
 });
 

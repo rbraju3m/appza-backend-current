@@ -14,7 +14,7 @@ class Page extends Model
     public $timestamps = true;
     protected $guarded = ['id'];
     protected $dates = ['deleted_at','created_at', 'updated_at'];
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug','plugin_slug','background_color','border_color','border_radius','component_limit','persistent_footer_buttons'];
 
     protected static function newFactory()
     {

@@ -39,7 +39,7 @@ class ComponentController extends Controller
         $this->deleteComponentsWithNullSlug();
 
         // Fetch and paginate components
-        $components = Component::orderByDesc('id')->paginate(13);
+        $components = Component::orderByDesc('id')->paginate(20);
 
         // Return components to view
         return view('component.index', ['components' => $components]);

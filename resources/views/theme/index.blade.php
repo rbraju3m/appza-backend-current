@@ -41,10 +41,15 @@
 
                                 @if(count($themes)>0)
                                     <tbody>
-                                        @php $i=1; @endphp
+                                        @php
+                                            $i=1;
+                                            $currentPage = $themes->currentPage();
+                                            $perPage = $themes->perPage();
+                                            $serial = ($currentPage - 1) * $perPage + 1;
+                                        @endphp
                                         @foreach($themes as $theme)
                                             <tr>
-                                                <td>{{$i}}</td>
+                                                <td>{{$serial++}}</td>
                                                 <td>{{$theme->theme_name}}</td>
                                                 <td>{{$theme['appbar']?$theme['appbar']->name:null}}</td>
                                                 <td>{{$theme['navbar']?$theme['navbar']->name:null}}</td>

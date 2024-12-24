@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PageRequest;
 use App\Models\Currency;
 use App\Models\GlobalConfig;
 use App\Models\GlobalConfigComponent;
+use App\Models\Page;
+use App\Models\Scope;
 use App\Models\SupportsPlugin;
 use App\Models\Theme;
 use App\Traits\HandlesFileUploads;
@@ -18,7 +21,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class GlobalConfigController extends Controller
+class PageController extends Controller
 {
     use ValidatesRequests;
     use HandlesFileUploads;
@@ -30,15 +33,17 @@ class GlobalConfigController extends Controller
      */
     public function index()
     {
-        // Clean up any GlobalConfig entries with a null slug
-        GlobalConfig::whereNull('slug')->first()?->delete();
+        // Clean up any page entries with a null slug
+        Page::whereNull('slug')->first()?->delete();
 
-        // Retrieve active GlobalConfig entries
-        $globalConfig = GlobalConfig::where('is_active', 1)
-            ->latest('id')
+        // Retrieve active page entries
+        $pages = Page::where('is_active', 1)
+            ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'plugin_slug')
+            ->select('appfiy_page.*', 'appza_supports_plugin.name as plugin_name')
+            ->orderByDesc('id')
             ->paginate(20);
 
-        return view('global-config.index',compact('globalConfig'));
+        return view('page.index',compact('pages'));
     }
 
 
@@ -46,21 +51,87 @@ class GlobalConfigController extends Controller
      * Show the form for creating a new resource.
      * @return RedirectResponse
      */
-    public function create($mode)
+    public function create()
     {
-        $input = [
-            'is_active' => 1,
-            'automatically_imply_leading' => false,
-            'center_title' => false,
-            'mode' => $mode,
-        ];
-
-        $globalConfig = GlobalConfig::create($input);
-
-        return $globalConfig->id
-            ? redirect()->route('global_config_edit', $globalConfig->id)
-            : redirect()->back()->with('error', __('messages.creationFailed'));
+        $pluginDropdown = SupportsPlugin::getPluginDropdown();
+        return view('page.add', compact('pluginDropdown'));
     }
+
+    public function store(PageRequest $request)
+    {
+        $inputs = $request->validated();
+
+        // Handle 'persistent_footer_buttons' field
+        if ($request->has('persistent_footer_buttons')) {
+            $inputs['persistent_footer_buttons'] = '{}';
+        }
+
+        // Set default value for 'component_limit' if null
+        if (!$inputs['component_limit']) {
+            $inputs['component_limit'] = 0;
+        }
+
+        try {
+            // Start database transaction
+            DB::beginTransaction();
+
+            // Create the Page
+            $page = Page::create($inputs);
+
+            // Handle scope data creation only if 'page_scope' exists
+            if ($request->has('page_scope') && $page) {
+                $scopeData = [
+                    'name' => $inputs['name'],
+                    'slug' => $inputs['slug'],
+                    'plugin_slug' => $inputs['plugin_slug'],
+                    'is_global' => 0,
+                ];
+
+                Scope::create($scopeData);
+            }
+
+            // Commit the transaction if everything is successful
+            DB::commit();
+
+            return redirect()->route('page_list')->with('success', 'Page created successfully.');
+        } catch (\Exception $e) {
+            // Rollback the transaction on error
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Error creating page: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('page_list')->with('error', 'Failed to create the page. Please try again.');
+        }
+    }
+
+
+    /*public function store(PageRequest $request){
+        $inputs = $request->validated();
+        if ($request->has('persistent_footer_buttons')){
+            $inputs['persistent_footer_buttons'] = '{}';
+        }
+
+        if (!$inputs['component_limit']){
+            $inputs['component_limit'] = 0;
+        }
+
+        if ($request->has('page_scope')){
+            $scopeData = [
+              'name' => $inputs['name'],
+              'slug' => $inputs['slug'],
+              'plugin_slug' => $inputs['plugin_slug'],
+              'is_global' => 0,
+            ];
+        }
+        $page = Page::create($inputs);
+        if ($page){
+            Scope::create($scopeData);
+        }
+        return redirect()->route('page_list')->with('success', 'Page created successfully.');
+    }*/
 
     /**
      * Show the form for editing the specified resource.

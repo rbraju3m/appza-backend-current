@@ -8,26 +8,12 @@
 
                     <div class="card-header">
                         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                        <h6>{{__('messages.GlobalConfigList')}}</h6>
+                        <h6>{{__('messages.pageList')}}</h6>
                         <div class="btn-toolbar mb-2 mb-md-0">
                             <div class="btn-group me-2">
-                                <a href="{{route('global_config_add', 'appbar')}}" title="" class="module_button_header">
+                                <a href="{{route('page_add')}}" title="" class="module_button_header">
                                     <button type="button" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-plus-circle"></i> {{__('messages.createAppbar')}}
-                                    </button>
-                                </a>
-                            </div>
-                            <div class="btn-group me-2">
-                                <a href="{{route('global_config_add', 'navbar')}}" title="" class="module_button_header">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-plus-circle"></i> {{__('messages.createNavbar')}}
-                                    </button>
-                                </a>
-                            </div>
-                            <div class="btn-group me-2">
-                                <a href="{{route('global_config_add', 'drawer')}}" title="" class="module_button_header">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-plus-circle"></i> {{__('messages.createDrawer')}}
+                                        <i class="fas fa-plus-circle"></i> {{__('messages.createPage')}}
                                     </button>
                                 </a>
                             </div>
@@ -43,39 +29,41 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
-                                    <th>{{__('messages.mode')}}</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
-                                    <th>{{__('messages.selectedColor')}}</th>
-                                    <th>{{__('messages.unselectedColor')}}</th>
                                     <th>{{__('messages.backgroundColor')}}</th>
+                                    <th>{{__('messages.borderColor')}}</th>
+                                    <th>{{__('messages.borderRadius')}}</th>
+                                    <th>{{__('messages.componentLimit')}}</th>
+                                    <th>{{__('messages.Plugin')}}</th>
                                     <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
                                         <i class="fas fa-cog"></i>
                                     </th>
                                 </tr>
                                 </thead>
 
-                                @if(sizeof($globalConfig)>0)
+                                @if(sizeof($pages)>0)
                                     <tbody>
                                         @php
                                             $i=1;
-                                            $currentPage = $globalConfig->currentPage();
-                                            $perPage = $globalConfig->perPage();
+                                            $currentPage = $pages->currentPage();
+                                            $perPage = $pages->perPage();
                                             $serial = ($currentPage - 1) * $perPage + 1;
                                         @endphp
-                                        @foreach($globalConfig as $config)
+                                        @foreach($pages as $page)
                                             <tr>
                                                 <td>{{$serial++}}</td>
-                                                <td>{{$config->mode}}</td>
-                                                <td>{{$config->name}}</td>
-                                                <td>{{$config->slug}}</td>
-                                                <td>{{$config->selected_color}}</td>
-                                                <td>{{$config->unselected_color}}</td>
-                                                <td>{{$config->background_color}}</td>
+                                                <td>{{$page->name}}</td>
+                                                <td>{{$page->slug}}</td>
+                                                <td>{{$page->background_color}}</td>
+                                                <td>{{$page->border_color}}</td>
+                                                <td>{{$page->border_radius}}</td>
+                                                <td>{{$page->component_limit}}</td>
+                                                <td>{{$page->plugin_name}}</td>
 
                                                 <td>
                                                     <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('global_config_edit',$config->id)}}"><i class="fas fa-edit"></i></a>
+                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('global_config_edit',$page->id)}}"><i class="fas fa-edit"></i></a>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -84,9 +72,9 @@
                                     </tbody>
                                 @endif
                             </table>
-                            @if(isset($globalConfig) && count($globalConfig)>0)
+                            @if(isset($pages) && count($pages)>0)
                                 <div class=" justify-content-right">
-                                    {{ $globalConfig->links('layouts.pagination') }}
+                                    {{ $pages->links('layouts.pagination') }}
                                 </div>
                             @endif
                         </form>

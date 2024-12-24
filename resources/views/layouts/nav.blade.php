@@ -32,6 +32,15 @@
             </ul>
         </div>
 
+        <div class="nav-group {{ Request::is('appza/page/*') ? 'show' : ''}}">
+            <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.pages')}}</div>
+            <ul class="nav-sidebar">
+                <li class="nav-item ">
+                    <a href="{{route('page_list')}}" class="nav-link {{ Request::is('appza/page/*') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.pageList')}}</span></a>
+                </li>
+            </ul>
+        </div>
+
 
         <div class="nav-group {{ Request::is('appza/component-group/*') ? 'show' : ''}}">
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.componentGroup')}}</div>

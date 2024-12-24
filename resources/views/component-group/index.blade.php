@@ -40,10 +40,15 @@
 
                                 @if(sizeof($componentTypes)>0)
                                     <tbody>
-                                        @php $i=1; @endphp
+                                        @php
+                                            $i=1;
+                                            $currentPage = $componentTypes->currentPage();
+                                            $perPage = $componentTypes->perPage();
+                                            $serial = ($currentPage - 1) * $perPage + 1;
+                                        @endphp
                                         @foreach($componentTypes as $group)
                                             <tr>
-                                                <td>{{$i}}</td>
+                                                <td>{{$serial++}}</td>
                                                 <td>{{$group->name}}</td>
                                                 <td>{{$group->icon}}</td>
                                                 <td>{{$group->is_active==1?'Active':'Inactive'}}</td>

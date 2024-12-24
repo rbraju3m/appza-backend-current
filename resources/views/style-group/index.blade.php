@@ -43,10 +43,15 @@
 
                                 @if(count($styleGroups)>0)
                                     <tbody>
-                                    @php $i=1; @endphp
+                                    @php
+                                        $i=1;
+                                        $currentPage = $styleGroups->currentPage();
+                                        $perPage = $styleGroups->perPage();
+                                        $serial = ($currentPage - 1) * $perPage + 1;
+                                    @endphp
                                     @foreach($styleGroups as $styleGroup)
                                         <tr>
-                                            <td>{{$i}}</td>
+                                            <td>{{$serial++}}</td>
                                             <td>{{$styleGroup->name}}</td>
                                             <td>{{$styleGroup->slug}}</td>
                                             <td>{{count($styleGroup->groupProperties->toArray())}}</td>

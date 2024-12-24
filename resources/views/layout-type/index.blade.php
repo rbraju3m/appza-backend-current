@@ -39,10 +39,15 @@
 
                                 @if(isset($layoutTypes) && count($layoutTypes)>0)
                                     <tbody>
-                                        @php $i=1; @endphp
+                                        @php
+                                            $i=1;
+                                            $currentPage = $layoutTypes->currentPage();
+                                            $perPage = $layoutTypes->perPage();
+                                            $serial = ($currentPage - 1) * $perPage + 1;
+                                        @endphp
                                         @foreach($layoutTypes as $layoutType)
                                             <tr>
-                                                <td>{{$i}}</td>
+                                                <td>{{$serial++}}</td>
                                                 <td>{{$layoutType->name}}</td>
                                                 <td>{{$layoutType->slug}}</td>
                                                 <td>

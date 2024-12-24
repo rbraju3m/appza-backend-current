@@ -42,7 +42,7 @@ class ThemeController extends Controller
             ->select(['id', 'name as theme_name', 'appbar_id', 'navbar_id', 'drawer_id'])
             ->with(['appbar:id,name', 'navbar:id,name', 'drawer:id,name'])
             ->latest('id')
-            ->paginate(10);
+            ->paginate(20);
 
         return view('theme.index', compact('themes'));
     }
