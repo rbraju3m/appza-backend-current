@@ -55,13 +55,29 @@ class ThemeController extends Controller
     public function create()
     {
         $dropdowns = [
-//            'appbars' => GlobalConfig::getDropdown('appbar'),
-//            'navbars' => GlobalConfig::getDropdown('navbar'),
-//            'drawers' => GlobalConfig::getDropdown('drawer'),
             'pluginDropdown' => SupportsPlugin::getPluginDropdown(),
         ];
 
-        return view('theme.add', $dropdowns);
+        // Fetch all plugins with a "home-page" in one query
+        $homePagePlugins = Page::where('slug', 'home-page')
+            ->pluck('plugin_slug')
+            ->toArray();
+
+        $categorizedDropdowns = [
+            'withHomePage' => [],
+            'withoutHomePage' => [],
+        ];
+
+        // Categorize the plugin dropdown
+        foreach ($dropdowns['pluginDropdown'] as $key => $value) {
+            if (in_array($key, $homePagePlugins)) {
+                $categorizedDropdowns['withHomePage'][$key] = $value;
+            } else {
+                $categorizedDropdowns['withoutHomePage'][$key] = $value;
+            }
+        }
+
+        return view('theme.add', $dropdowns,$categorizedDropdowns);
     }
 
     /**

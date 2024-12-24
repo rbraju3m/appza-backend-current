@@ -63,7 +63,8 @@
 
                                                 <td>
                                                     <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('global_config_edit',$page->id)}}"><i class="fas fa-edit"></i></a>
+                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('page_edit',$page->id)}}"><i class="fas fa-edit"></i></a>
+                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$page->id)}}"><i class="fas fa-trash"></i></a>
                                                     </div>
                                                 </td>
                                             </tr>

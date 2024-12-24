@@ -110,7 +110,7 @@
 
                                         <div class="col-sm-10">
                                             {{ html()
-                                                ->select('plugin_slug', $pluginDropdown, '')
+                                                ->select('plugin_slug', $withHomePage, '')
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->attribute('aria-describedby', 'basic-addon2')
                                                 ->placeholder(__('messages.choosePlugin'))
@@ -118,6 +118,37 @@
                                             <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                         </div>
                                     </div>
+
+                                    @if (!empty($withoutHomePage))
+                                        <div class="form-group row mg-top">
+                                            <div class="col-sm-2">
+                                            </div>
+
+                                            <div class="col-sm-10" style="background-color: #FFF2E8; padding: 10px">
+                                                <h3 class="text-center text-danger mb-3 font-weight-bold">
+                                                    <i class="fas fa-exclamation-circle"></i> Missing Home Page
+                                                </h3>
+                                                <div class="alert alert-warning text-center" role="alert">
+                                                    The following plugins are missing a home page:
+                                                </div>
+                                                <ul class="list-group list-group-flush">
+                                                    @foreach ($withoutHomePage as $key => $value)
+{{--                                                        <li>Plugin Name: {{ $value }}</li>--}}
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center text-wrap">
+                                                            <span class="font-weight-bold">{{ $value }}</span>
+                                                            <span class="badge bg-danger text-white">Missing</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                                {{--<ul>
+                                                    @foreach ($withoutHomePage as $key => $value)
+                                                        <li>Plugin Name: {{ $value }}</li>
+                                                    @endforeach
+                                                </ul>--}}
+                                            </div>
+                                        </div>
+                                    @endif
+
 
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">

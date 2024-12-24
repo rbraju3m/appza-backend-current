@@ -122,12 +122,9 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('list',[PageController::class,'index'])->name('page_list');
         Route::get('create',[PageController::class,'create'])->name('page_add');
         Route::POST('store',[PageController::class,'store'])->name('page_store');
-
-//        Route::get('edit/{id}',[GlobalConfigController::class, 'edit'])->name('global_config_edit');
-//        Route::PATCH('update/{id}',[GlobalConfigController::class, 'update'])->name('global_config_update');
-//        Route::get('assign-component',[GlobalConfigController::class, 'globalConfigAssignComponent'])->name('global_config_assign_component');
-//        Route::get('assign-component-position',[GlobalConfigController::class, 'globalConfigAssignComponentPosition'])->name('global_config_assign_component_position');
-//        Route::POST('plugin-slug/update',[GlobalConfigController::class, 'updatePluginSlug'])->name('plugin_slug_update_config');
+        Route::get('edit/{id}',[PageController::class, 'edit'])->name('page_edit');
+        Route::PATCH('update/{page}',[PageController::class, 'update'])->name('page_update');
+        Route::get('delete/{id}',[PageController::class,'destroy'])->name('page_delete');
     });
     /* page route end */
 });
