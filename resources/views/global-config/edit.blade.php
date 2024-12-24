@@ -13,28 +13,28 @@
                                 <div class="btn-group me-2">
 
                                     <div class="btn-group me-2">
-                                        <a href="{{route('global_config_add', [app()->getLocale(),'appbar'])}}" title="" class="module_button_header">
+                                        <a href="{{route('global_config_add','appbar')}}" title="" class="module_button_header">
                                             <button type="button" class="btn btn-sm btn-outline-secondary">
                                                 <i class="fas fa-plus-circle"></i> {{__('messages.createAppbar')}}
                                             </button>
                                         </a>
                                     </div>
                                     <div class="btn-group me-2">
-                                        <a href="{{route('global_config_add', [app()->getLocale(),'navbar'])}}" title="" class="module_button_header">
+                                        <a href="{{route('global_config_add', 'navbar')}}" title="" class="module_button_header">
                                             <button type="button" class="btn btn-sm btn-outline-secondary">
                                                 <i class="fas fa-plus-circle"></i> {{__('messages.createNavbar')}}
                                             </button>
                                         </a>
                                     </div>
                                     <div class="btn-group me-2">
-                                        <a href="{{route('global_config_add', [app()->getLocale(),'drawer'])}}" title="" class="module_button_header">
+                                        <a href="{{route('global_config_add', 'drawer')}}" title="" class="module_button_header">
                                             <button type="button" class="btn btn-sm btn-outline-secondary">
                                                 <i class="fas fa-plus-circle"></i> {{__('messages.createDrawer')}}
                                             </button>
                                         </a>
                                     </div>
 
-                                    <a href="{{route('global_config_list', app()->getLocale())}}" title="" class="module_button_header">
+                                    <a href="{{route('global_config_list')}}" title="" class="module_button_header">
                                         <button type="button" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-list"></i> {{__('messages.list')}}
                                         </button>
@@ -103,11 +103,13 @@
                                         <div class="col-sm-4">
                                             {{ html()
                                                 ->select('plugin_slug', $pluginDropdown, $data->plugin_slug)
-                                                ->class('form-control form-select js-example-basic-single')
+                                                ->class('form-control plugin_slug form-select js-example-basic-single')
                                                 ->attribute('aria-describedby', 'basic-addon2')
                                                 ->placeholder(__('messages.choosePlugin'))
+                                                ->attribute('id',$data['id'])
                                             }}
                                             <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
+                                            <a data-href="{{route('plugin_slug_update_config')}}" class="plugin_slug_update"></a>
                                         </div>
                                     </div>
 
@@ -908,6 +910,37 @@
 
             });
             return false;
+        });
+
+        $(document).delegate('.plugin_slug', 'change', function (event) {
+            event.preventDefault(); // Prevent any default behavior
+            let value = $(this).val();
+            let id = $(this).attr('id');
+            let route = $('.plugin_slug_update').attr('data-href');
+
+            $.ajax({
+                url: route,
+                method: "post",
+                dataType: "json",
+                data: { id: id, value: value },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Attach CSRF token
+                },
+                beforeSend: function (xhr) {
+                    // Optional: Add any loading indicator logic here
+                }
+            }).done(function (response) {
+                if (response.status !== 'ok') {
+                    // Reload the page when the response is successful
+                    alert('Plugin slug not updated.')
+                }
+                location.reload();
+                // console.log(response);
+            }).fail(function (jqXHR, textStatus) {
+                console.error('Request failed:', textStatus);
+            });
+
+            return false; // Prevent any additional default behavior
         });
     </script>
 

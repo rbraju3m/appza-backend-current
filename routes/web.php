@@ -75,6 +75,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('edit/{id}',[ComponentController::class, 'edit'])->name('component_edit');
         Route::get('properties/inline/update',[ComponentController::class, 'componentPropertiesInlineUpdate'])->name('component_properties_inline_update');
         Route::PATCH('update/{id}',[ComponentController::class, 'update'])->name('component_update');
+        Route::POST('plugin-slug/update',[ComponentController::class, 'updatePluginSlug'])->name('plugin_slug_update_component');
     });
     /* component route end */
 
@@ -87,6 +88,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::PATCH('update/{id}',[GlobalConfigController::class, 'update'])->name('global_config_update');
         Route::get('assign-component',[GlobalConfigController::class, 'globalConfigAssignComponent'])->name('global_config_assign_component');
         Route::get('assign-component-position',[GlobalConfigController::class, 'globalConfigAssignComponentPosition'])->name('global_config_assign_component_position');
+        Route::POST('plugin-slug/update',[GlobalConfigController::class, 'updatePluginSlug'])->name('plugin_slug_update_config');
     });
     /* global config route end */
 

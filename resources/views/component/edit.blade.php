@@ -42,6 +42,23 @@
                                 <div class="row">
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">
+                                            <label for="transparent"
+                                                   class="form-label">{{__('messages.Plugin')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            {{ html()->select('plugin_slug', $pluginDropdown, $data['plugin_slug'])
+                                                ->class('form-control form-select js-example-basic-single plugin_slug')
+                                                ->placeholder(__('messages.choosePlugin'))
+                                                ->attribute('id',$data['id'])
+                                            }}
+                                            <br><span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
+                                            <a data-href="{{route('plugin_slug_update_component')}}" class="plugin_slug_update"></a>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
                                             <label for="" class="form-label">{{__('messages.name')}}</label>
                                             <span class="textRed">*</span>
                                         </div>
@@ -245,20 +262,6 @@
                                                 ->placeholder(__('messages.chooseComponentType'))
                                             }}
                                             <br><span class="textRed">{!! $errors->first('component_type_id') !!}</span>
-                                        </div>
-
-                                        <div class="col-sm-2">
-                                            <label for="transparent"
-                                                   class="form-label">{{__('messages.Plugin')}}</label>
-                                            <span class="textRed">*</span>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()->select('plugin_slug', $pluginDropdown, $data['plugin_slug'])
-                                                ->class('form-control form-select js-example-basic-single')
-                                                ->placeholder(__('messages.choosePlugin'))
-                                            }}
-                                            <br><span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                         </div>
                                     </div>
 
@@ -510,7 +513,7 @@
                                             @php
                                                 $scopeArray = json_decode($data['scope']);
                                             @endphp
-                                            @if(count($scopeArrayData['page-scope'])>0)
+                                            @if(isset($scopeArrayData['page-scope']) && count($scopeArrayData['page-scope'])>0)
                                                 @foreach($scopeArrayData['page-scope'] as $scopePage)
                                                     <div class="form-check form-check-inline">
                                                         <input style="margin-top: 0px" class="form-check-input"
@@ -798,6 +801,38 @@
                 blahurl.src = URL.createObjectURL(file)
             }
         }
+
+        $(document).delegate('.plugin_slug', 'change', function (event) {
+            event.preventDefault(); // Prevent any default behavior
+            let value = $(this).val();
+            let id = $(this).attr('id');
+            let route = $('.plugin_slug_update').attr('data-href');
+
+            $.ajax({
+                url: route,
+                method: "post",
+                dataType: "json",
+                data: { id: id, value: value },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Attach CSRF token
+                },
+                beforeSend: function (xhr) {
+                    // Optional: Add any loading indicator logic here
+                }
+            }).done(function (response) {
+                if (response.status !== 'ok') {
+                    // Reload the page when the response is successful
+                    alert('Plugin slug not updated.')
+                }
+                location.reload();
+                // console.log(response);
+            }).fail(function (jqXHR, textStatus) {
+                console.error('Request failed:', textStatus);
+            });
+
+            return false; // Prevent any additional default behavior
+        });
+
 
         $(document).delegate('.inline_update', 'change', function () {
             let value = $(this).val();

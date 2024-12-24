@@ -128,7 +128,7 @@ class ComponentController extends Controller
         $styleGroups = StyleGroup::where('is_active', 1)->get();
         $properties = $this->getComponentStyleGroupProperties($id, $styleGroups);
         $componentStyleIdArray = $this->getCheckedStyleGroupIds($properties);
-        $scopes = $this->formatScopes(Scope::select(['id', 'name', 'slug', 'is_global'])->get());
+        $scopes = $this->formatScopes(Scope::select(['id', 'name', 'slug', 'is_global'])->whereIn('plugin_slug',[$data->plugin_slug,'global'])->get());
         $componentType = ComponentType::where('is_active', 1)->get();
         $pluginDropdown = SupportsPlugin::getPluginDropdown();
 
@@ -400,6 +400,13 @@ class ComponentController extends Controller
 
         Session::flash('delete', __('messages.deleteMessage'));
         return redirect()->route('component_list');
+    }
+
+    public function updatePluginSlug(Request $request)
+    {
+        $component = Component::findOrFail($request->input('id'));
+        $component->update(['plugin_slug' => $request->input('value')]);
+        return response()->json(['status' => 'ok'], 200);
     }
 
 }

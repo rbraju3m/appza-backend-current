@@ -92,6 +92,7 @@ class GlobalConfigController extends Controller
             ])
             ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'appfiy_component.plugin_slug')
             ->where('appfiy_component.scope', 'like', '%' . $data->mode . '%')
+            ->where('appfiy_component.plugin_slug', $data->plugin_slug)
             ->where('appfiy_component.is_active', 1)
             ->where('appfiy_component.is_upcoming', 0)
             ->get()
@@ -208,5 +209,12 @@ class GlobalConfigController extends Controller
         ];
 
         return response()->json($response);
+    }
+
+    public function updatePluginSlug(Request $request)
+    {
+        $component = GlobalConfig::findOrFail($request->input('id'));
+        $component->update(['plugin_slug' => $request->input('value')]);
+        return response()->json(['status' => 'ok'], 200);
     }
 }
