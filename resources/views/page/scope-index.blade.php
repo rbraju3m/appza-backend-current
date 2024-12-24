@@ -31,51 +31,43 @@
                                     <th>{{__('messages.SL')}}</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
-                                    <th>{{__('messages.backgroundColor')}}</th>
-                                    <th>{{__('messages.borderColor')}}</th>
-                                    <th>{{__('messages.borderRadius')}}</th>
-                                    <th>{{__('messages.componentLimit')}}</th>
                                     <th>{{__('messages.Plugin')}}</th>
-                                    <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
+                                    {{--<th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
                                         <i class="fas fa-cog"></i>
-                                    </th>
+                                    </th>--}}
                                 </tr>
                                 </thead>
 
-                                @if(sizeof($pages)>0)
+                                @if(sizeof($scopes)>0)
                                     <tbody>
                                         @php
                                             $i=1;
-                                            $currentPage = $pages->currentPage();
-                                            $perPage = $pages->perPage();
+                                            $currentPage = $scopes->currentPage();
+                                            $perPage = $scopes->perPage();
                                             $serial = ($currentPage - 1) * $perPage + 1;
                                         @endphp
-                                        @foreach($pages as $page)
+                                        @foreach($scopes as $scope)
                                             <tr>
                                                 <td>{{$serial++}}</td>
-                                                <td>{{$page->name}}</td>
-                                                <td>{{$page->slug}}</td>
-                                                <td>{{$page->background_color}}</td>
-                                                <td>{{$page->border_color}}</td>
-                                                <td>{{$page->border_radius}}</td>
-                                                <td>{{$page->component_limit}}</td>
-                                                <td>{{$page->plugin_name}}</td>
+                                                <td>{{$scope->name}}</td>
+                                                <td>{{$scope->slug}}</td>
+                                                <td>{{$scope->plugin_name}}</td>
 
-                                                <td>
+                                                {{--<td>
                                                     <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('page_edit',$page->id)}}"><i class="fas fa-edit"></i></a>
-{{--                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$page->id)}}"><i class="fas fa-trash"></i></a>--}}
+                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('page_edit',$scope->id)}}"><i class="fas fa-edit"></i></a>
+                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$scope->id)}}"><i class="fas fa-trash"></i></a>
                                                     </div>
-                                                </td>
+                                                </td>--}}
                                             </tr>
                                             @php $i++; @endphp
                                         @endforeach
                                     </tbody>
                                 @endif
                             </table>
-                            @if(isset($pages) && count($pages)>0)
+                            @if(isset($scopes) && count($scopes)>0)
                                 <div class=" justify-content-right">
-                                    {{ $pages->links('layouts.pagination') }}
+                                    {{ $scopes->links('layouts.pagination') }}
                                 </div>
                             @endif
                         </form>

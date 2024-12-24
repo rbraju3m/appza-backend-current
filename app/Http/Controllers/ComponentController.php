@@ -33,7 +33,7 @@ class ComponentController extends Controller
      * Display a listing of the resource.
      * @return Renderable
      */
-    public function index()
+    /*public function index()
     {
         // Clean up components with null slug
         $this->deleteComponentsWithNullSlug();
@@ -43,7 +43,37 @@ class ComponentController extends Controller
 
         // Return components to view
         return view('component.index', ['components' => $components]);
+    }*/
+
+    public function index(Request $request)
+    {
+        // Clean up components with null slug
+        $this->deleteComponentsWithNullSlug();
+
+        // Get the search term from the request
+        $search = $request->input('search');
+
+        // Fetch and paginate components, applying the search condition if provided
+        $components = Component::query()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('slug', 'like', '%' . $search . '%')
+                    ->orWhere('label', 'like', '%' . $search . '%')
+                    ->orWhere('scope', 'like', '%' . $search . '%');
+            })
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        // Include the search query in the pagination links
+        $components->appends(['search' => $search]);
+
+        // Return components to view
+        return view('component.index', [
+            'components' => $components,
+            'search' => $search, // Pass search term back to the view for repopulating the search input
+        ]);
     }
+
 
     /**
      * Deletes the first component with a null 'slug' if it exists.

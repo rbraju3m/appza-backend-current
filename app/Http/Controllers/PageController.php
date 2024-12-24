@@ -47,6 +47,18 @@ class PageController extends Controller
 
         return view('page.index',compact('pages'));
     }
+    public function scopeIndex()
+    {
+        // Retrieve active page entries
+        $scopes = Scope::orderByDesc('id')
+            ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'appfiy_scope.plugin_slug')
+            ->select('appfiy_scope.*', 'appza_supports_plugin.name as plugin_name')
+
+            ->paginate(20);
+//        dump($scopes);
+
+        return view('page.scope-index',compact('scopes'));
+    }
 
 
     /**

@@ -120,6 +120,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     /* page route start */
     Route::prefix('page')->group(function () {
         Route::get('list',[PageController::class,'index'])->name('page_list');
+        Route::get('scope/list',[PageController::class,'scopeIndex'])->name('scope_list');
         Route::get('create',[PageController::class,'create'])->name('page_add');
         Route::POST('store',[PageController::class,'store'])->name('page_store');
         Route::get('edit/{id}',[PageController::class, 'edit'])->name('page_edit');

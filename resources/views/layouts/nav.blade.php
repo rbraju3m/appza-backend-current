@@ -36,7 +36,8 @@
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.pages')}}</div>
             <ul class="nav-sidebar">
                 <li class="nav-item ">
-                    <a href="{{route('page_list')}}" class="nav-link {{ Request::is('appza/page/*') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.pageList')}}</span></a>
+                    <a href="{{route('page_list')}}" class="nav-link {{ Request::is('appza/page/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.pageList')}}</span></a>
+                    <a href="{{route('scope_list')}}" class="nav-link {{ Request::is('appza/page/scope/*') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.scopeList')}}</span></a>
                 </li>
             </ul>
         </div>

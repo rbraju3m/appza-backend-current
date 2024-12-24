@@ -257,7 +257,7 @@
                                                     $componentTypeDropdown[$type['id']] = $type['name'];
                                                 }
                                             @endphp
-                                            {{ html()->select('component_type_id', $pageDetailsDropdown, $data['component_type_id'])
+                                            {{ html()->select('component_type_id', $componentTypeDropdown, $data['component_type_id'])
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->placeholder(__('messages.chooseComponentType'))
                                             }}
