@@ -138,7 +138,7 @@
                                         </div>
 
                                         <div class="col-sm-4">
-                                            {{ html()->checkbox('page_scope')}}
+                                            {{ html()->checkbox('page_scope',true)}}
                                         </div>
 
                                         <div class="col-sm-2">
