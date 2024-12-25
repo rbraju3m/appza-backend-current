@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Component;
 use App\Models\ComponentType;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -137,6 +138,13 @@ class ComponentGroupController extends Controller
             return redirect()
                 ->route('component_group_list')
                 ->with('error', __('messages.notFoundMessage'));
+        }
+
+        $componentExists = Component::where('component_type_id', $id)->exists();
+        if ($componentExists){
+            return redirect()
+                ->route('component_group_list')
+                ->with('validate', 'Already exists in component');
         }
 
         // Soft delete (or delete) the record
