@@ -363,7 +363,7 @@ class ThemeController extends Controller
                                 }
 
                                 // Add the styles to finalNewStyle, grouping by style group slug
-                                $finalNewStyle[$groupName->slug === 'list_view_decoration' ? 'general_decoration' : $groupName->slug] = $newStyle;
+                                $finalNewStyle[$groupName->slug] = $newStyle;
                             }
 
                             $getPluginPrefix = SupportsPlugin::getPluginPrefix($pluginSlug);
@@ -474,11 +474,7 @@ class ThemeController extends Controller
                             $newStyle = [];
                             foreach ($styleGroups as $sty) {
                                 $sty = (array)$sty;
-                                if ($sty['slug'] == 'list_view_decoration') {
-                                    $newStyle['general_decoration'][$sty['name']] = $sty['value'];
-                                } else {
-                                    $newStyle[$sty['slug']][$sty['name']] = $sty['value'];
-                                }
+                                $newStyle[$sty['slug']][$sty['name']] = $sty['value'];
                             }
 
                             // Build component structure

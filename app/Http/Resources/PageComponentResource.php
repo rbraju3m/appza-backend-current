@@ -23,11 +23,7 @@ class PageComponentResource extends JsonResource
     {
         $newStyle = [];
         foreach ($this->styleGroups as $styleGroup) {
-            if ($styleGroup->style_group_slug === 'list_view_decoration') {
-                $newStyle['general_decoration'][$styleGroup->name] = $styleGroup->value;
-            } else {
-                $newStyle[$styleGroup->style_group_slug][$styleGroup->name] = $styleGroup->value;
-            }
+            $newStyle[$styleGroup->style_group_slug][$styleGroup->name] = $styleGroup->value;
         }
 
         return [

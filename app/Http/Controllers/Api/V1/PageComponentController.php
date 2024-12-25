@@ -129,11 +129,7 @@ class PageComponentController extends Controller
                         $newStyle = [];
                         foreach ($styleGroups as $sty) {
                             $sty = (array)$sty;
-                            if ('list_view_decoration' == $sty['slug']) {
-                                $newStyle['general_decoration'][$sty['name']] = $sty['value'];
-                            } else {
-                                $newStyle[$sty['slug']][$sty['name']] = $sty['value'];
-                            }
+                            $newStyle[$sty['slug']][$sty['name']] = $sty['value'];
                         }
 
                         $componentGeneral['page_id'] = null;

@@ -273,11 +273,7 @@ class GlobalConfigController extends Controller
 
         $stylesGrouped = [];
         foreach ($styles as $style) {
-            if ($style->slug === 'list_view_decoration') {
-                $stylesGrouped['general_decoration'][$style->name] = $style->value;
-            } else {
-                $stylesGrouped[$style->slug][$style->name] = $style->value;
-            }
+            $stylesGrouped[$style->slug][$style->name] = $style->value;
         }
 
         return $stylesGrouped;
