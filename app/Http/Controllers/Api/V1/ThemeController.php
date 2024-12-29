@@ -140,6 +140,7 @@ class ThemeController extends Controller
             $data = Theme::select([
                 'appfiy_theme.id',
                 'appfiy_theme.name',
+                'appfiy_theme.slug',
                 'appfiy_theme.background_color',
                 'appfiy_theme.font_family',
                 'appfiy_theme.text_color',
@@ -188,6 +189,7 @@ class ThemeController extends Controller
             // Construct theme data array with defaults and conditionals
             $themeData = [
                 'theme_name' => $data->name ?? 'Default Theme Name',
+                'theme_slug' => $data->slug,
                 'plugin_slug' => $pluginSlug,
                 'default_active_page_slug' => $data->default_page,
                 'background_color' => $data->background_color ?? '#FFFFFF',

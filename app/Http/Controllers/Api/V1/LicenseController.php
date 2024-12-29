@@ -29,64 +29,70 @@ class LicenseController extends Controller
         $this->pluginName = ($data && $data['plugin_name'])?$data['plugin_name']:'';
     }
 
+
     public function check(Request $request)
     {
-        if (!$this->authorization){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_UNAUTHORIZED,
+        // Helper function for JSON responses
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
                 'url' => $request->getUri(),
                 'method' => $request->getMethod(),
-                'message'=>'Unauthorized1',
-            ],Response::HTTP_UNAUTHORIZED);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+                'message' => $message,
+            ], $additionalData), $statusCode);
+        };
+
+        // Check for authorization
+        if (!$this->authorization) {
+            return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 
-
-        if ($request->get('license_key')!='' && $request->get('site_url')!=''){
-            $fluentApiUrl = config('app.fluent_api_url');
-
-            $params = [
-                'fluent_cart_action' => 'check_license',
-                'license' => $request->get('license_key'),
-                'url' => $request->get('site_url')
-            ];
-
-            $response = Http::withHeaders([])->get($fluentApiUrl,$params);
-
-            $body = $response->getBody()->getContents();
-            $data = json_decode($body,true);
-            if (!$data['success']){
-                $response = new JsonResponse([
-                    'status'=>Response::HTTP_NOT_FOUND,
-                    'url' => $request->getUri(),
-                    'method' => $request->getMethod(),
-                    'message'=>$data['data']['error'],
-                ],Response::HTTP_OK);
-                $response->headers->set('Content-Type', 'application/json');
-                return $response;
+        // Validate required parameters
+        $requiredFields = ['license_key', 'site_url', 'item_id'];
+        foreach ($requiredFields as $field) {
+            if (!$request->get($field)) {
+                return $jsonResponse(Response::HTTP_NOT_FOUND, ucfirst(str_replace('_', ' ', $field)) . ' missing.');
             }
-
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_OK,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message'=>'Your License key is valid.',
-                'data'=>$data['data'],
-            ],Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
         }
 
-        $response = new JsonResponse([
-            'status'=>Response::HTTP_NOT_FOUND,
-            'url' => $request->getUri(),
-            'method' => $request->getMethod(),
-            'message'=>'Parameter missing',
-        ],Response::HTTP_OK);
-        $response->headers->set('Content-Type', 'application/json');
-        return $response;
+        // Setup API parameters
+        $fluentApiUrl = config('app.fluent_api_url');
+        $params = [
+            'fluent_cart_action' => 'check_license',
+            'license' => $request->get('license_key'),
+            'item_id' => $request->get('item_id'),
+            'url' => $request->get('site_url'),
+        ];
+
+        // Send API Request
+        try {
+            $response = Http::get($fluentApiUrl, $params);
+        } catch (\Exception $e) {
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
+        }
+
+        // Decode response
+        $data = json_decode($response->getBody()->getContents(), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
+        }
+
+        // Handle license errors
+        if (!$data['success'] ?? false) {
+            $messages = [
+                'missing' => 'License not found.',
+                'expired' => 'License has expired.',
+                'disabled' => 'License key revoked.',
+                'invalid_item_id' => 'Item id is invalid.',
+            ];
+            $message = $messages[$data['error']] ?? 'License not valid.';
+            return $jsonResponse(Response::HTTP_NOT_FOUND, $message);
+        }
+
+        // Success response
+        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
     }
+
 
     public function activate(Request $request)
     {
