@@ -96,96 +96,95 @@ class LicenseController extends Controller
 
     public function activate(Request $request)
     {
-        if (!$this->authorization){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_UNAUTHORIZED,
+        // Helper function for JSON responses
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
                 'url' => $request->getUri(),
                 'method' => $request->getMethod(),
-                'message'=>'Unauthorized',
-            ],Response::HTTP_UNAUTHORIZED);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+                'message' => $message,
+            ], $additionalData), $statusCode);
+        };
+
+        // Check for authorization
+        if (!$this->authorization) {
+            return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 
+        // Validate input
         $validator = Validator::make($request->all(), [
             'site_url' => 'required',
-            'license_key' => 'required'
-        ],[
-            'site_url.required' => __('customers::messages.domainRequired'),
-            'license_key.required' => __('customers::messages.licenseRequired')
+            'license_key' => 'required',
+            'item_id' => 'required',
+        ], [
+            'site_url.required' => 'Site URL is required.',
+            'license_key.required' => 'License Key is required.',
+            'item_id.required' => 'Item ID is required.',
         ]);
 
         if ($validator->fails()) {
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_UNAUTHORIZED,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message'=> $validator->errors(),
-            ],Response::HTTP_UNAUTHORIZED);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+            return $jsonResponse(Response::HTTP_BAD_REQUEST, 'Validation Error', ['errors' => $validator->errors()]);
         }
 
-        $data = $request->only('site_url','license_key','email');
-        $input = [
+        $data = $request->only('site_url', 'license_key', 'email', 'item_id');
+        $apiInput = [
             'url' => $data['site_url'],
             'license' => $data['license_key'],
-            'fluent_cart_action' => 'activate_license'
+            'item_id' => $data['item_id'],
+            'fluent_cart_action' => 'activate_license',
         ];
 
+        // External Fluent API Call
         $fluentApiUrl = config('app.fluent_api_url');
-        $response = Http::withHeaders([])->get($fluentApiUrl,$input);
-
-        $body = $response->getBody()->getContents();
-        $res = json_decode($body,true);
-
-        if (isset($res['code']) && $res['code'] == 'rest_no_route'){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_NOT_FOUND,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message'=>$res['data']['error'],
-            ],Response::HTTP_NOT_FOUND);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+        try {
+            $response = Http::get($fluentApiUrl, $apiInput);
+        } catch (\Exception $e) {
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
         }
 
-        if (!$res['success']){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_NOT_FOUND,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message'=>$res['data']['error'],
-            ],Response::HTTP_NOT_FOUND);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+        // Decode API Response
+        $res = json_decode($response->getBody()->getContents(), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
         }
 
-        if ($res['success']){
-            $getBuildDomain = BuildDomain::where('site_url',$data['site_url'])->where('license_key',$data['license_key'])->first();
-            if (!$getBuildDomain){
-                $packageName = $this->getSubdomainAndDomain($data['site_url']);
-                $domainInput = [
-                    'site_url' => $data['site_url'],
-                    'package_name' => 'com.'.$packageName.'.live',
-                    'email' => $data['email'] ?? $this->email,
-                    'plugin_name' => $this->pluginName,
-                    'license_key' => $data['license_key'],
-                ];
-                BuildDomain::create($domainInput);
-            }
+        // License Activation Errors
+        if (!$res['success'] ?? false) {
+            $errorMessages = [
+                'missing' => "License doesn't exist.",
+                'invalid_item_id' => 'Item ID is invalid.',
+                'missing_url' => 'Site URL is not provided.',
+                'license_not_activable' => "Attempting to activate a bundle's parent license.",
+                'disabled' => 'License key revoked.',
+                'no_activations_left' => 'No activations left.',
+                'expired' => 'License has expired.',
+                'site_inactive' => 'Site is not active for this license.',
+                'invalid' => 'License key does not match.',
+            ];
+
+            $errorMessage = $errorMessages[$res['error']] ?? 'License not valid.';
+            return $jsonResponse(Response::HTTP_NOT_FOUND, $errorMessage);
         }
 
-        $response = new JsonResponse([
-            'status'=>Response::HTTP_OK,
-            'url' => $request->getUri(),
-            'method' => $request->getMethod(),
-            'message'=>'Your License key has been activated successfully.',
-            'data'=>$res['data'],
-        ],Response::HTTP_OK);
-        $response->headers->set('Content-Type', 'application/json');
-        return $response;
+        // Check or Create BuildDomain Entry
+        $buildDomain = BuildDomain::firstOrCreate(
+            [
+                'site_url' => $data['site_url'],
+                'license_key' => $data['license_key'],
+            ],
+            [
+                'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
+                'email' => $data['email'] ?? $this->email,
+                'plugin_name' => $this->pluginName,
+                'fluent_item_id' => $data['item_id'],
+            ]
+        );
+
+        return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', [
+            'data' => $res
+        ]);
     }
+
 
     function getSubdomainAndDomain($url) {
         $parsedUrl = parse_url($url);

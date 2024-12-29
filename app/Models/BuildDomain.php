@@ -31,7 +31,9 @@ class BuildDomain extends Model
         'team_id',
         'is_android',
         'confirm_email',
-        'is_ios'];
+        'is_ios',
+        'fluent_item_id'
+    ];
 
     public static function boot() {
         parent::boot();
