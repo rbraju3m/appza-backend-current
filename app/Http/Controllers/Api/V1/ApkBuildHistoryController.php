@@ -33,86 +33,66 @@ class ApkBuildHistoryController extends Controller
         $this->iosBuildValidationService = $iosBuildValidationService;
     }
 
-    public function apkBuild(FinalBuildRequest $request){
-
-        if (!$this->authorization){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_UNAUTHORIZED,
+    public function apkBuild(FinalBuildRequest $request) {
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
                 'url' => $request->getUri(),
                 'method' => $request->getMethod(),
-                'message'=>'Unauthorized',
-            ],Response::HTTP_UNAUTHORIZED);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+                'message' => $message,
+            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
+        };
+
+        if (!$this->authorization) {
+            return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 
-        if ($this->pluginName == 'lazy_task'){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_OK,
-                'message'=> 'Build process off for lazy task',
-            ],Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+        if ($this->pluginName == 'lazy_task') {
+            return $jsonResponse(Response::HTTP_OK, 'Build process off for lazy task');
         }
 
         $input = $request->validated();
 
-        $findSiteUrl = BuildDomain::where('site_url',$input["site_url"])->where('license_key',$input['license_key'])->where('package_name',$input['package_name'])->first();
-        if ($findSiteUrl){
-            $apkBuildExists = BuildOrder::where('status','processing')->where('issuer_id',$findSiteUrl->ios_issuer_id)->exists();
+        $findSiteUrl = BuildDomain::where('site_url', $input["site_url"])
+            ->where('license_key', $input['license_key'])
+            ->where('package_name', $input['package_name'])
+            ->first();
 
-            if ($apkBuildExists){
-                $response = new JsonResponse([
-                    'status' => Response::HTTP_OK,
-                    'url' => $request->getUri(),
-                    'method' => $request->getMethod(),
-                    'message' => 'An app building process is already going on. Please try again later.'
-                ], Response::HTTP_OK);
-                $response->headers->set('Content-Type', 'application/json');
-                return $response;
-            }
-
-            $buildHistory = ApkBuildHistory::create([
-                'version_id' => $findSiteUrl->version_id,
-                'build_domain_id' => $findSiteUrl->id,
-                'fluent_id' => $findSiteUrl->fluent_id,
-                'app_name' => $findSiteUrl->app_name,
-                'app_logo' => $findSiteUrl->app_logo,
-                'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
-                'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
-                'ios_key_id' => $findSiteUrl->ios_key_id,
-                'ios_team_id' => $findSiteUrl->team_id,
-                'ios_p8_file_content' => $findSiteUrl->ios_p8_file_content,
-            ]);
-
-            $buildHistory->update([
-                'build_version'=>$buildHistory->id
-            ]);
-
-            /* START APK BUILD REQUEST JOBS FOR ANIS VI */
-            $job = $this->buildRequestProcessForJob($buildHistory,$findSiteUrl);
-            /* END APK BUILD REQUEST JOBS FOR ANIS VI */
-
-
-            $response = new JsonResponse([
-                'status' => Response::HTTP_OK,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message' => 'Your App building process has been started successfully.',
-                'data' => $buildHistory
-            ], Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
-        }else{
-            $response = new JsonResponse([
-                'status' => Response::HTTP_NOT_FOUND,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message' => 'Domain or license key wrong',
-            ], Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+        if (!$findSiteUrl) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key wrong');
         }
+
+        $apkBuildExists = BuildOrder::where('status', 'processing')
+            ->where('issuer_id', $findSiteUrl->ios_issuer_id)
+            ->exists();
+
+        if ($apkBuildExists) {
+            return $jsonResponse(Response::HTTP_OK, 'An app building process is already going on. Please try again later.');
+        }
+
+        $buildHistory = ApkBuildHistory::create([
+            'version_id' => $findSiteUrl->version_id,
+            'build_domain_id' => $findSiteUrl->id,
+            'fluent_id' => $findSiteUrl->fluent_id,
+            'app_name' => $findSiteUrl->app_name,
+            'app_logo' => $findSiteUrl->app_logo,
+            'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
+            'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
+            'ios_key_id' => $findSiteUrl->ios_key_id,
+            'ios_team_id' => $findSiteUrl->team_id,
+            'ios_p8_file_content' => $findSiteUrl->ios_p8_file_content,
+        ]);
+
+        $buildHistory->update([
+            'build_version' => $buildHistory->id
+        ]);
+
+        // Start APK build job
+        $this->buildRequestProcessForJob($buildHistory, $findSiteUrl);
+
+        return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
+            'data' => $buildHistory
+        ]);
     }
 
     private function buildRequestProcessForJob($buildHistory,$findSiteUrl)
@@ -162,46 +142,44 @@ class ApkBuildHistoryController extends Controller
         }
     }
 
-    public function apkBuildResponse(BuildResponseRequest $request,$id)
-    {
+    public function apkBuildResponse(BuildResponseRequest $request, $id) {
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
+                'message' => $message,
+            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
+        };
+
         $input = $request->validated();
         $orderItem = BuildOrder::find($id);
-        if (!$orderItem){
-            $response = new JsonResponse([
-                'status'=>Response::HTTP_NOT_FOUND,
-                'message'=> 'Build order not found',
-            ],Response::HTTP_NOT_FOUND);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+
+        if (!$orderItem) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build order not found');
         }
 
         $orderItem->update($input);
-        $getUserInfo = BuildDomain::where('package_name',$orderItem->package_name)->first();
+        $getUserInfo = BuildDomain::where('package_name', $orderItem->package_name)->first();
 
-        if ($input['status']==='failed'){
+        if ($input['status'] === 'failed') {
             $details = [
-                'customer_name'=>$getUserInfo->app_name,
-                'subject'=>'Update on Your App Build: Action Required',
-                'app_name'=>$getUserInfo->app_name,
-                'mail_template'=>'build_failed'
+                'customer_name' => $getUserInfo->app_name,
+                'subject' => 'Update on Your App Build: Action Required',
+                'app_name' => $getUserInfo->app_name,
+                'mail_template' => 'build_failed'
             ];
             Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-        }elseif ($input['status']==='completed'){
+        } elseif ($input['status'] === 'completed') {
             $details = [
-                'customer_name'=>$getUserInfo->app_name,
-                'subject'=>'Your App Build Is Complete!',
-                'app_name'=>$getUserInfo->app_name,
-                'apk_url'=>$orderItem->apk_url,
-                'mail_template'=>'build_complete'
+                'customer_name' => $getUserInfo->app_name,
+                'subject' => 'Your App Build Is Complete!',
+                'app_name' => $getUserInfo->app_name,
+                'apk_url' => $orderItem->apk_url,
+                'mail_template' => 'build_complete'
             ];
             Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
         }
 
-        $response = new JsonResponse([
-            'status'=>Response::HTTP_OK,
-            'message'=> 'success',
-        ],Response::HTTP_OK);
-        $response->headers->set('Content-Type', 'application/json');
-        return $response;
+        return $jsonResponse(Response::HTTP_OK, 'success');
     }
+
 }
