@@ -15,6 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
     'fluent_api_url' => env('FLUENT_API_URL', 'default_value'),
+    'fluent_item_id' => env('FLUENT_ITEM_ID', 'default_value'),
     'image_public_path' => env('IMAGE_PUBLIC_PATH', 'default_value'),
     'company_name' => env('COMPANY_NAME', 'default_value'),
     'is_show_scanner' => env('IS_SHOW_SCANNER', 'default_value'),

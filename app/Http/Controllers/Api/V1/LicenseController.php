@@ -48,7 +48,7 @@ class LicenseController extends Controller
         }
 
         // Validate required parameters
-        $requiredFields = ['license_key', 'site_url', 'item_id'];
+        $requiredFields = ['license_key', 'site_url'];
         foreach ($requiredFields as $field) {
             if (!$request->get($field)) {
                 return $jsonResponse(Response::HTTP_NOT_FOUND, ucfirst(str_replace('_', ' ', $field)) . ' missing.');
@@ -57,10 +57,28 @@ class LicenseController extends Controller
 
         // Setup API parameters
         $fluentApiUrl = config('app.fluent_api_url');
+        // Check if it's null
+        if (is_null($fluentApiUrl)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');
+        }
+
+        // External variable Call
+        $fluentItemId = config('app.fluent_item_id');
+
+        // Check if it's null
+        if (is_null($fluentItemId)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is null or not set in the configuration.');
+        }
+
+        // Check if it's a number (integer or float)
+        if (!is_numeric($fluentItemId)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is not a valid number.');
+        }
+
         $params = [
             'fluent_cart_action' => 'check_license',
             'license' => $request->get('license_key'),
-            'item_id' => $request->get('item_id'),
+            'item_id' => $fluentItemId,
             'url' => $request->get('site_url'),
         ];
 
@@ -115,27 +133,43 @@ class LicenseController extends Controller
         $validator = Validator::make($request->all(), [
             'site_url' => 'required',
             'license_key' => 'required',
-            'item_id' => 'required',
         ], [
             'site_url.required' => 'Site URL is required.',
             'license_key.required' => 'License Key is required.',
-            'item_id.required' => 'Item ID is required.',
         ]);
 
         if ($validator->fails()) {
             return $jsonResponse(Response::HTTP_BAD_REQUEST, 'Validation Error', ['errors' => $validator->errors()]);
         }
 
-        $data = $request->only('site_url', 'license_key', 'email', 'item_id');
+        $data = $request->only('site_url', 'license_key', 'email');
+        // External variable Call
+        $fluentItemId = config('app.fluent_item_id');
+
+        // Check if it's null
+        if (is_null($fluentItemId)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is null or not set in the configuration.');
+        }
+
+        // Check if it's a number (integer or float)
+        if (!is_numeric($fluentItemId)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is not a valid number.');
+        }
+
         $apiInput = [
             'url' => $data['site_url'],
             'license' => $data['license_key'],
-            'item_id' => $data['item_id'],
+            'item_id' => $fluentItemId,
             'fluent_cart_action' => 'activate_license',
         ];
 
         // External Fluent API Call
         $fluentApiUrl = config('app.fluent_api_url');
+        // Check if it's null
+        if (is_null($fluentApiUrl)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');
+        }
+
         try {
             $response = Http::get($fluentApiUrl, $apiInput);
         } catch (\Exception $e) {
@@ -176,7 +210,7 @@ class LicenseController extends Controller
                 'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
                 'email' => $data['email'] ?? $this->email,
                 'plugin_name' => $this->pluginName,
-                'fluent_item_id' => $data['item_id'],
+                'fluent_item_id' => $fluentItemId,
             ]
         );
 
