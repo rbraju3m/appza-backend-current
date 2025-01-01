@@ -148,6 +148,8 @@
                                                 'BannerCategory' => 'Banner Category',
                                                 'BannerBrand' => 'Banner Brand',
                                                 'BannerTag' => 'Banner Tag',
+                                                'CourseList' => 'Course list',
+                                                'CourseDetails' => 'Course Details',
                                             ];
                                         @endphp
 

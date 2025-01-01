@@ -116,7 +116,7 @@ return [
     'chooseLayoutType' => 'Choose layout type',
     'ChooseScope' => 'Choose scope',
     'productType' => 'Class Type',
-    'chooseProductType' => 'Choose product type',
+    'chooseProductType' => 'Choose class type',
     'imageUrl' => 'Image Url',
     'persistent_footer_buttons' => 'Persistent footer buttons',
     /*
