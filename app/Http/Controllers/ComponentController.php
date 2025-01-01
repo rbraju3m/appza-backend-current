@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClassType;
 use App\Models\Component;
 use App\Models\ComponentStyleGroup;
 use App\Models\ComponentStyleGroupProperties;
@@ -165,6 +166,8 @@ class ComponentController extends Controller
         // Check if the component is in use
         $alreadyUse = $this->checkIfComponentIsAlreadyInUse($id);
 
+        $classTypesDropdown = ClassType::getDropdown($data->plugin_slug);
+
         // Pass data to view
         return view('component.edit', [
             'data' => $data,
@@ -175,6 +178,7 @@ class ComponentController extends Controller
             'componentStyleGroup' => $properties,
             'componentType' => $componentType,
             'pluginDropdown' => $pluginDropdown,
+            'classTypesDropdown' => $classTypesDropdown,
             'alreadyUse' => $alreadyUse
         ]);
     }

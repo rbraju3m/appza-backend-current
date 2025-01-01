@@ -138,23 +138,9 @@
                                             <label for=""
                                                    class="form-label">{{__('messages.productType')}}</label>
                                         </div>
-                                        @php
-                                            $dropdownValue = [
-                                                'Brand' => 'Brand',
-                                                'Cart' => 'Cart',
-                                                'Product' => 'Product',
-                                                'Category' => 'Category',
-                                                'CategoryProduct' => 'Category Product',
-                                                'BannerCategory' => 'Banner Category',
-                                                'BannerBrand' => 'Banner Brand',
-                                                'BannerTag' => 'Banner Tag',
-                                                'CourseList' => 'Course list',
-                                                'CourseDetails' => 'Course Details',
-                                            ];
-                                        @endphp
 
                                         <div class="col-sm-4">
-                                            {{ html()->select('product_type', $dropdownValue, $data['product_type'])
+                                            {{ html()->select('product_type', $classTypesDropdown, $data['product_type'])
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->placeholder(__('messages.chooseProductType'))
                                             }}
