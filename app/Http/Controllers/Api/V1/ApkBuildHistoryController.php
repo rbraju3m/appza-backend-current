@@ -67,7 +67,7 @@ class ApkBuildHistoryController extends Controller
             ->exists();
 
         if ($apkBuildExists) {
-            return $jsonResponse(Response::HTTP_OK, 'An app building process is already going on. Please try again later.');
+            return $jsonResponse(Response::HTTP_CONFLICT, 'An app building process is already going on. Please try again later.');
         }
 
         $buildHistory = ApkBuildHistory::create([
