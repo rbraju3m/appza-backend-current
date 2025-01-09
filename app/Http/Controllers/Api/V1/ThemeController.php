@@ -196,7 +196,7 @@ class ThemeController extends Controller
                 'font_family' => $data->font_family ?? 'Arial',
                 'text_color' => $data->text_color ?? '#000000',
                 'font_size' => $data->font_size ?? 14,
-                'is_transparent_background' => $data->transparent === 'True', // Adjusted for clarity
+                'is_transparent_background' => $data->transparent === 'True',
                 'image_url' => $data->image ? rtrim(config('app.image_public_path'), '/') . '/' . $data->image : null,
                 'dashboard_page' => $data->dashboard_page ?? null,
                 'login_page' => $data->login_page ?? null,
