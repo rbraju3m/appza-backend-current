@@ -361,8 +361,49 @@ class ThemeController extends Controller
                 ->whereIn('plugin_slug', [$theme->plugin_slug])
                 ->pluck('name', 'slug'),
         ];
+        $pages = Page::where('is_active', 1)->whereIn('plugin_slug',[$theme->plugin_slug,'wordpress'])->get();
+        $this->AddedNewPageNewThemeUpdate($pages,$theme);
 
         return view('theme.edit', array_merge($dropdowns, compact('theme')));
+    }
+
+    private function AddedNewPageNewThemeUpdate($pages,$theme,$backgroundColor='#000000')
+    {
+        foreach ($pages as $page) {
+            if ((($theme->plugin_slug != $page->plugin_slug) && ($page->plugin_slug == 'wordpress' && $page->slug != 'home-page')) || $theme->plugin_slug == $page->plugin_slug) {
+                $themePageExists = ThemePage::where('theme_id', $theme->id)->where('page_id', $page->id)->first();
+                if (!$themePageExists) {
+                    $themePage = ThemePage::create([
+                        'theme_id' => $theme->id,
+                        'page_id' => $page->id,
+                        'persistent_footer_buttons' => null,
+                        'background_color' => $backgroundColor,
+                        'border_color' => $page->border_color,
+                        'border_radius' => $page->border_radius,
+                    ]);
+
+                    $components = Component::where('scope', 'LIKE', '%' . $page->slug . '%')
+                        ->whereIn('plugin_slug', [$theme->plugin_slug, 'wordpress'])
+                        ->where('is_active', 1)
+                        ->where('is_upcoming', 0)
+                        ->get();
+
+                    foreach ($components as $component) {
+                        if ($component->plugin_slug == $page->plugin_slug) {
+                            $themeComponent = ThemeComponent::create([
+                                'theme_id' => $theme->id,
+                                'component_id' => $component->id,
+                                'theme_page_id' => $themePage->id,
+                                'display_name' => $component->name,
+                                'clone_component' => 3,
+                            ]);
+
+                            $this->createThemeComponentStyles($theme->id, $themeComponent->id, $component->id);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

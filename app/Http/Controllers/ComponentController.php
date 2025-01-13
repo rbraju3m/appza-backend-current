@@ -110,39 +110,49 @@ class ComponentController extends Controller
 
         $styleGroups = StyleGroup::where('is_active', 1)->get();
 
-        $styleGroups->each(function ($group) use ($component) {
-            // Create ComponentStyleGroup
-            ComponentStyleGroup::create([
-                'component_id' => $component->id,
-                'style_group_id' => $group->id,
-            ]);
 
-            // Fetch properties linked to the style group
-            $properties = StyleGroupProperties::where('appfiy_style_group_properties.style_group_id', $group->id)
-                ->where('appfiy_style_properties.is_active', 1)
-                ->join('appfiy_style_properties', 'appfiy_style_properties.id', '=', 'appfiy_style_group_properties.style_property_id')
-                ->select([
-                    'appfiy_style_properties.name',
-                    'appfiy_style_properties.input_type',
-                    'appfiy_style_properties.value',
-                    'appfiy_style_properties.default_value',
-                ])
-                ->get();
+        $this->AddedComponentStylesWithProperties($styleGroups, $component);
 
-            // Create ComponentStyleGroupProperties for each property
-            $properties->each(function ($property) use ($component, $group) {
-                ComponentStyleGroupProperties::create([
-                    'component_id' => $component->id,
-                    'style_group_id' => $group->id,
-                    'name' => $property->name,
-                    'input_type' => $property->input_type,
-                    'value' => $property->value,
-                    'default_value' => $property->default_value,
-                ]);
-            });
-        });
 
         return redirect()->route('component_edit', $component->id);
+    }
+
+    private function AddedComponentStylesWithProperties($styleGroups,$component)
+    {
+        $styleGroups->each(function ($group) use ($component) {
+            $exists = ComponentStyleGroup::where('component_id', $component->id)->where('style_group_id', $group->id)->first();
+            if (!$exists) {
+                // Create ComponentStyleGroup
+                ComponentStyleGroup::create([
+                    'component_id' => $component->id,
+                    'style_group_id' => $group->id,
+                ]);
+
+                // Fetch properties linked to the style group
+                $properties = StyleGroupProperties::where('appfiy_style_group_properties.style_group_id', $group->id)
+                    ->where('appfiy_style_properties.is_active', 1)
+                    ->join('appfiy_style_properties', 'appfiy_style_properties.id', '=', 'appfiy_style_group_properties.style_property_id')
+                    ->select([
+                        'appfiy_style_properties.name',
+                        'appfiy_style_properties.input_type',
+                        'appfiy_style_properties.value',
+                        'appfiy_style_properties.default_value',
+                    ])
+                    ->get();
+
+                // Create ComponentStyleGroupProperties for each property
+                $properties->each(function ($property) use ($component, $group) {
+                    ComponentStyleGroupProperties::create([
+                        'component_id' => $component->id,
+                        'style_group_id' => $group->id,
+                        'name' => $property->name,
+                        'input_type' => $property->input_type,
+                        'value' => $property->value,
+                        'default_value' => $property->default_value,
+                    ]);
+                });
+            }
+        });
     }
 
     /**
@@ -157,6 +167,7 @@ class ComponentController extends Controller
         $data = Component::findOrFail($id);
         $layoutTypes = LayoutType::where('is_active', 1)->pluck('name', 'id');
         $styleGroups = StyleGroup::where('is_active', 1)->get();
+        $this->AddedComponentStylesWithProperties($styleGroups, $data);
         $properties = $this->getComponentStyleGroupProperties($id, $styleGroups);
         $componentStyleIdArray = $this->getCheckedStyleGroupIds($properties);
         $scopes = $this->formatScopes(Scope::select(['id', 'name', 'slug', 'is_global'])->whereIn('plugin_slug',[$data->plugin_slug,'global'])->get());
