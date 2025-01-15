@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StyleGroupRequest;
 use App\Models\StyleGroup;
 use App\Models\StyleGroupProperties;
 use App\Models\StyleProperties;
@@ -27,8 +28,28 @@ class StyleGroupController extends Controller
     }
 
     public function create(){
-        $plugins = SupportsPlugin::getPluginDropdown();
-        return view('style-group/index',compact('plugins'));
+        $pluginDropdown = SupportsPlugin::getPluginDropdown();
+        return view('style-group/add',compact('pluginDropdown'));
+    }
+
+    public function store(StyleGroupRequest $request)
+    {
+        $inputs = $request->validated();
+        StyleGroup::create($inputs);
+        return redirect()->route('style_group_list')->with('message', 'Style group created successfully.');
+    }
+
+    public function edit(StyleGroup $styleGroup,$id){
+        $pluginDropdown = SupportsPlugin::getPluginDropdown();
+        $styleGroup = StyleGroup::find($id);
+        return view('style-group/edit',compact('styleGroup','pluginDropdown'));
+    }
+
+    public function update(StyleGroupRequest $request,$id){
+        $inputs = $request->validated();
+        $styleGroup = StyleGroup::find($id);
+        $styleGroup->update($inputs);
+        return redirect()->route('style_group_list')->with('message', 'Style group updated successfully.');
     }
 
     public function assignProperties(int $id)
@@ -37,7 +58,7 @@ class StyleGroupController extends Controller
         $styleProperties = StyleProperties::where('is_active', 1)->get();
         $existsPropertiesArray = $styleGroup->groupProperties->pluck('style_property_id')->toArray();
 
-        return view('style-group.edit', compact('styleGroup', 'styleProperties', 'existsPropertiesArray'));
+        return view('style-group.assign-properties', compact('styleGroup', 'styleProperties', 'existsPropertiesArray'));
     }
 
 

@@ -28,7 +28,7 @@
             <ul class="nav-sidebar">
                 <li class="nav-item ">
                     <a href="{{route('style_group_list')}}" class="nav-link {{ Request::is('appza/style-group/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.styleGroupList')}}</span></a>
-{{--                    <a href="{{route('style_group_create')}}" class="nav-link {{ Request::is('appza/style-group/create') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>Create Style Group</span></a>--}}
+                    <a href="{{route('style_group_create')}}" class="nav-link {{ Request::is('appza/style-group/create') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>Create Style Group</span></a>
                 </li>
             </ul>
         </div>

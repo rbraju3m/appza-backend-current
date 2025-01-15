@@ -8,22 +8,15 @@
 
                     <div class="card-header">
                         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                            <h6>{{$styleGroup->name}}</h6>
+                            <h6>{{__('messages.themeUpdate')}}</h6>
                             <div class="btn-toolbar mb-2 mb-md-0">
                                 <div class="btn-group me-2">
 
-                                   {{-- <a href="{{route('component_add', app()->getLocale())}}" title="" class="module_button_header">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-plus-circle"></i> {{__('messages.createNew')}}
-                                        </button>
-                                    </a>--}}
-
                                     <a href="{{route('style_group_list')}}" title="" class="module_button_header">
                                         <button type="button" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-list"></i> {{__('messages.styleGroupList')}}
+                                            <i class="fas fa-list"></i> {{__('messages.list')}}
                                         </button>
                                     </a>
-
                                 </div>
                             </div>
                         </div>
@@ -31,35 +24,62 @@
 
                     <div class="card-body">
                         @include('layouts.message')
+
                         <div class="row">
                             <div class="col-md-12">
-
-                                {{ html()->form('PATCH', route('style_group_properties_update', $styleGroup->id))->open() }}
+                                {{ html()->modelForm($styleGroup, 'PATCH', route('style_group_update', $styleGroup->id))
+                                    ->attribute('enctype', 'multipart/form-data')
+                                    ->attribute('files', true)
+                                    ->attribute('autocomplete', 'off')
+                                    ->open()
+                                }}
                                 <div class="row">
-
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">
-                                            <label for="formFile" class="form-label">{{__('messages.styleProperties')}}</label>
+                                            <label for="" class="form-label">{{__('messages.Plugin')}}</label>
                                             <span class="textRed">*</span>
                                         </div>
 
                                         <div class="col-sm-10">
-                                            @if(count($styleProperties)>0)
-                                                @foreach($styleProperties as $properties)
-                                                    <div class="form-check form-check-inline">
-                                                        <input style="margin-top: 0px" class="form-check-input" name="properties_id[]" type="checkbox" id="{{$properties->name}}" value="{{$properties->id}}"
-                                                        @if(count($existsPropertiesArray)>0)
-                                                            {{in_array($properties->id,$existsPropertiesArray)?'checked':''}}
-                                                            @endif
-                                                        >
-                                                        <label class="form-check-label" for="{{$properties->name}}">{{$properties->name}}</label>
-                                                    </div>
-                                                @endforeach
-                                            @endif
-                                            <br><span class="textRed">{!! $errors->first('properties_id') !!}</span>
+                                            {{ html()
+                                                ->select('plugin_slug[]', $pluginDropdown, old('plugin_slug', $styleGroup['plugin_slug']))
+                                                ->class('form-control form-select js-example-basic-single')
+                                                ->attribute('aria-describedby', 'basic-addon2')
+                                                ->multiple('multiple')
+                                            }}
+                                            <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                         </div>
                                     </div>
 
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="layout_type_id" class="form-label">{{__('messages.name')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            {{html()
+                                                ->text('name')
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.name'))
+                                            }}
+                                            <span class="textRed">{!! $errors->first('name') !!}</span>
+                                        </div>
+
+                                        <div class="col-sm-2">
+                                            <label for="transparent" class="form-label">{{__('messages.slug')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            {{html()
+                                                ->text('slug')
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.slug'))
+                                            }}
+                                            <span class="textRed">{!! $errors->first('slug') !!}</span>
+                                        </div>
+                                    </div>
 
                                     <div class="row mg-top">
                                         <div class="col-md-2"></div>
@@ -69,35 +89,13 @@
                                                 <button type="reset" class="btn submit-button">Reset</button>
                                             </div>
                                         </div>
-
                                     </div>
-
                                 </div>
-
-
                                 {{ html()->form()->close() }}
                             </div>
                         </div>
+
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="allModalShow" tabindex="-1" aria-labelledby="allModalShowModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="appfiypleModalLabel"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="" id="modelForm">
-
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn customButton" data-bs-dismiss="modal" aria-label="Close"><i class="fas fa-times"></i></button>                    <button type="button" class="btn btn-primary modelDataInsert">Save changes</button>
                 </div>
             </div>
         </div>
@@ -111,13 +109,6 @@
             color: #000;
             background-color: #fff;
             border-color: #6c757d;
-        }
-        .imageText{
-            background: blue;
-            color: #fff;
-            padding: 5px 5px;
-            display: block;
-            margin-top: 2px;
         }
         .textRed{
             color: #ff0000;

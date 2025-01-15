@@ -30,6 +30,7 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
+                                    <th>{{__('messages.Plugin')}}</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.totalProperties')}}</th>
@@ -50,8 +51,21 @@
                                         $serial = ($currentPage - 1) * $perPage + 1;
                                     @endphp
                                     @foreach($styleGroups as $styleGroup)
+
                                         <tr>
                                             <td>{{$serial++}}</td>
+                                            <td>
+                                                @if (!empty($styleGroup->plugin_slug) && is_array($styleGroup->plugin_slug))
+                                                    <ul style="text-align: left; font-weight: bold; margin: 0; padding-left: 20px;">
+                                                        @foreach ($styleGroup->plugin_slug as $plugin)
+                                                            <li style="margin: 0;">{{ $plugin }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p style="color: darkred; font-style: italic;">No plugins assigned.</p>
+                                                @endif
+                                            </td>
+
                                             <td>{{$styleGroup->name}}</td>
                                             <td>{{$styleGroup->slug}}</td>
                                             <td>{{count($styleGroup->groupProperties->toArray())}}</td>
@@ -61,19 +75,10 @@
 
                                             <td>
                                                 <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                    <a title="Edit" class="btn btn-outline-primary btn-sm"
-                                                       href="{{route('style_group_assign_properties',$styleGroup->id)}}"><i
-                                                            class="fas fa-edit"></i></a>
+                                                        <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('style_group_edit',$styleGroup->id)}}"><i class="fas fa-edit"></i></a>
+                                                    <a title="Assign Properties" class="btn btn-outline-danger btn-sm" href="{{route('style_group_assign_properties',$styleGroup->id)}}"><i class="fas fa-font"></i></a>
                                                 </div>
                                             </td>
-
-                                            {{--<td>
-                                                <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                    <button type="button" class="btn btn-outline-primary btn-sm">
-                                                        <a title="Edit" class="dropdown-item" href="{{route('style_group_assign_properties',[app()->getLocale(),$style-group->id])}}"><i class="fas fa-edit"></i></a>
-                                                    </button>
-                                                </div>
-                                            </td>--}}
                                         </tr>
                                         @php $i++; @endphp
                                     @endforeach

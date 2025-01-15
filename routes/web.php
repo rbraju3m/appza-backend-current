@@ -52,6 +52,9 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     Route::prefix('style-group')->group(function () {
         Route::get('list', [StyleGroupController::class, 'index'])->name('style_group_list');
         Route::get('create', [StyleGroupController::class, 'create'])->name('style_group_create');
+        Route::post('store', [StyleGroupController::class, 'store'])->name('style_group_store');
+        Route::get('edit/{id}', [StyleGroupController::class, 'edit'])->name('style_group_edit');
+        Route::patch('update/{id}', [StyleGroupController::class, 'update'])->name('style_group_update');
         Route::get('assign/properties/{id}', [StyleGroupController::class, 'assignProperties'])->name('style_group_assign_properties');
         Route::PATCH('properties/update/{id}',[StyleGroupController::class,'assignPropertiesUpdate'])->name('style_group_properties_update');
     });
@@ -73,6 +76,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     Route::prefix('component')->group(function () {
         Route::get('list',[ComponentController::class,'index'])->name('component_list');
         Route::get('create',[ComponentController::class,'create'])->name('component_add');
+        Route::post('store',[ComponentController::class,'store'])->name('component_store');
         Route::get('delete/{id}',[ComponentController::class,'destroy'])->name('component_delete');
         Route::get('edit/{id}',[ComponentController::class, 'edit'])->name('component_edit');
         Route::get('properties/inline/update',[ComponentController::class, 'componentPropertiesInlineUpdate'])->name('component_properties_inline_update');

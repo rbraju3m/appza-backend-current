@@ -12,7 +12,7 @@
                             <div class="btn-toolbar mb-2 mb-md-0">
                                 <div class="btn-group me-2">
 
-                                    <a href="{{route('page_list')}}" title="" class="module_button_header">
+                                    <a href="{{route('style_group_list')}}" title="" class="module_button_header">
                                         <button type="button" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-list"></i> {{__('messages.list')}}
                                         </button>
@@ -28,7 +28,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 {{ html()
-                                    ->form('POST', route('page_store'))
+                                    ->form('POST', route('style_group_store'))
                                     ->attribute('enctype', 'multipart/form-data')
                                     ->attribute('files', true)
                                     ->attribute('autocomplete', 'off')
@@ -43,10 +43,10 @@
 
                                         <div class="col-sm-10">
                                             {{ html()
-                                                ->select('plugin_slug', $pluginDropdown, '')
+                                                ->select('plugin_slug[]', $pluginDropdown, old('plugin_slug', []))
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->attribute('aria-describedby', 'basic-addon2')
-                                                ->placeholder(__('messages.choosePlugin'))
+                                                ->multiple('multiple')
                                             }}
                                             <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                         </div>
@@ -82,73 +82,49 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-group row mg-top">
+                                    {{--<div class="form-group row mg-top">
                                         <div class="col-sm-2">
-                                            <label for="layout_type_id" class="form-label">{{__('messages.BackgroundColor')}}</label>
+                                            <label for=""
+                                                   class="form-label">{{__('messages.IsActive')}}</label>
                                         </div>
 
                                         <div class="col-sm-4">
-                                            {{ html()
-                                                ->input('color', 'background_color')
-                                                ->class('form-control inline_update')
-                                            }}
+                                            <div class="from-group">
+                                                <?php
+                                                $Active = '';
+                                                $Inactive = '';
+                                                if (isset($data->is_active)) {
+                                                    if ($data->is_active == 1) {
+                                                        $Active = 'checked="checked"';
+                                                    } else {
+                                                        $Inactive = 'checked="checked"';
+                                                    }
+                                                } else {
+                                                    $Inactive = 'checked="checked"';
+                                                }
+                                                ?>
+                                                <div class="input-group mb-3">
+                                                    <div class="form-check form-check-inline">
+                                                        <input style="margin-top: 0px"
+                                                               class="form-check-input isChecked " type="radio"
+                                                               name="is_active" id="inlineRadioActive1"
+                                                               value="1" {{$Active}}>
+                                                        <label class="form-check-label"
+                                                               for="inlineRadioActive1">Yes</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input style="margin-top: 0px"
+                                                               class="form-check-input isChecked ayatFormEdit"
+                                                               type="radio" name="is_active" id="inlineRadioActive2"
+                                                               value="0" {{$Inactive}}>
+                                                        <label class="form-check-label"
+                                                               for="inlineRadioActive2">No</label>
+                                                    </div>
+                                                    <span class="textRed">{!! $errors->first('is_multiple') !!}</span>
+                                                </div>
+                                            </div>
                                         </div>
-
-                                        <div class="col-sm-2">
-                                            <label for="transparent" class="form-label">{{__('messages.borderColor')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()
-                                                ->input('color', 'border_color')
-                                                ->class('form-control inline_update')
-                                            }}
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group row mg-top">
-                                        <div class="col-sm-2">
-                                            <label for="layout_type_id" class="form-label">{{__('messages.borderRadius')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()
-                                                ->number('border_radius')
-                                                ->class('form-control')
-                                                ->placeholder(__('messages.borderRadius'))
-                                            }}
-                                        </div>
-
-                                        <div class="col-sm-2">
-                                            <label for="transparent" class="form-label">{{__('messages.componentLimit')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()
-                                                ->number('component_limit')
-                                                ->class('form-control')
-                                                ->placeholder(__('messages.componentLimit'))
-                                            }}
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group row mg-top">
-                                        <div class="col-sm-2">
-                                            <label for="layout_type_id" class="form-label" style="font-weight: bold">{{__('messages.pageScope')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()->checkbox('page_scope',true)}}
-                                        </div>
-
-                                        <div class="col-sm-2">
-                                            <label for="transparent" class="form-label">{{__('messages.persistent_footer_buttons')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()->checkbox('persistent_footer_buttons')}}
-                                        </div>
-                                    </div>
+                                    </div>--}}
 
                                     <div class="row mg-top">
                                         <div class="col-md-2"></div>

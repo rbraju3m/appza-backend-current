@@ -48,10 +48,19 @@
                                         </div>
 
                                         <div class="col-sm-4">
+                                            <input type="hidden" name="plugin_slug" value="{{$data['plugin_slug']}}">
+                                            {{--{{ html()
+                                                ->select('plugin_slug', $pluginDropdown, $theme->plugin_slug)
+                                                ->class('form-control form-select js-example-basic-single')
+                                                ->attribute('aria-describedby', 'basic-addon2')
+                                                ->placeholder(__('messages.choosePlugin'))
+                                                ->attribute('disabled',true)
+                                            }}--}}
                                             {{ html()->select('plugin_slug', $pluginDropdown, $data['plugin_slug'])
                                                 ->class('form-control form-select js-example-basic-single plugin_slug')
                                                 ->placeholder(__('messages.choosePlugin'))
                                                 ->attribute('id',$data['id'])
+                                                ->attribute('disabled',true)
                                             }}
                                             <br><span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                             <a data-href="{{route('plugin_slug_update_component')}}" class="plugin_slug_update"></a>

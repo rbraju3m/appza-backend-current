@@ -30,22 +30,6 @@ class ComponentController extends Controller
     use ValidatesRequests;
     use HandlesFileUploads;
 
-    /**
-     * Display a listing of the resource.
-     * @return Renderable
-     */
-    /*public function index()
-    {
-        // Clean up components with null slug
-        $this->deleteComponentsWithNullSlug();
-
-        // Fetch and paginate components
-        $components = Component::orderByDesc('id')->paginate(20);
-
-        // Return components to view
-        return view('component.index', ['components' => $components]);
-    }*/
-
     public function index(Request $request)
     {
         // Clean up components with null slug
@@ -95,11 +79,24 @@ class ComponentController extends Controller
 
     public function create()
     {
+        $pluginDropdown = SupportsPlugin::getPluginDropdown();
+        return view('component.add',compact('pluginDropdown'));
+    }
+
+    public function store(Request $request){
+        $this->validate($request, [
+            'plugin_slug' => 'required|string',
+        ], [
+            'plugin_slug.required' => __('messages.choosePlugin'),
+        ]);
+
+        $plugin = $request->get("plugin_slug");
         $input = [
             'parent_id' => null,
             'layout_type_id' => null,
             'name' => null,
             'slug' => null,
+            'plugin_slug' => $plugin,
         ];
 
         $component = Component::create($input);
@@ -108,11 +105,9 @@ class ComponentController extends Controller
             return redirect()->back()->with('error', __('messages.componentCreationFailed'));
         }
 
-        $styleGroups = StyleGroup::where('is_active', 1)->get();
-
+        $styleGroups = StyleGroup::where('is_active', 1)->whereJsonContains('plugin_slug',$plugin)->get();
 
         $this->AddedComponentStylesWithProperties($styleGroups, $component);
-
 
         return redirect()->route('component_edit', $component->id);
     }
@@ -166,10 +161,13 @@ class ComponentController extends Controller
         // Fetch required data
         $data = Component::findOrFail($id);
         $layoutTypes = LayoutType::where('is_active', 1)->pluck('name', 'id');
-        $styleGroups = StyleGroup::where('is_active', 1)->get();
+
+        $styleGroups = StyleGroup::where('is_active', 1)->whereJsonContains('plugin_slug',$data->plugin_slug)->get();
         $this->AddedComponentStylesWithProperties($styleGroups, $data);
+
         $properties = $this->getComponentStyleGroupProperties($id, $styleGroups);
         $componentStyleIdArray = $this->getCheckedStyleGroupIds($properties);
+
         $scopes = $this->formatScopes(Scope::select(['id', 'name', 'slug', 'is_global'])->whereIn('plugin_slug',[$data->plugin_slug,'global'])->get());
         $componentType = ComponentType::where('is_active', 1)->get();
         $pluginDropdown = SupportsPlugin::getPluginDropdown();
