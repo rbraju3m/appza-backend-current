@@ -35,7 +35,9 @@ class GlobalConfigController extends Controller
 
         // Retrieve active GlobalConfig entries
         $globalConfig = GlobalConfig::where('is_active', 1)
-            ->latest('id')
+            ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'appfiy_global_config.plugin_slug')
+            ->select('appza_supports_plugin.name as plugin_name','appfiy_global_config.*')
+            ->latest('appfiy_global_config.id')
             ->paginate(20);
 
         return view('global-config.index',compact('globalConfig'));

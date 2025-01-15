@@ -39,9 +39,10 @@ class ThemeController extends Controller
     public function index()
     {
         $themes = Theme::active()
-            ->select(['id', 'name as theme_name', 'appbar_id', 'navbar_id', 'drawer_id'])
+            ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'appfiy_theme.plugin_slug')
+            ->select(['appfiy_theme.id', 'appfiy_theme.name as theme_name', 'appfiy_theme.appbar_id', 'appfiy_theme.navbar_id', 'appfiy_theme.drawer_id','appza_supports_plugin.name as plugin_name'])
             ->with(['appbar:id,name', 'navbar:id,name', 'drawer:id,name'])
-            ->latest('id')
+            ->latest('appfiy_theme.id')
             ->paginate(20);
 
         return view('theme.index', compact('themes'));

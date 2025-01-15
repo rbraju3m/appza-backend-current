@@ -29,12 +29,9 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
+                                    <th>Plugin Name</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
-                                    <th>{{__('messages.Plugin')}}</th>
-                                    {{--<th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
-                                        <i class="fas fa-cog"></i>
-                                    </th>--}}
                                 </tr>
                                 </thead>
 
@@ -49,16 +46,9 @@
                                         @foreach($scopes as $scope)
                                             <tr>
                                                 <td>{{$serial++}}</td>
+                                                <td>{{$scope->plugin_name}}</td>
                                                 <td>{{$scope->name}}</td>
                                                 <td>{{$scope->slug}}</td>
-                                                <td>{{$scope->plugin_name}}</td>
-
-                                                {{--<td>
-                                                    <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('page_edit',$scope->id)}}"><i class="fas fa-edit"></i></a>
-                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$scope->id)}}"><i class="fas fa-trash"></i></a>
-                                                    </div>
-                                                </td>--}}
                                             </tr>
                                             @php $i++; @endphp
                                         @endforeach

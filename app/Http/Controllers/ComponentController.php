@@ -40,13 +40,17 @@ class ComponentController extends Controller
 
         // Fetch and paginate components, applying the search condition if provided
         $components = Component::query()
+            ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'appfiy_component.plugin_slug')
+            ->select('appfiy_component.*','appza_supports_plugin.name as plugin_name')
             ->when($search, function ($query, $search) {
-                $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('slug', 'like', '%' . $search . '%')
-                    ->orWhere('label', 'like', '%' . $search . '%')
-                    ->orWhere('scope', 'like', '%' . $search . '%');
+                $query->where('appfiy_component.name', 'like', '%' . $search . '%')
+                    ->orWhere('appfiy_component.slug', 'like', '%' . $search . '%')
+                    ->orWhere('appfiy_component.label', 'like', '%' . $search . '%')
+                    ->orWhere('appza_supports_plugin.slug', 'like', '%' . $search . '%')
+                    ->orWhere('appza_supports_plugin.name', 'like', '%' . $search . '%')
+                    ->orWhere('appfiy_component.scope', 'like', '%' . $search . '%');
             })
-            ->orderByDesc('id')
+            ->orderByDesc('appfiy_component.id')
             ->paginate(20);
 
         // Include the search query in the pagination links

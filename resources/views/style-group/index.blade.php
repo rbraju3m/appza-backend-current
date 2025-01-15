@@ -11,11 +11,11 @@
                             <h6>{{__('messages.style-group')}}</h6>
                             <div class="btn-toolbar mb-2 mb-md-0">
                                 <div class="btn-group me-2">
-                                    {{--<a href="{{route('component_add', app()->getLocale())}}" title="" class="module_button_header">
+                                    <a href="{{route('style_group_create')}}" title="" class="module_button_header">
                                         <button type="button" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-plus-circle"></i> {{__('messages.createNew')}}
                                         </button>
-                                    </a>--}}
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -30,7 +30,7 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
-                                    <th>{{__('messages.Plugin')}}</th>
+                                    <th>Plugin Name</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.totalProperties')}}</th>

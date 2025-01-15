@@ -29,13 +29,13 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
+                                    <th>Plugin Name</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.backgroundColor')}}</th>
                                     <th>{{__('messages.borderColor')}}</th>
                                     <th>{{__('messages.borderRadius')}}</th>
                                     <th>{{__('messages.componentLimit')}}</th>
-                                    <th>{{__('messages.Plugin')}}</th>
                                     <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
                                         <i class="fas fa-cog"></i>
                                     </th>
@@ -53,13 +53,13 @@
                                         @foreach($pages as $page)
                                             <tr>
                                                 <td>{{$serial++}}</td>
+                                                <td>{{$page->plugin_name}}</td>
                                                 <td>{{$page->name}}</td>
                                                 <td>{{$page->slug}}</td>
                                                 <td>{{$page->background_color}}</td>
                                                 <td>{{$page->border_color}}</td>
                                                 <td>{{$page->border_radius}}</td>
                                                 <td>{{$page->component_limit}}</td>
-                                                <td>{{$page->plugin_name}}</td>
 
                                                 <td>
                                                     <div class="btn-group" role="group" aria-label="Basic outlined example">

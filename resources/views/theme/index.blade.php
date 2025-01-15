@@ -29,7 +29,8 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
-                                    <th>{{__('messages.name')}}</th>
+                                    <th>Plugin Name</th>
+                                    <th>Theme Name</th>
                                     <th>{{__('messages.appbarName')}}</th>
                                     <th>{{__('messages.navbarName')}}</th>
                                     <th>{{__('messages.drawerName')}}</th>
@@ -50,6 +51,7 @@
                                         @foreach($themes as $theme)
                                             <tr>
                                                 <td>{{$serial++}}</td>
+                                                <td>{{$theme->plugin_name}}</td>
                                                 <td>{{$theme->theme_name}}</td>
                                                 <td>{{$theme['appbar']?$theme['appbar']->name:null}}</td>
                                                 <td>{{$theme['navbar']?$theme['navbar']->name:null}}</td>

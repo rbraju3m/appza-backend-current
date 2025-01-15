@@ -4,13 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PageRequest;
 use App\Models\Component;
-use App\Models\Currency;
-use App\Models\GlobalConfig;
-use App\Models\GlobalConfigComponent;
 use App\Models\Page;
 use App\Models\Scope;
 use App\Models\SupportsPlugin;
-use App\Models\Theme;
 use App\Traits\HandlesFileUploads;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -18,10 +14,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Monolog\Handler\IFTTTHandler;
 
 class PageController extends Controller
 {

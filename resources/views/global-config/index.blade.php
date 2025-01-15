@@ -43,6 +43,7 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
+                                    <th>Plugin Slug</th>
                                     <th>{{__('messages.mode')}}</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
@@ -66,6 +67,7 @@
                                         @foreach($globalConfig as $config)
                                             <tr>
                                                 <td>{{$serial++}}</td>
+                                                <td>{{$config->plugin_name}}</td>
                                                 <td>{{$config->mode}}</td>
                                                 <td>{{$config->name}}</td>
                                                 <td>{{$config->slug}}</td>
