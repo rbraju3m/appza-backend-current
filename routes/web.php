@@ -51,6 +51,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     /* style group route start */
     Route::prefix('style-group')->group(function () {
         Route::get('list', [StyleGroupController::class, 'index'])->name('style_group_list');
+        Route::get('create', [StyleGroupController::class, 'create'])->name('style_group_create');
         Route::get('assign/properties/{id}', [StyleGroupController::class, 'assignProperties'])->name('style_group_assign_properties');
         Route::PATCH('properties/update/{id}',[StyleGroupController::class,'assignPropertiesUpdate'])->name('style_group_properties_update');
     });

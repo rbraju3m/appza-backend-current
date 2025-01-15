@@ -175,6 +175,7 @@
                                                                               'Verdana'=>'Verdana',
                                                                               'Calibri'=>'Calibri',
                                                                               'Noto'=>'Noto',
+                                                                              'Inter'=>'Inter'
                                                                         ];
                                                                     }
                                                                     if ($val['name'] == 'font_weight'){

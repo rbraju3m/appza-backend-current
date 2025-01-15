@@ -311,6 +311,7 @@
                                                                                                       'Poppins'=>'Poppins',
                                                                                                       'Roboto'=>'Roboto',
                                                                                                       'Open Sans'=>'Open Sans',
+                                                                                                      'Inter'=>'Inter'
                                                                                                 ];
                                                                                             }
                                                                                             if ($pro['name'] == 'font_weight'){

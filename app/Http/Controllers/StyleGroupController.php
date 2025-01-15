@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StyleGroup;
 use App\Models\StyleGroupProperties;
 use App\Models\StyleProperties;
+use App\Models\SupportsPlugin;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
@@ -23,6 +24,11 @@ class StyleGroupController extends Controller
     public function index(){
         $styleGroups = StyleGroup::where('is_active',1)->orderByDesc('id')->paginate(20);
         return view('style-group/index',compact('styleGroups'));
+    }
+
+    public function create(){
+        $plugins = SupportsPlugin::getPluginDropdown();
+        return view('style-group/index',compact('plugins'));
     }
 
     public function assignProperties(int $id)

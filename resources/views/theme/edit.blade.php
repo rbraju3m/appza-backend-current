@@ -209,6 +209,7 @@
                                                               'Poppins'=>'Poppins',
                                                               'Roboto'=>'Roboto',
                                                               'Open Sans'=>'Open Sans',
+                                                              'Inter'=>'Inter'
                                                         ];
                                             @endphp
                                             {{ html()
