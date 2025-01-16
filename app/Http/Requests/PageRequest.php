@@ -21,7 +21,6 @@ class PageRequest extends FormRequest
             'background_color' => 'nullable|string',
             'border_color' => 'nullable|string',
             'border_radius' => 'nullable',
-            'page_scope' => 'nullable',
             'component_limit' => 'nullable',
             'persistent_footer_buttons' => 'nullable',
         ];

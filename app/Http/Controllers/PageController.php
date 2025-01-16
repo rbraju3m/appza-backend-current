@@ -45,9 +45,7 @@ class PageController extends Controller
         $scopes = Scope::orderByDesc('id')
             ->join('appza_supports_plugin', 'appza_supports_plugin.slug', '=', 'appfiy_scope.plugin_slug')
             ->select('appfiy_scope.*', 'appza_supports_plugin.name as plugin_name')
-
             ->paginate(20);
-//        dump($scopes);
 
         return view('page.scope-index',compact('scopes'));
     }
@@ -85,10 +83,11 @@ class PageController extends Controller
             $page = Page::create($inputs);
 
             // Handle scope data creation only if 'page_scope' exists
-            if ($request->has('page_scope') && $page) {
+            if ($page) {
                 $scopeData = [
                     'name' => $inputs['name'],
                     'slug' => $inputs['slug'],
+                    'page_id' => $page->id,
                     'plugin_slug' => $inputs['plugin_slug'],
                     'is_global' => 0,
                 ];
@@ -112,7 +111,6 @@ class PageController extends Controller
             return redirect()->route('page_list')->with('error', 'Failed to create the page. Please try again.');
         }
     }
-
 
     /**
      * Show the form for editing the specified resource.
@@ -144,58 +142,50 @@ class PageController extends Controller
         $page = Page::findOrFail($id); // Use findOrFail for better error handling
 
         // Handle 'persistent_footer_buttons'
-        if ($request->has('persistent_footer_buttons')) {
-            $inputs['persistent_footer_buttons'] = '{}';
-        }else{
-            $inputs['persistent_footer_buttons'] = null;
-        }
+        $inputs['persistent_footer_buttons'] = $request->has('persistent_footer_buttons') ? '{}' : null;
 
         // Set default value for 'component_limit' if null
-        if (!$inputs['component_limit']) {
-            $inputs['component_limit'] = 0;
-        }
+        $inputs['component_limit'] = $inputs['component_limit'] ?? 0;
+
+        $scope = Scope::where('page_id', $id)->firstOrFail();
 
         try {
             DB::beginTransaction(); // Start transaction
 
-            // Update the Page
-            $page->update($inputs);
-
-            // Handle additional scope logic
-            if ($request->filled('page_scope')) {
-                // Look for an existing scope
-                $scope = Scope::withTrashed() // Include soft-deleted rows in search
-                ->where('plugin_slug', $page->plugin_slug)
-                    ->where('slug', $inputs['slug'])
-                    ->first();
-
-                $scopeData = [
-                    'name' => $inputs['name'],
-                    'slug' => $inputs['slug'],
-                    'plugin_slug' => $inputs['plugin_slug'],
-                    'is_global' => 0,
-                ];
-
-                if (!$scope) {
-                    // Create a new scope if it doesn't exist
-                    Scope::create($scopeData);
-                } elseif ($scope->trashed()) {
-                    // Restore if the scope was soft-deleted
-                    $scope->restore();
-                    $scope->update($scopeData); // Update additional fields if needed
-                } else {
-                    // Update an existing scope
-                    $scope->update($scopeData);
-                }
+            // Check if slug needs to be updated
+            if (isset($inputs['slug']) && $page->slug === $inputs['slug']) {
+                // Update the Page and Scope (no slug changes)
+                $page->update($inputs);
+                $scope->update($inputs);
             } else {
-                // Handle soft delete only if the scope exists
-                $scope = Scope::where('plugin_slug', $page->plugin_slug)
-                    ->where('slug', $inputs['slug'])
-                    ->first();
+                // Update components with old slug in the scope field if slug changes
+                $scopeWiseComponent = Component::where('scope', 'LIKE', '%' . $scope->slug . '%')
+                    ->where('plugin_slug', $scope->plugin_slug) // Direct comparison
+                    ->get(); // Retrieve matching components
 
-                if ($scope) {
-                    $scope->delete(); // Soft delete the scope
+                if ($scopeWiseComponent->isNotEmpty()) {
+                    foreach ($scopeWiseComponent as $component) {
+                        if (isset($component['scope'])) {
+                            $scopeArray = json_decode($component['scope'], true); // Decode 'scope' JSON
+
+                            if (is_array($scopeArray)) {
+                                // Replace the slug with the new slug
+                                $updatedScope = array_map(function ($item) use ($scope, $inputs) {
+                                    return $item === $scope->slug ? $inputs['slug'] : $item;
+                                }, $scopeArray);
+
+                                // Encode back to JSON and update
+                                $component->update([
+                                    'scope' => json_encode($updatedScope),
+                                ]);
+                            }
+                        }
+                    }
                 }
+
+                // Update Scope and Page with new slug
+                $scope->update($inputs);
+                $page->update($inputs);
             }
 
             DB::commit(); // Commit the transaction
@@ -209,6 +199,7 @@ class PageController extends Controller
             return redirect()->route('page_list')->with('error', 'Failed to update the page. Please try again.');
         }
     }
+
 
 
     public function destroy($id)

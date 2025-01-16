@@ -47,6 +47,7 @@
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->attribute('aria-describedby', 'basic-addon2')
                                                 ->placeholder(__('messages.choosePlugin'))
+                                                ->required()
                                             }}
                                             <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                         </div>
@@ -115,6 +116,7 @@
                                             {{ html()
                                                 ->number('border_radius')
                                                 ->class('form-control')
+                                                ->attribute('step', 'any')
                                                 ->placeholder(__('messages.borderRadius'))
                                             }}
                                         </div>
@@ -133,14 +135,6 @@
                                     </div>
 
                                     <div class="form-group row mg-top">
-                                        <div class="col-sm-2">
-                                            <label for="layout_type_id" class="form-label" style="font-weight: bold">{{__('messages.pageScope')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()->checkbox('page_scope',true)}}
-                                        </div>
-
                                         <div class="col-sm-2">
                                             <label for="transparent" class="form-label">{{__('messages.persistent_footer_buttons')}}</label>
                                         </div>

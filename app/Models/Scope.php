@@ -14,6 +14,6 @@ class Scope extends Model
     public $timestamps = true;
     protected $guarded = ['id'];
     protected $dates = ['deleted_at','created_at','updated_at'];
-    protected $fillable = ['name', 'slug','is_global','plugin_slug'];
+    protected $fillable = ['name', 'slug','is_global','plugin_slug','page_id'];
 
 }

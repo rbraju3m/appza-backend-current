@@ -8,7 +8,7 @@
 
                     <div class="card-header">
                         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                            <h6>{{__('messages.GlobalConfigUpdate')}}</h6>
+                            <h6>Page update</h6>
                             <div class="btn-toolbar mb-2 mb-md-0">
                                 <div class="btn-group me-2">
 
@@ -49,11 +49,13 @@
                                         </div>
 
                                         <div class="col-sm-10">
+                                            <input type="hidden" name="plugin_slug" value="{{$data->plugin_slug}}">
                                             {{ html()
                                                 ->select('plugin_slug', $pluginDropdown, $data->plugin_slug)
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->attribute('aria-describedby', 'basic-addon2')
                                                 ->placeholder(__('messages.choosePlugin'))
+                                                ->attribute('disabled',true)
                                             }}
                                             <span class="textRed">{!! $errors->first('plugin_slug') !!}</span>
                                         </div>
@@ -122,6 +124,7 @@
                                             {{ html()
                                                 ->number('border_radius')
                                                 ->class('form-control')
+                                                ->attribute('step','any')
                                                 ->placeholder(__('messages.borderRadius'))
                                             }}
                                         </div>
@@ -140,14 +143,6 @@
                                     </div>
 
                                     <div class="form-group row mg-top">
-                                        <div class="col-sm-2">
-                                            <label for="layout_type_id" class="form-label" style="font-weight: bold">{{__('messages.pageScope')}}</label>
-                                        </div>
-
-                                        <div class="col-sm-4">
-                                            {{ html()->checkbox('page_scope')}}
-                                        </div>
-
                                         <div class="col-sm-2">
                                             <label for="transparent" class="form-label">{{__('messages.persistent_footer_buttons')}}</label>
                                         </div>
