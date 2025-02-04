@@ -419,7 +419,7 @@
                                                                                         @endphp
 
                                                                                         @if($pro['input_type'] == 'number')
-                                                                                            {{ html()->number('value[]', $pro['value'])
+                                                                                            {{ html()->text('value[]', $pro['value'])
                                                                                                 ->class('form-control inline_update')
                                                                                                 ->attribute('component_properties_id', $pro['id'])
                                                                                             }}
