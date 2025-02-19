@@ -93,7 +93,7 @@ class PluginController extends Controller
                 'status' => Response::HTTP_OK,
                 'is_disable' => $plugin->is_disable?true:false,
             ], Response::HTTP_OK);
-            
+
         } catch (Exception $ex) {
             return response(['message' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

@@ -24,7 +24,7 @@ class PluginResource extends JsonResource
             'description' => $this->description,
             'others' => $this->others,
             'created' => $this->created_at ? $this->created_at->format('d-M-Y') : null,
-            'is_disable' => $this->is_disable === 'True',
+            'is_disable' => $this->is_disable?true:false,
             'image' => $this->image
                 ? config('app.image_public_path') . $this->image
                 : null,
