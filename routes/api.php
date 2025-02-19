@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\GlobalConfigController;
 use App\Http\Controllers\Api\V1\LeadController;
 use App\Http\Controllers\Api\V1\LicenseController;
 use App\Http\Controllers\Api\V1\PageComponentController;
+use App\Http\Controllers\Api\V1\PluginController;
 use App\Http\Controllers\Api\V1\ThemeController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,5 +54,11 @@ Route::prefix('/appza/v1')
             // build response by builder application
             Route::post('/response/{id}', [ApkBuildHistoryController::class,'apkBuildResponse'])->name('building_apk_response');
         });
+
+        // plugin api
+        Route::prefix('plugins')->group(function () {
+            Route::get('', [PluginController::class,'allPlugin'])->name('get_all_plugins');
+        });
+        Route::get('plugin/check-disable', [PluginController::class,'checkDisablePlugin'])->name('check_disable_plugin');
     });
 

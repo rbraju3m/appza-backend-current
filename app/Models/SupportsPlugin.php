@@ -7,14 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 class SupportsPlugin extends Model
 {
     protected $table = 'appza_supports_plugin';
-    public $timestamps = false;
+    public $timestamps = true;
     protected $guarded = ['id'];
-    protected $dates = ['deleted_at','created_at','updated_at'];
+    protected $dates = ['created_at','updated_at'];
     protected $fillable = [
         'name',
         'slug',
+        'prefix',
+        'image',
+        'title',
+        'description',
+        'others',
+        'is_disable',
         'status'
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
 
     public static function getPluginDropdown(){
         return cache()->remember('plugin_dropdown', 60, function () {

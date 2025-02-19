@@ -6,6 +6,7 @@ use App\Http\Controllers\GlobalConfigController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LayoutTypeController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PluginController;
 use App\Http\Controllers\StyleGroupController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Auth;
@@ -133,5 +134,15 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('delete/{id}',[PageController::class,'destroy'])->name('page_delete');
     });
     /* page route end */
+
+    /* plugin route start */
+    Route::prefix('plugin')->group(function () {
+        Route::get('list',[PluginController::class,'index'])->name('plugin_list');
+        Route::get('create',[PluginController::class,'create'])->name('plugin_add');
+        Route::POST('store',[PluginController::class,'store'])->name('plugin_store');
+        Route::get('edit/{id}',[PluginController::class, 'edit'])->name('plugin_edit');
+        Route::PATCH('update/{plugin}',[PluginController::class, 'update'])->name('plugin_update');
+    });
+    /* plugin route end */
 });
 

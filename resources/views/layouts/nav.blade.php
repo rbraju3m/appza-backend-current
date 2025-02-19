@@ -89,6 +89,16 @@
         </div>
 
 
+        <div class="nav-group {{ Request::is('appza/plugin/*') ? 'show' : ''}}">
+            <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.Plugin')}}</div>
+            <ul class="nav-sidebar">
+                <li class="nav-item ">
+                    <a href="{{route('plugin_list')}}" class="nav-link {{ Request::is('appza/plugin/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.pluginList')}}</span></a>
+                </li>
+            </ul>
+        </div>
+
+
             {{--<div class="nav-group {{ Request::is(app()->getLocale().'/appfiy/apk/*') ? 'show' : ''}}">
                 <div class="nav-group-label" style="font-size: 15px !important;">{{__('appfiy::messages.ApkBuildHistory')}}</div>
                 <ul class="nav-sidebar">
