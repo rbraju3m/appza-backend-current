@@ -594,21 +594,14 @@ class ThemeController extends Controller
                 [
                     "name" => "Banner 1",
                     "image" => $pagesComponent['image'] ? config('app.image_public_path') . $pagesComponent['image'] : null,
-                    "category" => "shorts",
+                    "category" => null,
                     "button_text" => "Sale2",
                     "button_color" => "#ffffff"
                 ],
                 [
                     "name" => "Banner 2",
                     "image" => $pagesComponent['image'] ? config('app.image_public_path') . $pagesComponent['image'] : null,
-                    "category" => "performance-fabrics",
-                    "button_text" => "Sale2",
-                    "button_color" => "#ffffff"
-                ],
-                [
-                    "name" => "Banner 3",
-                    "image" => $pagesComponent['image'] ? config('app.image_public_path') . $pagesComponent['image'] : null,
-                    "category" => "men-saleclothing",
+                    "category" => null,
                     "button_text" => "Sale2",
                     "button_color" => "#ffffff"
                 ]
