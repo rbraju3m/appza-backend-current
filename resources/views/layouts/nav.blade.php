@@ -94,6 +94,8 @@
             <ul class="nav-sidebar">
                 <li class="nav-item ">
                     <a href="{{route('plugin_list')}}" class="nav-link {{ Request::is('appza/plugin/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.pluginList')}}</span></a>
+                    <a href="{{route('plugin_sort')}}" class="nav-link {{ Request::is('appza/plugin/sort') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.themeSort')}}</span></a>
+
                 </li>
             </ul>
         </div>

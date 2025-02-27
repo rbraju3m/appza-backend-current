@@ -19,6 +19,7 @@ class SupportsPlugin extends Model
         'description',
         'others',
         'is_disable',
+        'sort_order',
         'status'
     ];
 

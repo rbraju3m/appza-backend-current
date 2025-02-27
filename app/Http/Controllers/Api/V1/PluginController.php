@@ -39,7 +39,7 @@ class PluginController extends Controller
         try {
             // Fetch active themes with their photo gallery
             $plugins = SupportsPlugin::active()
-                ->orderby('id', 'desc')
+                ->orderby('sort_order', 'asc')
                 ->get();
 
             // Check if themes exist

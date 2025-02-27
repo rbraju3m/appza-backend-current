@@ -142,6 +142,10 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::POST('store',[PluginController::class,'store'])->name('plugin_store');
         Route::get('edit/{id}',[PluginController::class, 'edit'])->name('plugin_edit');
         Route::PATCH('update/{plugin}',[PluginController::class, 'update'])->name('plugin_update');
+
+        Route::get('sort', [PluginController::class, 'sortPlugin'])->name('plugin_sort');
+        Route::get('sort/data',[PluginController::class, 'pluginSortData'])->name('plugin_sort_data');
+        Route::put('sort/update',[PluginController::class, 'pluginSortUpdate'])->name('plugin_sort_update');
     });
     /* plugin route end */
 });

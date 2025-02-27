@@ -178,4 +178,33 @@ class PluginController extends Controller
             return redirect()->route('page_list')->with('error', 'Failed to delete the page. Please try again.');
         }
     }
+
+    public function sortPlugin()
+    {
+        return view('plugin.sort');
+    }
+    public function pluginSortData(Request $request)
+    {
+        $plugins = SupportsPlugin::orderBy('sort_order')->get();
+        $str = '<ul id="sortable">';
+        if ($plugins != null) {
+            foreach ($plugins as $plugin) {
+                $str .= '<li id="' . $plugin->id . '"><i class="fa fa-sort"></i>' . $plugin->name . '</li>';
+            }
+        }
+        echo $str . '</ul>';
+    }
+
+    public function pluginSortUpdate(Request $request)
+    {
+        $pluginOrder = $request->input('pluginOrder');
+        $pluginOrderArray = explode(',', $pluginOrder);
+        $count = 1;
+        foreach ($pluginOrderArray as $id) {
+            $event = SupportsPlugin::find($id);
+            $event->sort_order = $count;
+            $event->update();
+            $count++;
+        }
+    }
 }
