@@ -55,7 +55,15 @@ class LicenseController extends Controller
             }
         }
 
-        // Setup API parameters
+
+        /* START manually added for fluent issue & after fluent is okay it will be remove*/
+        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
+            'license_key' => $request->get('license_key'),
+            'site_url' => $request->get('site_url')
+        ]]);
+        /* END manually added for fluent issue & after fluent is okay it will be remove*/
+
+    /*    // Setup API parameters
         $fluentApiUrl = config('app.fluent_api_url');
         // Check if it's null
         if (is_null($fluentApiUrl)) {
@@ -108,7 +116,7 @@ class LicenseController extends Controller
         }
 
         // Success response
-        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
+        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);*/
     }
 
 
