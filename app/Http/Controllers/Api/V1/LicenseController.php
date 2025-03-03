@@ -239,6 +239,21 @@ class LicenseController extends Controller
         ]);*/
 
         /* START manually added for fluent issue & after fluent is okay it will be remove*/
+
+        // Check or Create BuildDomain Entry
+        $buildDomain = BuildDomain::firstOrCreate(
+            [
+                'site_url' => $data['site_url'],
+                'license_key' => $data['license_key'],
+            ],
+            [
+                'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
+                'email' => $data['email'] ?? $this->email,
+                'plugin_name' => $this->pluginName,
+                'fluent_item_id' => '540',
+            ]
+        );
+
         return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => [
             "success" => true,
             "license"=> "valid",
