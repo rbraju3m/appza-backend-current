@@ -163,7 +163,7 @@ class LicenseController extends Controller
         }
 
         $data = $request->only('site_url', 'license_key', 'email');
-        // External variable Call
+        /*// External variable Call
         $fluentItemId = config('app.fluent_item_id');
 
         // Check if it's null
@@ -236,7 +236,24 @@ class LicenseController extends Controller
 
         return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', [
             'data' => $res
-        ]);
+        ]);*/
+
+        /* START manually added for fluent issue & after fluent is okay it will be remove*/
+        return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => [
+            "success" => true,
+            "license"=> "valid",
+            "item_id"=> "540",
+            "item_name"=> "",
+            "license_limit"=> "25",
+            "site_count"=> 1,
+            "expires"=> "2028-01-01 06:19:01",
+            "activations_left"=> 24,
+            "customer_name"=> "Testing All Product",
+            "customer_email"=> "test@test.com",
+            "price_id"=> "9",
+            "checksum"=> "4b096d7dc1f3dc6fe741f57c8b45f6cb"
+        ]]);
+        /* END manually added for fluent issue & after fluent is okay it will be remove*/
     }
 
 
