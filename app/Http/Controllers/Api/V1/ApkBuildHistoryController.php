@@ -100,8 +100,8 @@ class ApkBuildHistoryController extends Controller
         $data['package_name'] = $findSiteUrl->package_name;
         $data['app_name'] = $buildHistory->app_name;
         $data['domain'] = $findSiteUrl->site_url;
-        $data['base_suffix'] = '/wp-json/appza/api/v1/home-page';
-        $data['base_url'] = rtrim($findSiteUrl->site_url, '/').'/wp-json/appza/api/v1/home-page';
+        $data['base_suffix'] = '/wp-json/appza/api/v1/';
+        $data['base_url'] = rtrim($findSiteUrl->site_url, '/').'/wp-json/appza/api/v1/';
         $data['build_number'] = $buildHistory->build_version;
         $data['icon_url'] = url('').'/upload/build-apk/logo/'.$buildHistory->app_logo;
 
