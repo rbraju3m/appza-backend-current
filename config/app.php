@@ -19,6 +19,7 @@ return [
     'image_public_path' => env('IMAGE_PUBLIC_PATH', 'default_value'),
     'company_name' => env('COMPANY_NAME', 'default_value'),
     'is_show_scanner' => env('IS_SHOW_SCANNER', 'default_value'),
+    'is_send_mail' => env('IS_SEND_MAIL', 'default_value'),
 
     /*
     |--------------------------------------------------------------------------

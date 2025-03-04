@@ -117,7 +117,9 @@ class ApkBuildHistoryController extends Controller
             'mail_template'=>'build_request'
         ];
 
-        Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+        // send mail
+        $isMailSend = config('app.is_send_mail');
+        $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
 
         $order = BuildOrder::create($data);
         $order = $order->fresh();
@@ -167,7 +169,11 @@ class ApkBuildHistoryController extends Controller
                 'app_name' => $getUserInfo->app_name,
                 'mail_template' => 'build_failed'
             ];
-            Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+
+            // send mail
+            $isMailSend = config('app.is_send_mail');
+            $isMailSend && Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+
         } elseif ($input['status'] === 'completed') {
             $details = [
                 'customer_name' => $getUserInfo->app_name,
@@ -176,7 +182,11 @@ class ApkBuildHistoryController extends Controller
                 'apk_url' => $orderItem->apk_url,
                 'mail_template' => 'build_complete'
             ];
-            Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+
+            // send mail
+            $isMailSend = config('app.is_send_mail');
+            $isMailSend && Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+
         }
 
         return $jsonResponse(Response::HTTP_OK, 'success');
