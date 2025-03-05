@@ -12,6 +12,7 @@ use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use App\Services\IosBuildValidationService;
@@ -76,6 +77,7 @@ class ApkBuildHistoryController extends Controller
             'fluent_id' => $findSiteUrl->fluent_id,
             'app_name' => $findSiteUrl->app_name,
             'app_logo' => $findSiteUrl->app_logo,
+//            'app_logo' => 'https://lh3.googleusercontent.com/a/ACg8ocKjNpWfu0nlD_yPYVLVdJVfb64Ps91jIvo3X8cBysMj69_uXrA=s83-c-mo',
             'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
             'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
             'ios_key_id' => $findSiteUrl->ios_key_id,
@@ -121,9 +123,11 @@ class ApkBuildHistoryController extends Controller
         $isMailSend = config('app.is_send_mail');
         $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
 
-        $order = BuildOrder::create($data);
-        $order = $order->fresh();
-        dispatch(new ProcessBuild($order->id));
+        if ($findSiteUrl->is_android) {
+            $order = BuildOrder::create($data);
+            $order = $order->fresh();
+            dispatch(new ProcessBuild($order->id));
+        }
 
         //for ios
         if ($findSiteUrl->is_ios){
@@ -190,6 +194,52 @@ class ApkBuildHistoryController extends Controller
         }
 
         return $jsonResponse(Response::HTTP_OK, 'success');
+    }
+
+    public function uploadApkIntoR2(Request $request) {
+        $directory = "/var/www/html/appza-backend/public/apk-upload";
+        $folder = "android-apk";
+
+        try {
+            $path = $this->getPublicUrlForUploadApk($directory, $folder);
+            return response()->json([
+                'status' => Response::HTTP_OK,
+                'message' => 'success',
+                'download-path' => $path
+            ], Response::HTTP_OK, ['Content-Type' => 'application/json'], JSON_UNESCAPED_SLASHES);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function getPublicUrlForUploadApk($directory, $r2Folder)
+    {
+        // Get the first APK file in the directory
+        $apkFiles = collect(glob($directory . '/*.apk'));
+
+        if ($apkFiles->isEmpty()) {
+            throw new \Exception("No APK file found in the specified directory: $directory");
+        }
+
+        $apkFile = $apkFiles->first();
+        $fileName = basename($apkFile);
+        $filePath = $r2Folder . '/' . $fileName;
+        $fileContents = file_get_contents($apkFile);
+
+        // Upload with correct MIME type
+        Storage::disk('r2')->put($filePath, $fileContents, [
+            'visibility' => 'public',
+            'Content-Type' => 'application/vnd.android.package-archive',
+        ]);
+
+        // Return public download URL
+        return config('app.image_public_path') . $filePath;
     }
 
 }
