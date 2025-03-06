@@ -29,7 +29,8 @@ class BuildOrder extends Model
         'app_identifier',
         'status',
         'apk_url',
-        'build_message'
+        'build_message',
+        'build_plugin_slug'
     ];
 
     protected $casts = [

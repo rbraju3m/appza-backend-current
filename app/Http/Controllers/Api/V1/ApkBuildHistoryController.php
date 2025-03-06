@@ -49,7 +49,7 @@ class ApkBuildHistoryController extends Controller
         }
 
         if ($this->pluginName == 'lazy_task') {
-            return $jsonResponse(Response::HTTP_OK, 'Build process off for lazy task');
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build process off for lazy task');
         }
 
         $input = $request->validated();
@@ -61,6 +61,16 @@ class ApkBuildHistoryController extends Controller
 
         if (!$findSiteUrl) {
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key wrong');
+        }
+
+        // for builder application supports
+        $builderSupportsPlugin = ['woocommerce', 'tutor-lms'];
+        if (empty($findSiteUrl->build_plugin_slug)) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Plugin slug missing , first request build resource api.');
+        }
+
+        if (!in_array($findSiteUrl->build_plugin_slug, $builderSupportsPlugin, true)) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Builder not supported this plugin');
         }
 
         $apkBuildExists = BuildOrder::where('status', 'processing')
@@ -99,6 +109,7 @@ class ApkBuildHistoryController extends Controller
 
     private function buildRequestProcessForJob($buildHistory,$findSiteUrl)
     {
+        $data['build_plugin_slug'] = $findSiteUrl->build_plugin_slug;
         $data['package_name'] = $findSiteUrl->package_name;
         $data['app_name'] = $buildHistory->app_name;
         $data['domain'] = $findSiteUrl->site_url;

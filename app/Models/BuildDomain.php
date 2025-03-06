@@ -32,7 +32,8 @@ class BuildDomain extends Model
         'is_android',
         'confirm_email',
         'is_ios',
-        'fluent_item_id'
+        'fluent_item_id',
+        'build_plugin_slug'
     ];
 
     public static function boot() {

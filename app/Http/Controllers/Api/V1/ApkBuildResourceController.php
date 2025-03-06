@@ -167,6 +167,7 @@ class ApkBuildResourceController extends Controller
             'is_android' => $request->input('is_android'),
             'is_ios' => $request->input('is_ios'),
             'confirm_email' => $request->input('email'),
+            'build_plugin_slug' => $request->input('plugin_slug'),
         ]);
 
         return $jsonResponse(Response::HTTP_OK, 'App selection for build requests is confirmed.');

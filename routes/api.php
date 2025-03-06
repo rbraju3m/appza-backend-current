@@ -51,6 +51,7 @@ Route::prefix('/appza/v1')
             Route::post('ios-resource', [ApkBuildResourceController::class,'iosResource'])->name('create_ios_resource');
             Route::post('ios-app', [ApkBuildResourceController::class,'iosAppName'])->name('create_ios_resource_appname');
             Route::post('apk', [ApkBuildHistoryController::class,'apkBuild'])->name('create_building_apk');
+
             // build response by builder application
             Route::post('/response/{id}', [ApkBuildHistoryController::class,'apkBuildResponse'])->name('building_apk_response');
             // check apk upload into r2
