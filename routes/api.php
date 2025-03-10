@@ -56,6 +56,7 @@ Route::prefix('/appza/v1')
             Route::post('/response/{id}', [ApkBuildHistoryController::class,'apkBuildResponse'])->name('building_apk_response');
             // check apk upload into r2
             Route::get('/r2/upload', [ApkBuildHistoryController::class,'uploadApkIntoR2'])->name('upload_apk_into_r2');
+//            Route::get('/r2/upload', [ApkBuildHistoryController::class,'checkSh'])->name('upload_apk_into_r2');
         });
 
         // plugin api
