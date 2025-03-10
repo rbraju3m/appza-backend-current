@@ -137,7 +137,7 @@ class ApkBuildHistoryController extends Controller
         if ($findSiteUrl->is_android) {
             $order = BuildOrder::create($data);
             $order = $order->fresh();
-            dispatch(new ProcessBuild($order->id));
+//            dispatch(new ProcessBuild($order->id));
         }
 
         //for ios
@@ -155,7 +155,7 @@ class ApkBuildHistoryController extends Controller
 
             $order = BuildOrder::create($data);
             $order = $order->fresh();
-            dispatch(new ProcessBuild($order->id));
+//            dispatch(new ProcessBuild($order->id));
         }
     }
 
