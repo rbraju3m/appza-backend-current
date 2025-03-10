@@ -132,12 +132,13 @@ class ApkBuildHistoryController extends Controller
 
         // send mail
         $isMailSend = config('app.is_send_mail');
+        $isBuilderON = config('app.is_builder_on');
         $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
 
         if ($findSiteUrl->is_android) {
             $order = BuildOrder::create($data);
             $order = $order->fresh();
-//            dispatch(new ProcessBuild($order->id));
+            $isBuilderON && dispatch(new ProcessBuild($order->id));
         }
 
         //for ios
@@ -155,7 +156,7 @@ class ApkBuildHistoryController extends Controller
 
             $order = BuildOrder::create($data);
             $order = $order->fresh();
-//            dispatch(new ProcessBuild($order->id));
+            $isBuilderON && dispatch(new ProcessBuild($order->id));
         }
     }
 
