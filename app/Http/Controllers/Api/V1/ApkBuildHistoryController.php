@@ -44,6 +44,12 @@ class ApkBuildHistoryController extends Controller
             ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
         };
 
+        $isBuilderON = config('app.is_builder_on');
+
+        if (!$isBuilderON) {
+            return $jsonResponse(Response::HTTP_LOCKED, 'Builder is busy. Please try again later.');
+        }
+
         if (!$this->authorization) {
             return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
@@ -100,14 +106,14 @@ class ApkBuildHistoryController extends Controller
         ]);
 
         // Start APK build job
-        $this->buildRequestProcessForJob($buildHistory, $findSiteUrl);
+        $this->buildRequestProcessForJob($buildHistory, $findSiteUrl,$isBuilderON);
 
         return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
             'data' => $buildHistory
         ]);
     }
 
-    private function buildRequestProcessForJob($buildHistory,$findSiteUrl)
+    private function buildRequestProcessForJob($buildHistory,$findSiteUrl,$isBuilderON)
     {
         $data['build_plugin_slug'] = $findSiteUrl->build_plugin_slug;
         $data['package_name'] = $findSiteUrl->package_name;
@@ -132,7 +138,6 @@ class ApkBuildHistoryController extends Controller
 
         // send mail
         $isMailSend = config('app.is_send_mail');
-        $isBuilderON = config('app.is_builder_on');
         $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
 
         if ($findSiteUrl->is_android) {
