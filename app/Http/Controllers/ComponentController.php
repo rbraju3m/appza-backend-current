@@ -335,7 +335,7 @@ class ComponentController extends Controller
 
         /*new step*/
         $arrayComponentId = [164,165];
-        if (in_array($componentId, $arrayComponentId)) {
+        if (in_array($componentId, json_decode(config('app.upcoming_component'),true))) {
             return false;
         }else {
             return GlobalConfigComponent::where('component_id', $componentId)->exists() || ThemeComponent::where('component_id', $componentId)->exists();
