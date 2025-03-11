@@ -330,8 +330,16 @@ class ComponentController extends Controller
      */
     protected function checkIfComponentIsAlreadyInUse($componentId)
     {
-        return GlobalConfigComponent::where('component_id', $componentId)->exists() ||
-            ThemeComponent::where('component_id', $componentId)->exists();
+        /*firstly code is*/
+//        return GlobalConfigComponent::where('component_id', $componentId)->exists() || ThemeComponent::where('component_id', $componentId)->exists();
+
+        /*new step*/
+        $arrayComponentId = [164,165];
+        if (in_array($componentId, $arrayComponentId)) {
+            return false;
+        }else {
+            return GlobalConfigComponent::where('component_id', $componentId)->exists() || ThemeComponent::where('component_id', $componentId)->exists();
+        }
     }
 
 

@@ -682,7 +682,7 @@
                                     </div>
 
 
-                                    <div class="form-group row mg-top">
+                                    {{--<div class="form-group row mg-top">
                                         <div class="col-sm-2">
                                             <label for="imageUrl"
                                                    class="form-label">{{__('messages.imageUrl')}}</label>
@@ -697,7 +697,7 @@
                                             @endif
                                             <img id="blahurl" src="#" width="25%"/>
                                         </div>
-                                    </div>
+                                    </div>--}}
 
 
                                     <div class="row mg-top">
