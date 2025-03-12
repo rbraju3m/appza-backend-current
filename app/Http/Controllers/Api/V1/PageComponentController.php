@@ -227,24 +227,17 @@ class PageComponentController extends Controller
             [
                 "name" => "Banner 1",
                 "image" => $pageComponent['image'] ? config('app.image_public_path') . $pageComponent['image'] : null,
-                "category" => "shorts",
+                "category" => null,
                 "button_text" => "Sale2",
                 "button_color" => "#ffffff",
             ],
             [
                 "name" => "Banner 2",
                 "image" => $pageComponent['image'] ? config('app.image_public_path') . $pageComponent['image'] : null,
-                "category" => "performance-fabrics",
+                "category" => null,
                 "button_text" => "Sale2",
                 "button_color" => "#ffffff",
-            ],
-            [
-                "name" => "Banner 3",
-                "image" => $pageComponent['image'] ? config('app.image_public_path') . $pageComponent['image'] : null,
-                "category" => "men-saleclothing",
-                "button_text" => "Sale2",
-                "button_color" => "#ffffff",
-            ],
+            ]
         ];
     }
 
