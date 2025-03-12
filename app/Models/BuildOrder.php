@@ -30,6 +30,9 @@ class BuildOrder extends Model
         'status',
         'apk_url',
         'build_message',
+        'aab_url',
+        'android_output_url',
+        'ios_output_url',
         'build_plugin_slug'
     ];
 

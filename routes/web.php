@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BuildOrderController;
 use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ComponentGroupController;
 use App\Http\Controllers\GlobalConfigController;
@@ -148,5 +149,11 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::put('sort/update',[PluginController::class, 'pluginSortUpdate'])->name('plugin_sort_update');
     });
     /* plugin route end */
+
+    /* build-order start */
+    Route::prefix('build-order')->group(function () {
+        Route::get('list',[BuildOrderController::class,'index'])->name('build_order_list');
+    });
+    /* build-order route end */
 });
 
