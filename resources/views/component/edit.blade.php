@@ -793,12 +793,12 @@
         }
 
 
-        image_url.onchange = evt => {
+        /*image_url.onchange = evt => {
             const [file] = image_url.files
             if (file) {
                 blahurl.src = URL.createObjectURL(file)
             }
-        }
+        }*/
 
         $(document).delegate('.plugin_slug', 'change', function (event) {
             event.preventDefault(); // Prevent any default behavior
@@ -836,7 +836,7 @@
             let value = $(this).val();
             let component_properties_id = $(this).attr('component_properties_id');
             let route = $('#component_properties_inline_update').attr('data-href');
-            // console.log(value,component_properties_id)
+            // console.log(value,component_properties_id,route)
 
             $.ajax({
                 url: route,
