@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LayoutTypeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PluginController;
+use App\Http\Controllers\SetupController;
 use App\Http\Controllers\StyleGroupController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Auth;
@@ -149,6 +150,12 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::put('sort/update',[PluginController::class, 'pluginSortUpdate'])->name('plugin_sort_update');
     });
     /* plugin route end */
+
+    /* build-order start */
+    Route::prefix('setup')->group(function () {
+        Route::get('list',[SetupController::class,'index'])->name('setup_list');
+    });
+    /* build-order route end */
 
     /* build-order start */
     Route::prefix('build-order')->group(function () {

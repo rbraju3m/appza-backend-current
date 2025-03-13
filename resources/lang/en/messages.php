@@ -284,6 +284,8 @@ return [
     'enterHeight' => 'Enter height',
     'width' => 'Width',
     'enterWidth' => 'Enter width',
+    'Setup' => 'Setup',
+    'SetupList' => 'Setup list',
     /*
     |--------------------------------------------------------------------------
     | Global Config language End

@@ -70,11 +70,6 @@ class PageController extends Controller
             $inputs['persistent_footer_buttons'] = '{}';
         }
 
-        // Set default value for 'component_limit' if null
-        if (!$inputs['component_limit']) {
-            $inputs['component_limit'] = 0;
-        }
-
         try {
             // Start database transaction
             DB::beginTransaction();
@@ -145,7 +140,7 @@ class PageController extends Controller
         $inputs['persistent_footer_buttons'] = $request->has('persistent_footer_buttons') ? '{}' : null;
 
         // Set default value for 'component_limit' if null
-        $inputs['component_limit'] = $inputs['component_limit'] ?? 0;
+        $inputs['component_limit'] = $inputs['component_limit'] ?? null;
 
         $scope = Scope::where('page_id', $id)->firstOrFail();
 
