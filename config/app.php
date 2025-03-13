@@ -21,6 +21,7 @@ return [
     'is_show_scanner' => env('IS_SHOW_SCANNER', 'default_value'),
     'is_send_mail' => env('IS_SEND_MAIL', 'default_value'),
     'is_builder_on' => env('IS_BUILDER_ON', 'default_value'),
+    'is_fluent_check' => env('IS_FLUENT_CHECK', 'default_value'),
 
     /*
     |--------------------------------------------------------------------------

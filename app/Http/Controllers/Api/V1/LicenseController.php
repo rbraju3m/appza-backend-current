@@ -55,27 +55,27 @@ class LicenseController extends Controller
             }
         }
 
-
-        /* START manually added for fluent issue & after fluent is okay it will be remove*/
-        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
-//            'license_key' => $request->get('license_key'),
-//            'site_url' => $request->get('site_url')
-            "success" => true,
-            "license"=> "valid",
-            "item_id"=> "540",
-            "item_name"=> "",
-            "license_limit"=> "25",
-            "site_count"=> 1,
-            "expires"=> "2028-01-01 06:19:01",
-            "activations_left"=> 24,
-            "customer_name"=> "Testing All Product",
-            "customer_email"=> "test@test.com",
-            "price_id"=> "9",
-            "checksum"=> "4b096d7dc1f3dc6fe741f57c8b45f6cb"
+        if (!config('app.is_fluent_check')){
+            /* START manually added for fluent issue & after fluent is okay it will be remove*/
+            return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
+                "success" => true,
+                "license"=> "valid",
+                "item_id"=> config('app.fluent_item_id'),
+                "item_name"=> "",
+                "license_limit"=> "25",
+                "site_count"=> 1,
+                "expires"=> "2028-01-01 06:19:01",
+                "activations_left"=> 24,
+                "customer_name"=> "Testing All Product",
+                "customer_email"=> "test@test.com",
+                "price_id"=> "9",
+                "checksum"=> "4b096d7dc1f3dc6fe741f57c8b45f6cb",
+                "fluent_check" => config('app.is_fluent_check')?"True":"False"." by raju",
             ]]);
-        /* END manually added for fluent issue & after fluent is okay it will be remove*/
+            /* END manually added for fluent issue & after fluent is okay it will be remove*/
+        }
 
-    /*    // Setup API parameters
+        // Setup API parameters
         $fluentApiUrl = config('app.fluent_api_url');
         // Check if it's null
         if (is_null($fluentApiUrl)) {
@@ -128,7 +128,7 @@ class LicenseController extends Controller
         }
 
         // Success response
-        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);*/
+        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
     }
 
 
@@ -161,9 +161,44 @@ class LicenseController extends Controller
         if ($validator->fails()) {
             return $jsonResponse(Response::HTTP_BAD_REQUEST, 'Validation Error', ['errors' => $validator->errors()]);
         }
-
         $data = $request->only('site_url', 'license_key', 'email');
-        /*// External variable Call
+
+        if (!config('app.is_fluent_check')) {
+            /* START manually added for fluent issue & after fluent is okay it will be remove*/
+            // Check or Create BuildDomain Entry
+            $buildDomain = BuildDomain::firstOrCreate(
+                [
+                    'site_url' => $data['site_url'],
+                    'license_key' => $data['license_key'],
+                ],
+                [
+                    'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
+                    'email' => $data['email'] ?? $this->email,
+                    'plugin_name' => $this->pluginName,
+                    'fluent_item_id' => '540',
+                ]
+            );
+
+            return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => [
+                "success" => true,
+                "license" => "valid",
+                "item_id" => config('app.fluent_item_id'),
+                "item_name" => "",
+                "license_limit" => "25",
+                "site_count" => 1,
+                "expires" => "2028-01-01 06:19:01",
+                "activations_left" => 24,
+                "customer_name" => "Testing All Product",
+                "customer_email" => "test@test.com",
+                "price_id" => "9",
+                "checksum" => "4b096d7dc1f3dc6fe741f57c8b45f6cb",
+                "fluent_check" => config('app.is_fluent_check')?"True":"False"." by raju",
+            ]]);
+            /* END manually added for fluent issue & after fluent is okay it will be remove*/
+        }
+
+
+        // External variable Call
         $fluentItemId = config('app.fluent_item_id');
 
         // Check if it's null
@@ -213,7 +248,7 @@ class LicenseController extends Controller
                 'no_activations_left' => 'No activations left.',
                 'expired' => 'License has expired.',
                 'site_inactive' => 'Site is not active for this license.',
-                'invalid' => 'License key does not match.',
+                'invalid' => 'License key does not ma72ca56675130125fa6fa8ea9f2306d16tch.',
             ];
 
             $errorMessage = $errorMessages[$res['error']] ?? 'License not valid.';
@@ -236,39 +271,7 @@ class LicenseController extends Controller
 
         return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', [
             'data' => $res
-        ]);*/
-
-        /* START manually added for fluent issue & after fluent is okay it will be remove*/
-
-        // Check or Create BuildDomain Entry
-        $buildDomain = BuildDomain::firstOrCreate(
-            [
-                'site_url' => $data['site_url'],
-                'license_key' => $data['license_key'],
-            ],
-            [
-                'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
-                'email' => $data['email'] ?? $this->email,
-                'plugin_name' => $this->pluginName,
-                'fluent_item_id' => '540',
-            ]
-        );
-
-        return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => [
-            "success" => true,
-            "license"=> "valid",
-            "item_id"=> "540",
-            "item_name"=> "",
-            "license_limit"=> "25",
-            "site_count"=> 1,
-            "expires"=> "2028-01-01 06:19:01",
-            "activations_left"=> 24,
-            "customer_name"=> "Testing All Product",
-            "customer_email"=> "test@test.com",
-            "price_id"=> "9",
-            "checksum"=> "4b096d7dc1f3dc6fe741f57c8b45f6cb"
-        ]]);
-        /* END manually added for fluent issue & after fluent is okay it will be remove*/
+        ]);
     }
 
 
