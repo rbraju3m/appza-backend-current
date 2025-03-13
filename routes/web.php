@@ -154,6 +154,11 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     /* build-order start */
     Route::prefix('setup')->group(function () {
         Route::get('list',[SetupController::class,'index'])->name('setup_list');
+        Route::get('create',[SetupController::class,'create'])->name('setup_add');
+        Route::post('store',[SetupController::class,'store'])->name('setup_store');
+        Route::get('edit/{id}',[SetupController::class, 'edit'])->name('setup_edit');
+        Route::PATCH('update/{setup}',[SetupController::class, 'update'])->name('setup_update');
+        Route::get('delete/{id}',[SetupController::class,'destroy'])->name('setup_delete');
     });
     /* build-order route end */
 

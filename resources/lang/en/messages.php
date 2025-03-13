@@ -286,6 +286,9 @@ return [
     'enterWidth' => 'Enter width',
     'Setup' => 'Setup',
     'SetupList' => 'Setup list',
+    'createSetup' => 'Create setup',
+    'key' => 'Key',
+    'keyPlaceholder' => 'Key e.g - create_key',
     /*
     |--------------------------------------------------------------------------
     | Global Config language End
