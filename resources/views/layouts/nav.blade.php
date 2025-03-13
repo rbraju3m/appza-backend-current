@@ -100,14 +100,14 @@
             </ul>
         </div>
 
-        <div class="nav-group {{ Request::is('appza/setup/*') ? 'show' : ''}}">
+        {{--<div class="nav-group {{ Request::is('appza/setup/*') ? 'show' : ''}}">
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.Setup')}}</div>
             <ul class="nav-sidebar">
                 <li class="nav-item ">
                     <a href="{{route('setup_list')}}" class="nav-link {{ Request::is('appza/setup/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.SetupList')}}</span></a>
                 </li>
             </ul>
-        </div>
+        </div>--}}
 
         {{--<div class="nav-group {{ Request::is('appza/build-order/*') ? 'show' : ''}}">
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.BuildOrder')}}</div>
