@@ -11,6 +11,7 @@ use App\Models\BuildOrder;
 use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -93,16 +94,11 @@ class ApkBuildHistoryController extends Controller
             'fluent_id' => $findSiteUrl->fluent_id,
             'app_name' => $findSiteUrl->app_name,
             'app_logo' => $findSiteUrl->app_logo,
-//            'app_logo' => 'https://lh3.googleusercontent.com/a/ACg8ocKjNpWfu0nlD_yPYVLVdJVfb64Ps91jIvo3X8cBysMj69_uXrA=s83-c-mo',
             'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
             'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
             'ios_key_id' => $findSiteUrl->ios_key_id,
             'ios_team_id' => $findSiteUrl->team_id,
             'ios_p8_file_content' => $findSiteUrl->ios_p8_file_content,
-        ]);
-
-        $buildHistory->update([
-            'build_version' => $buildHistory->id
         ]);
 
         // Start APK build job
@@ -113,56 +109,86 @@ class ApkBuildHistoryController extends Controller
         ]);
     }
 
-    private function buildRequestProcessForJob($buildHistory,$findSiteUrl,$isBuilderON)
+    private function buildRequestProcessForJob($buildHistory, $findSiteUrl, $isBuilderON)
     {
-        $data['build_plugin_slug'] = $findSiteUrl->build_plugin_slug;
-        $data['package_name'] = $findSiteUrl->package_name;
-        $data['app_name'] = $buildHistory->app_name;
-        $data['domain'] = $findSiteUrl->site_url;
-        $data['base_suffix'] = '/wp-json/appza/api/v1/';
-        $data['base_url'] = rtrim($findSiteUrl->site_url, '/').'/wp-json/appza/api/v1/';
-        $data['build_number'] = $buildHistory->build_version;
-        $data['icon_url'] = url('').'/upload/build-apk/logo/'.$buildHistory->app_logo;
-
-        //for android
-        $data['build_target'] = 'android';
-        $data['jks_url'] = url('').'/android/upload-keystore.jks';
-        $data['key_properties_url'] = url('').'/android/key.properties';
-
-        $details = [
-            'customer_name'=>$this->customerName,
-            'subject'=>'Your App Build Request is in Progress',
-            'app_name'=>$buildHistory->app_name,
-            'mail_template'=>'build_request'
+        $data = [
+            'build_plugin_slug' => $findSiteUrl->build_plugin_slug,
+            'package_name' => $findSiteUrl->package_name,
+            'app_name' => $buildHistory->app_name,
+            'domain' => $findSiteUrl->site_url,
+            'base_suffix' => '/wp-json/appza/api/v1/',
+            'base_url' => rtrim($findSiteUrl->site_url, '/') . '/wp-json/appza/api/v1/',
+            'icon_url' => url('') . '/upload/build-apk/logo/' . $buildHistory->app_logo
         ];
 
-        // send mail
-        $isMailSend = config('app.is_send_mail');
-        $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-
-        if ($findSiteUrl->is_android) {
-            $order = BuildOrder::create($data);
-            $order = $order->fresh();
-            $isBuilderON && dispatch(new ProcessBuild($order->id));
+        // Send email notification
+        if (config('app.is_send_mail')) {
+            Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail([
+                'customer_name' => $this->customerName,
+                'subject' => 'Your App Build Request is in Progress',
+                'app_name' => $buildHistory->app_name,
+                'mail_template' => 'build_request'
+            ]));
         }
 
-        //for ios
-        if ($findSiteUrl->is_ios){
-            $data['build_target'] = 'ios';
+        // Process Android Build
+        if ($findSiteUrl->is_android) {
+            $this->processBuildOrder($findSiteUrl, $buildHistory, $data, 'android', $isBuilderON);
+        }
 
+        // Process iOS Build
+        if ($findSiteUrl->is_ios) {
+            $this->processBuildOrder($findSiteUrl, $buildHistory, $data, 'ios', $isBuilderON);
+        }
+    }
+
+    private function processBuildOrder($findSiteUrl, $buildHistory, $data, $platform, $isBuilderON)
+    {
+        $data['build_target'] = $platform;
+        $data['build_number'] = $this->getNextBuildNumber($findSiteUrl->site_url, $findSiteUrl->package_name, $platform);
+
+        // Specific fields for Android
+        if ($platform === 'android') {
+            $data['jks_url'] = url('') . '/android/upload-keystore.jks';
+            $data['key_properties_url'] = url('') . '/android/key.properties';
+        }
+
+        // Specific fields for iOS
+        if ($platform === 'ios') {
             $data['jks_url'] = null;
             $data['key_properties_url'] = null;
 
             $data['issuer_id'] = $buildHistory->ios_issuer_id;
             $data['key_id'] = $buildHistory->ios_key_id;
-            $data['api_key_url'] = url('').'/upload/build-apk/p8file/'.$buildHistory->ios_p8_file_content;
+            $data['api_key_url'] = url('') . '/upload/build-apk/p8file/' . $buildHistory->ios_p8_file_content;
             $data['team_id'] = $buildHistory->ios_team_id;
-            $data['app_identifier'] =$findSiteUrl->package_name;
-
-            $order = BuildOrder::create($data);
-            $order = $order->fresh();
-            $isBuilderON && dispatch(new ProcessBuild($order->id));
+            $data['app_identifier'] = $findSiteUrl->package_name;
         }
+
+        try {
+            $order = BuildOrder::create($data);
+            if ($isBuilderON) {
+                dispatch(new ProcessBuild($order->id));
+            }
+        } catch (\Exception $e) {
+            Log::error("BuildOrder creation failed for {$platform}: " . $e->getMessage());
+        }
+    }
+
+    private function getNextBuildNumber($domain, $packageName, $buildTarget)
+    {
+        $latestBuild = BuildOrder::where([
+            ['domain', $domain],
+            ['package_name', $packageName],
+            ['build_target', $buildTarget]
+        ])->latest()->first();
+        $number = $this->generateThreeDigitNumbers($latestBuild ? $latestBuild->build_number : 0);
+        return $number;
+    }
+
+    private function generateThreeDigitNumbers($num)
+    {
+        return str_pad($num + 1, 3, '0', STR_PAD_LEFT);
     }
 
     public function apkBuildResponse(BuildResponseRequest $request, $id) {
