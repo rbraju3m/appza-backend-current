@@ -134,6 +134,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('edit/{id}',[PageController::class, 'edit'])->name('page_edit');
         Route::PATCH('update/{page}',[PageController::class, 'update'])->name('page_update');
         Route::get('delete/{id}',[PageController::class,'destroy'])->name('page_delete');
+        Route::get('force-delete/{id}',[PageController::class,'forceDestroy'])->name('page_force_delete');
     });
     /* page route end */
 

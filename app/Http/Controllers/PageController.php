@@ -7,6 +7,9 @@ use App\Models\Component;
 use App\Models\Page;
 use App\Models\Scope;
 use App\Models\SupportsPlugin;
+use App\Models\ThemeComponent;
+use App\Models\ThemeComponentStyle;
+use App\Models\ThemePage;
 use App\Traits\HandlesFileUploads;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -223,6 +226,75 @@ class PageController extends Controller
             }
 
             // Soft delete the page itself
+            $page->delete();
+
+            // Commit the transaction
+            DB::commit();
+
+            return redirect()->route('page_list')->with('success', 'Page and associated scope soft-deleted successfully.');
+        } catch (\Exception $e) {
+            // Rollback the transaction if something goes wrong
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Error during soft delete: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('page_list')->with('error', 'Failed to delete the page. Please try again.');
+        }
+    }
+
+
+    public function forceDestroy($id)
+    {
+        try {
+            // Begin a transaction
+            DB::beginTransaction();
+
+            $page = Page::findOrFail($id);
+
+            // Update the `scope` field in Component where necessary
+            Component::where('plugin_slug', $page->plugin_slug)
+                ->where('scope', 'like', '%' . $page->slug . '%')
+                ->get()
+                ->each(function ($component) use ($page) {
+                    $scope = json_decode($component->scope, true);
+
+                    if (is_array($scope)) {
+                        $scope = array_values(array_diff($scope, [$page->slug])); // Remove $page->slug from scope
+                    }
+
+                    $component->scope = empty($scope) ? null : json_encode($scope);
+                    $component->save();
+                });
+
+            // Retrieve related ThemePage and ThemeComponent IDs
+            $getThemePages = ThemePage::where('page_id', $id)->get();
+            $themePageIds = $getThemePages->pluck('id');
+
+            $getThemeComponents = ThemeComponent::whereIn('theme_page_id', $themePageIds)->get();
+            $themeComponentIds = $getThemeComponents->pluck('id');
+
+            // Delete ThemeComponentStyles
+            ThemeComponentStyle::whereIn('theme_component_id', $themeComponentIds)->delete();
+
+            // Delete ThemeComponents
+            ThemeComponent::whereIn('id', $themeComponentIds)->delete();
+
+            // Delete ThemePages
+            ThemePage::whereIn('id', $themePageIds)->delete();
+
+            // Handle associated scope soft deletion
+            $scope = Scope::where('plugin_slug', $page->plugin_slug)
+                ->where('slug', $page->slug)
+                ->first();
+
+            if ($scope) {
+                $scope->delete(); // Soft delete the scope
+            }
+
+            // Finally, delete the Page
             $page->delete();
 
             // Commit the transaction
