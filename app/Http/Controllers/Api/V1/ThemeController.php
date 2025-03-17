@@ -558,11 +558,11 @@ class ThemeController extends Controller
     private function buildPageComponentGeneralProperties($pagesComponent,$pluginSlug) {
         $getPluginPrefix = SupportsPlugin::getPluginPrefix($pluginSlug);
         $componentPluginSlug = $pagesComponent['plugin_slug'];
-        if ($componentPluginSlug=='wordpress'){
+        /*if ($componentPluginSlug=='wordpress'){
             $classType = 'WPCore_'.$pagesComponent['product_type'];
-        }else{
+        }else{*/
             $classType = $getPluginPrefix.$pagesComponent['product_type'];
-        }
+//        }
 
         $componentProperties = [
             'label' => $pagesComponent['label'],
