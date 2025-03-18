@@ -2,8 +2,9 @@
 set -euo pipefail  # Enable strict error handling
 
 # Debugging: Save logs to /tmp for troubleshooting
-DEBUG_LOG_DIR="/tmp/jks_logs"
-DEBUG_LOG="$DEBUG_LOG_DIR/bash_debug.log"
+DEBUG_LOG_DIR="storage/logs"
+
+DEBUG_LOG="$DEBUG_LOG_DIR/laravel.log"
 
 # Create the log directory if it doesn't exist
 mkdir -p "$DEBUG_LOG_DIR"
