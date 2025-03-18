@@ -144,14 +144,54 @@ class ApkBuildHistoryController extends Controller
 
     private function processBuildOrder($findSiteUrl, $buildHistory, $data, $platform, $isBuilderON)
     {
+//        dump($findSiteUrl->package_name);
         $data['build_target'] = $platform;
         $data['build_number'] = $this->getNextBuildNumber($findSiteUrl->site_url, $findSiteUrl->package_name, $platform);
 
         // Specific fields for Android
         if ($platform === 'android') {
-            $data['jks_url'] = url('') . '/android/upload-keystore.jks';
-            $data['key_properties_url'] = url('') . '/android/key.properties';
+            /*$folder = $findSiteUrl->package_name;
+            $scriptPath = public_path('jks/jks_builder.sh'); // Correct file path
+
+            // Ensure the file exists and has execution permission
+            if (!file_exists($scriptPath)) {
+                return response()->json(['success' => false, 'error' => 'Script file not found'], 404);
+            }
+
+            if (!is_executable($scriptPath)) {
+                return response()->json(['success' => false, 'error' => 'Script is not executable'], 403);
+            }
+
+            // Wrap arguments with shell escaping
+            $command = escapeshellcmd($scriptPath)." ".
+                "--store-pass " . escapeshellarg($folder) . " ".
+                "--key-pass " . escapeshellarg($folder) . " ".
+                "--replace " . escapeshellarg('y') . " ".
+                "--folder " . escapeshellarg($folder) . " ".
+                "--cn " . escapeshellarg('My App') . " ".
+                "--ou " . escapeshellarg('My Unit') . " ".
+                "--org " . escapeshellarg('My Company') . " ".
+                "--location " . escapeshellarg('San Francisco') . " ".
+                "--state " . escapeshellarg('CA') . " ".
+                "--country " . escapeshellarg('US');
+
+            // Log exact command being executed
+            \Log::info("[Bash Script] Running Command: $command");
+
+            // Execute and capture output
+            $output = shell_exec("$command 2>&1");
+            dump($output);*/
+            $output = $this->handleJksFileRequest($findSiteUrl);
+            if ($output['return_code'] == 0) {
+                $data['jks_url'] = url('').Storage::url('jks/'.$findSiteUrl->package_name.'/upload-keystore.jks');
+                $data['key_properties_url'] = url('').Storage::url('jks/'.$findSiteUrl->package_name.'/key.properties');
+            }
+//            dump($output);
+
+//            $data['jks_url'] = url('') . '/android/upload-keystore.jks';
+//            $data['key_properties_url'] = url('') . '/android/key.properties';
         }
+//        dump($data);
 
         // Specific fields for iOS
         if ($platform === 'ios') {
@@ -173,6 +213,72 @@ class ApkBuildHistoryController extends Controller
         } catch (\Exception $e) {
             Log::error("BuildOrder creation failed for {$platform}: " . $e->getMessage());
         }
+    }
+
+    private function handleJksFileRequest($findSiteUrl)
+    {
+        $folder = $findSiteUrl->package_name;
+
+        // Define the script path in the storage directory
+        $storageScriptPath = storage_path('jks/jks_builder.sh');
+
+        // Define the source script path in the root directory
+        $rootScriptPath = base_path('jks_builder.sh');
+
+        // Ensure the storage/jks directory exists
+        if (!file_exists(dirname($storageScriptPath))) {
+            mkdir(dirname($storageScriptPath), 0755, true);
+        }
+
+        // Check if the script exists in the storage directory
+        if (!file_exists($storageScriptPath)) {
+            // If the script does not exist in storage, copy it from the root directory
+            if (!file_exists($rootScriptPath)) {
+                return response()->json(['success' => false, 'error' => 'Source script file not found in root directory'], 404);
+            }
+
+            // Copy the script from the root directory to the storage directory
+            if (!copy($rootScriptPath, $storageScriptPath)) {
+                return response()->json(['success' => false, 'error' => 'Failed to copy script to storage directory'], 500);
+            }
+
+            // Ensure the copied script has execution permissions
+            chmod($storageScriptPath, 0755);
+        }
+
+        // Ensure the script exists and is executable
+        if (!file_exists($storageScriptPath)) {
+            return response()->json(['success' => false, 'error' => 'Script file not found in storage directory'], 404);
+        }
+
+        if (!is_executable($storageScriptPath)) {
+            return response()->json(['success' => false, 'error' => 'Script is not executable'], 403);
+        }
+
+        // Wrap arguments with shell escaping
+        $command = escapeshellcmd($storageScriptPath)." ".
+            "--store-pass " . escapeshellarg($folder) . " ".
+            "--key-pass " . escapeshellarg($folder) . " ".
+            "--replace " . escapeshellarg('y') . " ".
+            "--folder " . escapeshellarg($folder) . " ".
+            "--cn " . escapeshellarg('My App') . " ".
+            "--ou " . escapeshellarg('My Unit') . " ".
+            "--org " . escapeshellarg('My Company') . " ".
+            "--location " . escapeshellarg('San Francisco') . " ".
+            "--state " . escapeshellarg('CA') . " ".
+            "--country " . escapeshellarg('US');
+        // Execute and capture output
+        $output = [];
+        $returnCode = 0;
+
+        exec("$command 2>&1", $output, $returnCode);
+
+        $outputText = implode("\n", $output);
+
+        return [
+            'output' => $outputText,
+            'return_code' => $returnCode
+        ];
     }
 
     private function getNextBuildNumber($domain, $packageName, $buildTarget)
