@@ -186,6 +186,7 @@ class ApkBuildHistoryController extends Controller
                 $data['jks_url'] = url('').Storage::url('jks/'.$findSiteUrl->package_name.'/upload-keystore.jks');
                 $data['key_properties_url'] = url('').Storage::url('jks/'.$findSiteUrl->package_name.'/key.properties');
             }
+            \Log::info($output['output']);
 //            dump($output);
 
 //            $data['jks_url'] = url('') . '/android/upload-keystore.jks';
