@@ -366,11 +366,11 @@ class ComponentController extends Controller
         $component = Component::findOrFail($id);
 
         // Handle Image Upload
-        $input['image'] = app()->environment('production')
+        $input['image'] = config('app.is_image_update')
             ? $this->handleFileUpload($request, $component, 'image', 'component-image')
             : $component->image;
 
-        $input['image_url'] = app()->environment('production')
+        $input['image_url'] = config('app.is_image_update')
             ? $this->handleFileUpload($request, $component, 'image_url', 'component-image')
             : $component->image_url;
 

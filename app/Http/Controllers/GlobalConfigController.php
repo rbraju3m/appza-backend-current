@@ -148,7 +148,7 @@ class GlobalConfigController extends Controller
         }
 
         // Handle Image Upload
-        $input['image'] = app()->environment('production')
+        $input['image'] = config('app.is_image_update')
             ? $this->handleFileUpload($request, $globalConfig, 'image', 'global-config')
             : $globalConfig->image;
 

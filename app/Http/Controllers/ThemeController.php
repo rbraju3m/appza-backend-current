@@ -113,7 +113,7 @@ class ThemeController extends Controller
             $input['slug'] = Str::slug($input['name']);
 
             // Handle Image Upload
-            $input['image'] = app()->environment('production')
+            $input['image'] = config('app.is_image_update')
                 ? $this->handleFileUpload($request, '', 'image', 'theme')
                 : null;
 
@@ -472,7 +472,7 @@ class ThemeController extends Controller
         $theme = Theme::find($id);
 
         // Handle Image Upload
-        $input['image'] = app()->environment('production')
+        $input['image'] = config('app.is_image_update')
             ? $this->handleFileUpload($request, $theme, 'image', 'theme')
             : $theme->image;
 

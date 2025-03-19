@@ -56,7 +56,7 @@ class PluginController extends Controller
             DB::beginTransaction();
 
             // Handle Image Upload
-            $inputs['image'] = app()->environment('production')
+            $inputs['image'] = config('app.is_image_update')
                 ? $this->handleFileUpload($request, '', 'image', 'plugins')
                 : null;
 
@@ -114,7 +114,7 @@ class PluginController extends Controller
             DB::beginTransaction();
 
             // Handle Image Upload
-            $inputs['image'] = app()->environment('production')
+            $inputs['image'] = config('app.is_image_update')
                 ? $this->handleFileUpload($request, $plugin, 'image', 'plugins')
                 : $plugin->image;
 
