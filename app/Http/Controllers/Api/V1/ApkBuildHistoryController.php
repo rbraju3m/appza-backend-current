@@ -150,47 +150,15 @@ class ApkBuildHistoryController extends Controller
 
         // Specific fields for Android
         if ($platform === 'android') {
-            /*$folder = $findSiteUrl->package_name;
-            $scriptPath = public_path('jks/jks_builder.sh'); // Correct file path
-
-            // Ensure the file exists and has execution permission
-            if (!file_exists($scriptPath)) {
-                return response()->json(['success' => false, 'error' => 'Script file not found'], 404);
-            }
-
-            if (!is_executable($scriptPath)) {
-                return response()->json(['success' => false, 'error' => 'Script is not executable'], 403);
-            }
-
-            // Wrap arguments with shell escaping
-            $command = escapeshellcmd($scriptPath)." ".
-                "--store-pass " . escapeshellarg($folder) . " ".
-                "--key-pass " . escapeshellarg($folder) . " ".
-                "--replace " . escapeshellarg('y') . " ".
-                "--folder " . escapeshellarg($folder) . " ".
-                "--cn " . escapeshellarg('My App') . " ".
-                "--ou " . escapeshellarg('My Unit') . " ".
-                "--org " . escapeshellarg('My Company') . " ".
-                "--location " . escapeshellarg('San Francisco') . " ".
-                "--state " . escapeshellarg('CA') . " ".
-                "--country " . escapeshellarg('US');
-
-            // Log exact command being executed
-            \Log::info("[Bash Script] Running Command: $command");
-
-            // Execute and capture output
-            $output = shell_exec("$command 2>&1");
-            dump($output);*/
-            $output = $this->handleJksFileRequest($findSiteUrl);
+            /*$output = $this->handleJksFileRequest($findSiteUrl);
             if ($output['return_code'] == 0) {
                 $data['jks_url'] = url('').Storage::url('jks/'.$findSiteUrl->package_name.'/upload-keystore.jks');
                 $data['key_properties_url'] = url('').Storage::url('jks/'.$findSiteUrl->package_name.'/key.properties');
             }
-            \Log::info($output['output']);
-//            dump($output);
+            \Log::info($output['output']);*/
 
-//            $data['jks_url'] = url('') . '/android/upload-keystore.jks';
-//            $data['key_properties_url'] = url('') . '/android/key.properties';
+            $data['jks_url'] = url('') . '/android/upload-keystore.jks';
+            $data['key_properties_url'] = url('') . '/android/key.properties';
         }
 //        dump($data);
 
