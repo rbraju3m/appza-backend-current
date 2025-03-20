@@ -54,7 +54,7 @@
                                                         $diffInMinutes = $created_at->diffInMinutes($finished_at);
                                                         $process_time = $diffInMinutes . ' minutes';
                                                     @endphp
-                                                    {{$process_time}}
+                                                    {{number_format($process_time,2)}}
                                                 </td>
                                                 <td>{{$buildOrder->build_plugin_slug}}</td>
                                                 <td>{{$buildOrder->package_name}}</td>
