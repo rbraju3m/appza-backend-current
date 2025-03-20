@@ -66,7 +66,7 @@ class ApkBuildResourceController extends Controller
         $params = [
             'url' => $input['site_url'],
             'license' => $input['license_key'],
-            'fluent_cart_action' => 'activate_license',
+            'fluent_cart_action' => 'check_license',
             'item_id' => $findSiteUrl->fluent_item_id,
         ];
 
