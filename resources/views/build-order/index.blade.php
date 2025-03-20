@@ -52,9 +52,9 @@
                                                         $finished_at = Carbon::parse($buildOrder->updated_at);
 
                                                         $diffInMinutes = $created_at->diffInMinutes($finished_at);
-                                                        $process_time = $diffInMinutes . ' minutes';
+                                                        $process_time = $diffInMinutes;
                                                     @endphp
-                                                    {{number_format($process_time,2)}}
+                                                    {{number_format($process_time,2).' minutes'}}
                                                 </td>
                                                 <td>{{$buildOrder->build_plugin_slug}}</td>
                                                 <td>{{$buildOrder->package_name}}</td>
