@@ -13,6 +13,7 @@
     </div><!-- sidebar-search -->
     <div class="sidebar-body pt-20">
 
+        @if(auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN')
 
         <div class="nav-group {{ Request::is('appza/layout-type/*') ? 'show' : ''}}">
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.layoutType')}}</div>
@@ -108,8 +109,9 @@
                 </li>
             </ul>
         </div>--}}
+        @endif
 
-        @if(auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN')
+        @if(auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN' || auth()->user()->user_type === 'ANDROID')
             <div class="nav-group {{ Request::is('appza/build-order/*') ? 'show' : ''}}">
                 <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.BuildOrder')}}</div>
                 <ul class="nav-sidebar">
