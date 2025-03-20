@@ -95,6 +95,8 @@
                                                         // Get status data or use a default
                                                         $statusDataLog = $statusMapLog[$statusLog] ?? ['class' => 'bg-secondary text-white', 'icon' => '❓', 'label' => ucfirst($statusLog)];
                                                     @endphp
+                                                    @if(auth()->user()->user_type === 'DEVELOPER')
+
                                                     @if($buildOrder->ios_output_url)
                                                         <button type="button" class="btn btn-primary" onclick="openFileInModal('{{ $buildOrder->ios_output_url }}')">
                                                             {!! $statusDataLog['icon'] !!} View
@@ -105,6 +107,7 @@
                                                         <button type="button" class="btn btn-primary" onclick="openFileInModal('{{ $buildOrder->android_output_url }}')">
                                                             📄 View
                                                         </button>
+                                                    @endif
                                                     @endif
                                                 </td>
                                             </tr>
