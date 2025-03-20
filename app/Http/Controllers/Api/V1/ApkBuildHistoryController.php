@@ -80,7 +80,7 @@ class ApkBuildHistoryController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Builder not supported this plugin');
         }
 
-        $apkBuildExists = BuildOrder::where('status', 'processing')
+        $apkBuildExists = BuildOrder::whereIn('status', ['processing','pending'])
             ->where('issuer_id', $findSiteUrl->ios_issuer_id)
             ->exists();
 
