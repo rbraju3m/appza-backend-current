@@ -47,6 +47,8 @@ Route::prefix('/appza/v1')
 
         // build api
         Route::prefix('build')->group(function () {
+            Route::get('list', [ApkBuildHistoryController::class,'apkBuildList'])->name('build_apk_list');
+
             Route::post('resource', [ApkBuildResourceController::class,'buildResource'])->name('create_build_resource');
             Route::post('ios-resource', [ApkBuildResourceController::class,'iosResource'])->name('create_ios_resource');
             Route::post('ios-app', [ApkBuildResourceController::class,'iosAppName'])->name('create_ios_resource_appname');

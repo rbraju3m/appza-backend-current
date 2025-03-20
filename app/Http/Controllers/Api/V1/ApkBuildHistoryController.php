@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use App\Services\IosBuildValidationService;
+use Carbon\Carbon;
+
 
 class ApkBuildHistoryController extends Controller
 {
@@ -302,6 +304,7 @@ class ApkBuildHistoryController extends Controller
                 'subject' => 'Your App Build Is Complete!',
                 'app_name' => $getUserInfo->app_name,
                 'apk_url' => $orderItem->apk_url,
+                'aab_url' => $orderItem->aab_url,
                 'mail_template' => 'build_complete'
             ];
 
@@ -359,5 +362,84 @@ class ApkBuildHistoryController extends Controller
         // Return public download URL
         return config('app.image_public_path') . $filePath;
     }
+
+    public function apkBuildList(Request $request) {
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
+                'message' => $message,
+            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
+        };
+
+        if (!$this->authorization) {
+            return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
+        }
+
+        $domain = $request->query('site_url');
+
+        if (!$domain) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Site URL is required');
+        }
+
+        $findSiteUrl = BuildDomain::where('site_url', $domain)->first();
+
+        if (!$findSiteUrl) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain not found');
+        }
+
+        $buildOrders = BuildOrder::where('domain', $domain)->get();
+        if ($buildOrders->isEmpty()) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build domain not found');
+        }
+
+        // Grouping by build_target
+        $grouped_builds = []; // Initialize the array
+
+        foreach ($buildOrders as $build) {
+            $item = [
+                'package_name' => $build->package_name,
+                'app_name' => $build->app_name,
+                'domain' => $build->domain,
+                'build_number' => $build->build_number,
+                'icon_url' => $build->icon_url,
+                'build_target' => $build->build_target,
+                'status' => $build->status->name ?? 'Unknown',
+                'build_plugin_slug' => $build->build_plugin_slug,
+            ];
+
+            // Ensure timestamps are not null before parsing
+            if ($build->created_at && $build->updated_at) {
+                $created_at = Carbon::parse($build->created_at);
+                $finished_at = Carbon::parse($build->updated_at);
+
+                $diffInMinutes = $created_at->diffInMinutes($finished_at);
+                $item['created_at'] = $build->created_at->format('Y-m-d H:i:s A');
+                $item['process_time'] = $diffInMinutes . ' minutes';
+            } else {
+                $item['created_at'] = null;
+                $item['process_time'] = 'Unknown';
+            }
+
+            // Assign values based on build_target
+            if ($build->build_target === 'android') {
+                $item['jks_url'] = $build->jks_url;
+                $item['key_properties_url'] = $build->key_properties_url;
+                $item['apk_url'] = $build->apk_url;
+                $item['aab_url'] = $build->aab_url;
+            } elseif ($build->build_target === 'ios') {
+                $item['issuer_id'] = $build->issuer_id;
+                $item['key_id'] = $build->key_id;
+                $item['p8_file_url'] = $build->api_key_url;
+                $item['team_id'] = $build->team_id;
+            }
+
+            $grouped_builds[$build->build_target][] = $item; // Use object notation
+        }
+
+        return $jsonResponse(Response::HTTP_OK, 'Data found', [
+            'data' => $grouped_builds
+        ]);
+    }
+
 
 }

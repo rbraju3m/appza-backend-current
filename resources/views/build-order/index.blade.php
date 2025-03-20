@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
 @section('body')
@@ -21,6 +22,7 @@
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
                                     <th>{{__('messages.OrderAt')}}</th>
+                                    <th>Process Time</th>
                                     <th>{{__('messages.Plugin')}}</th>
                                     <th>{{__('messages.packageName')}}</th>
                                     <th>{{__('messages.appName')}}</th>
@@ -44,6 +46,16 @@
                                             <tr>
                                                 <td>{{$serial++}}</td>
                                                 <td>{{$buildOrder->created_at}}</td>
+                                                <td>
+                                                    @php
+                                                        $created_at = Carbon::parse($buildOrder->created_at);
+                                                        $finished_at = Carbon::parse($buildOrder->updated_at);
+
+                                                        $diffInMinutes = $created_at->diffInMinutes($finished_at);
+                                                        $process_time = $diffInMinutes . ' minutes';
+                                                    @endphp
+                                                    {{$process_time}}
+                                                </td>
                                                 <td>{{$buildOrder->build_plugin_slug}}</td>
                                                 <td>{{$buildOrder->package_name}}</td>
                                                 <td>{{$buildOrder->app_name}}</td>

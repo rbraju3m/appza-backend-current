@@ -20,7 +20,8 @@
                                         <p style="color: black">I’m excited to inform you that the development of your app, [{{$details['app_name']}}], is now complete! 🎉 On the following link you will find your app files.
                                         </p>
                                         <p style="color: black">
-                                            Link: {{$details['apk_url']}}
+                                            <a href="{{$details['apk_url']}}">APK Link click here</a>
+                                            <a href="{{$details['aab_url']}}">AAB Link click here</a>
                                         </p>
                                         <p style="color: black">
                                             If you need any assistance or have questions about the app’s features or functionalities, feel free to reach out. We're here to support you every step of the way.
