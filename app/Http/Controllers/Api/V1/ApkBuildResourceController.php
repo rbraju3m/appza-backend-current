@@ -172,7 +172,12 @@ class ApkBuildResourceController extends Controller
             'build_plugin_slug' => $request->input('plugin_slug'),
         ]);
 
-        return $jsonResponse(Response::HTTP_OK, 'App selection for build requests is confirmed.');
+        return $jsonResponse(Response::HTTP_OK, 'App selection for build requests is confirmed.',[
+            'data' => [
+                'package_name' => $findSiteUrl->package_name,
+                'bundle_name' => $findSiteUrl->package_name,
+            ]
+        ]);
     }
 
     public function iosResource(IosBuildRequest $request) {
