@@ -109,14 +109,16 @@
             </ul>
         </div>--}}
 
-        {{--<div class="nav-group {{ Request::is('appza/build-order/*') ? 'show' : ''}}">
+        @if(auth()->user()->user_type === 'DEVELOPER')
+        <div class="nav-group {{ Request::is('appza/build-order/*') ? 'show' : ''}}">
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.BuildOrder')}}</div>
             <ul class="nav-sidebar">
                 <li class="nav-item ">
                     <a href="{{route('build_order_list')}}" class="nav-link {{ Request::is('appza/build-order/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.BuildOrderList')}}</span></a>
                 </li>
             </ul>
-        </div>--}}
+        </div>
+        @endif
 
 
             {{--<div class="nav-group {{ Request::is(app()->getLocale().'/appfiy/apk/*') ? 'show' : ''}}">
