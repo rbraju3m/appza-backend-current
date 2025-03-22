@@ -166,7 +166,7 @@ class LicenseController extends Controller
         if (!config('app.is_fluent_check')) {
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
             // Check or Create BuildDomain Entry
-            $buildDomain = BuildDomain::firstOrCreate(
+            BuildDomain::firstOrCreate(
                 [
                     'site_url' => $data['site_url'],
                     'license_key' => $data['license_key'],
@@ -256,7 +256,7 @@ class LicenseController extends Controller
         }
 
         // Check or Create BuildDomain Entry
-        $buildDomain = BuildDomain::firstOrCreate(
+        BuildDomain::firstOrCreate(
             [
                 'site_url' => $data['site_url'],
                 'license_key' => $data['license_key'],
