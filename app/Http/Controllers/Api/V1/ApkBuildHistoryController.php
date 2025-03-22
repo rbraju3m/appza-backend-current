@@ -94,7 +94,7 @@ class ApkBuildHistoryController extends Controller
             'version_id' => $findSiteUrl->version_id,
             'build_domain_id' => $findSiteUrl->id,
             'fluent_id' => $findSiteUrl->fluent_id,
-            'app_name' => $findSiteUrl->app_name,
+            'app_name' => $findSiteUrl->ios_app_name ?: $findSiteUrl->app_name,
             'app_logo' => $findSiteUrl->app_logo,
             'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
             'ios_issuer_id' => $findSiteUrl->ios_issuer_id,

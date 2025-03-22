@@ -50,7 +50,7 @@ class ApkBuildResourceController extends Controller
         }
 
         if ($this->pluginName == 'lazy_task'){
-            return $jsonResponse(Response::HTTP_OK, 'Build process off for lazy task.');
+            return $jsonResponse(Response::HTTP_LOCKED, 'Build process off for lazy task.');
         }
 
         $findSiteUrl = BuildDomain::where('site_url',$input["site_url"])->where('license_key',$input['license_key'])->first();
@@ -267,6 +267,7 @@ class ApkBuildResourceController extends Controller
         $iosResponse = $this->iosBuildValidationService->iosBuildProcessValidation2($findSiteUrl, $input['app']);
 
         if ($iosResponse) {
+            $findSiteUrl->update(['ios_app_name' => $input['app']]);
             return $jsonResponse(Response::HTTP_OK, 'The iOS app name is matched with your account.', [
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
@@ -282,6 +283,4 @@ class ApkBuildResourceController extends Controller
             ]);
         }
     }
-
-
 }

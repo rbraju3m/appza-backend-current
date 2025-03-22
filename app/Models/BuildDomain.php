@@ -33,6 +33,7 @@ class BuildDomain extends Model
         'confirm_email',
         'is_ios',
         'fluent_item_id',
+        'ios_app_name',
         'build_plugin_slug'
     ];
 
