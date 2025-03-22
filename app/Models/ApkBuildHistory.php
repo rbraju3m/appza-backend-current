@@ -14,7 +14,7 @@ class ApkBuildHistory extends Model
     protected $guarded = ['id'];
     protected $dates = ['created_at','updated_at'];
 
-    protected $fillable = ['version_id', 'build_domain_id', 'fluent_id', 'app_name', 'app_logo', 'app_splash_screen_image', 'build_version','ios_issuer_id','ios_key_id','ios_team_id','ios_p8_file_content'];
+    protected $fillable = ['version_id', 'build_domain_id', 'fluent_id', 'app_name', 'app_logo', 'app_splash_screen_image', 'build_version','ios_issuer_id','ios_key_id','ios_team_id','ios_p8_file_content','ios_app_name'];
 
     public static function boot() {
         parent::boot();

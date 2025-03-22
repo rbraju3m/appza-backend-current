@@ -94,7 +94,8 @@ class ApkBuildHistoryController extends Controller
             'version_id' => $findSiteUrl->version_id,
             'build_domain_id' => $findSiteUrl->id,
             'fluent_id' => $findSiteUrl->fluent_id,
-            'app_name' => $findSiteUrl->ios_app_name ?: $findSiteUrl->app_name,
+            'app_name' => $findSiteUrl->app_name,
+            'ios_app_name' => $findSiteUrl->ios_app_name,
             'app_logo' => $findSiteUrl->app_logo,
             'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
             'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
@@ -116,7 +117,6 @@ class ApkBuildHistoryController extends Controller
         $data = [
             'build_plugin_slug' => $findSiteUrl->build_plugin_slug,
             'package_name' => $findSiteUrl->package_name,
-            'app_name' => $buildHistory->app_name,
             'domain' => $findSiteUrl->site_url,
             'base_suffix' => '/wp-json/appza/api/v1/',
             'base_url' => rtrim($findSiteUrl->site_url, '/') . '/wp-json/appza/api/v1/',
@@ -135,11 +135,13 @@ class ApkBuildHistoryController extends Controller
 
         // Process Android Build
         if ($findSiteUrl->is_android) {
+            $data['app_name'] = $buildHistory->app_name;
             $this->processBuildOrder($findSiteUrl, $buildHistory, $data, 'android', $isBuilderON);
         }
 
         // Process iOS Build
         if ($findSiteUrl->is_ios) {
+            $data['app_name'] = $buildHistory->ios_app_name;
             $this->processBuildOrder($findSiteUrl, $buildHistory, $data, 'ios', $isBuilderON);
         }
     }
@@ -284,25 +286,26 @@ class ApkBuildHistoryController extends Controller
         }
 
         $orderItem->update($input);
-        $getUserInfo = BuildDomain::where('package_name', $orderItem->package_name)->first();
 
-        if ($input['status'] === 'failed') {
+        $getUserInfo = Lead::where('domain', $orderItem->domain)->ActiveAndOpen()->latest()->first();
+        $getBuildDomain = BuildDomain::where('site_url', $orderItem->domain)->where('package_name',$orderItem->package_name)->first();
+
+        if ($orderItem->status->value === 'failed') {
             $details = [
-                'customer_name' => $getUserInfo->app_name,
+                'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
                 'subject' => 'Update on Your App Build: Action Required',
-                'app_name' => $getUserInfo->app_name,
+                'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
                 'mail_template' => 'build_failed'
             ];
 
             // send mail
             $isMailSend = config('app.is_send_mail');
-            $isMailSend && Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-
-        } elseif ($input['status'] === 'completed') {
+            $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+        } elseif ($orderItem->status->value === 'completed') {
             $details = [
-                'customer_name' => $getUserInfo->app_name,
+                'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
                 'subject' => 'Your App Build Is Complete!',
-                'app_name' => $getUserInfo->app_name,
+                'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
                 'apk_url' => $orderItem->apk_url,
                 'aab_url' => $orderItem->aab_url,
                 'mail_template' => 'build_complete'
@@ -310,8 +313,7 @@ class ApkBuildHistoryController extends Controller
 
             // send mail
             $isMailSend = config('app.is_send_mail');
-            $isMailSend && Mail::to($getUserInfo->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-
+            $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
         }
 
         return $jsonResponse(Response::HTTP_OK, 'success');

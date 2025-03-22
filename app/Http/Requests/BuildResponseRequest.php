@@ -26,9 +26,7 @@ class BuildResponseRequest extends FormRequest
     public function rules()
     {
         return [
-            'status' => 'required|string|in:completed,failed',
-            'apk_url' => 'required_if:status,completed|nullable|string|url',
-            'build_message' => 'required_if:status,failed|nullable|string',
+            'build_message' => 'nullable|string',
         ];
     }
 
