@@ -307,7 +307,7 @@ class ApkBuildHistoryController extends Controller
         } elseif ($orderItem->status->value === 'completed') {
             $details = [
                 'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
-                'subject' => 'Your Android App Build Is Complete! 🎉',
+                'subject' => $orderItem->build_target=='ios'?'Your IOS App Build Is Complete! 🎉':'Your Android App Build Is Complete! 🎉',
                 'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
                 'apk_url' => $orderItem->apk_url,
                 'aab_url' => $orderItem->aab_url,
