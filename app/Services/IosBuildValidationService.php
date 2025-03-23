@@ -175,8 +175,14 @@ class IosBuildValidationService {
             // Count the number of distribution certificates
             $distributionCount = count($distributionCerts);
             // Check if there are more than 2 distribution certificates
-            if ($distributionCount >= 2) {
+            /*if ($distributionCount >= 2) {
                 return $distributionCerts[0]['ID'];
+            } else {
+                return null;
+            }*/
+            if ($distributionCount >= 2) {
+                $randomKey = array_rand($distributionCerts); // Get a random key from the array
+                return $distributionCerts[$randomKey]['ID']; // Return the ID of the randomly selected item
             } else {
                 return null;
             }
