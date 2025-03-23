@@ -1,7 +1,7 @@
 Dear {{$details['customer_name']}} ,
 
 <p style="color: black;text-align: justify">
-    I’m excited to inform you that the development of your Android app, [<b>{{$details['app_name']}}</b>] is now complete! 🎉
+    I’m excited to inform you that the development of your Android app, <b>{{$details['app_name']}}</b> is now complete! 🎉
 </p>
 
 <p style="color: black;text-align: justify">

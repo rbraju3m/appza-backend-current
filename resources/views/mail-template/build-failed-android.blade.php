@@ -1,7 +1,7 @@
 Dear {{$details['customer_name']}} ,
 
 <p style="color: black;text-align: justify">
-    I hope this message finds you well. I wanted to provide you with an update regarding the development of your Android app, [<b>{{$details['app_name']}}</b>]. Unfortunately, we encountered some unexpected issues during the build process, and we were unable to successfully complete the build at this time.
+    I hope this message finds you well. I wanted to provide you with an update regarding the development of your Android app, <b>{{$details['app_name']}}</b>. Unfortunately, we encountered some unexpected issues during the build process, and we were unable to successfully complete the build at this time.
 </p>
 
 <p style="color: black;text-align: justify">

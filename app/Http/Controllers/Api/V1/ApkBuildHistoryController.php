@@ -129,6 +129,8 @@ class ApkBuildHistoryController extends Controller
                 'customer_name' => $this->customerName,
                 'subject' => 'Your App Build Request is in Progress 🚀',
                 'app_name' => $buildHistory->app_name,
+                'is_android' => $findSiteUrl->is_android,
+                'is_ios' => $findSiteUrl->is_ios,
                 'mail_template' => 'build_request'
             ]));
         }
