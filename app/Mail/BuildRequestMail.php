@@ -43,11 +43,17 @@ class BuildRequestMail extends Mailable
         if($this->details['mail_template'] == 'build_request'){
             return $this->subject($this->details['subject'])->view('mail-template.build-request');
         }
-        if($this->details['mail_template'] == 'build_failed'){
-            return $this->subject($this->details['subject'])->view('mail-template.build-failed');
+        if($this->details['mail_template'] == 'build_failed_android'){
+            return $this->subject($this->details['subject'])->view('mail-template.build-failed-android');
         }
-        if($this->details['mail_template'] == 'build_complete'){
-            return $this->subject($this->details['subject'])->view('mail-template.build-success');
+        if($this->details['mail_template'] == 'build_failed_ios'){
+            return $this->subject($this->details['subject'])->view('mail-template.build-failed-ios');
+        }
+        if($this->details['mail_template'] == 'build_complete_android'){
+            return $this->subject($this->details['subject'])->view('mail-template.build-success-android');
+        }
+        if($this->details['mail_template'] == 'build_complete_ios'){
+            return $this->subject($this->details['subject'])->view('mail-template.build-success-ios');
         }
     }
 

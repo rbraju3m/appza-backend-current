@@ -127,7 +127,7 @@ class ApkBuildHistoryController extends Controller
         if (config('app.is_send_mail')) {
             Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail([
                 'customer_name' => $this->customerName,
-                'subject' => 'Your App Build Request is in Progress',
+                'subject' => 'Your App Build Request is in Progress 🚀',
                 'app_name' => $buildHistory->app_name,
                 'mail_template' => 'build_request'
             ]));
@@ -188,6 +188,7 @@ class ApkBuildHistoryController extends Controller
         }
     }
 
+    // for handle jks file
     private function handleJksFileRequest($findSiteUrl)
     {
         $folder = $findSiteUrl->package_name;
@@ -293,9 +294,9 @@ class ApkBuildHistoryController extends Controller
         if ($orderItem->status->value === 'failed') {
             $details = [
                 'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
-                'subject' => 'Update on Your App Build: Action Required',
+                'subject' => $orderItem->build_target=='ios'?'Update on Your iOS App Build: Action Required':'Update on Your Android App Build: Action Required',
                 'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
-                'mail_template' => 'build_failed'
+                'mail_template' => $orderItem->build_target=='ios'?'build_failed_ios':'build_failed_android'
             ];
 
             // send mail
@@ -304,11 +305,11 @@ class ApkBuildHistoryController extends Controller
         } elseif ($orderItem->status->value === 'completed') {
             $details = [
                 'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
-                'subject' => 'Your App Build Is Complete!',
+                'subject' => 'Your Android App Build Is Complete! 🎉',
                 'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
                 'apk_url' => $orderItem->apk_url,
                 'aab_url' => $orderItem->aab_url,
-                'mail_template' => 'build_complete'
+                'mail_template' => $orderItem->build_target=='ios'?'build_complete_ios':'build_complete_android'
             ];
 
             // send mail
@@ -319,6 +320,8 @@ class ApkBuildHistoryController extends Controller
         return $jsonResponse(Response::HTTP_OK, 'success');
     }
 
+
+    // this is for test , not functional in the application , it's for builder application
     public function uploadApkIntoR2(Request $request) {
         $directory = "/var/www/html/appza-backend/public/apk-upload";
         $folder = "android-apk";
