@@ -73,7 +73,7 @@ class ApkBuildHistoryController extends Controller
         }
 
         // for builder application supports
-        $builderSupportsPlugin = ['woocommerce', 'tutor-lms'];
+        $builderSupportsPlugin = ['woocommerce', 'tutor-lms','wordpress'];
         if (empty($findSiteUrl->build_plugin_slug)) {
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Plugin slug missing , first request build resource api.');
         }
