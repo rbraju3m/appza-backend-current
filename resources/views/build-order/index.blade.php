@@ -72,6 +72,11 @@
                                                             'completed' => ['class' => 'bg-secondary text-white', 'icon' => '✅', 'label' => 'Completed'],
                                                             'processing' => ['class' => 'bg-secondary text-dark', 'icon' => '⏳', 'label' => 'Processing'],
                                                             'pending' => ['class' => 'bg-secondary text-dark', 'icon' => '🕒', 'label' => 'Pending'],
+                                                             /*'pending' => [
+                                                                'class' => ' text-dark',
+                                                                'icon' => '<img src="' . asset('1.gif') . '" alt="Processing" width="50">',
+                                                                'label' => 'Pending'
+                                                            ],*/
                                                         ];
 
                                                         // Get status data or use a default
