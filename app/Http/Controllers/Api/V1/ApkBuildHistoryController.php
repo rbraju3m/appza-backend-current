@@ -303,7 +303,11 @@ class ApkBuildHistoryController extends Controller
 
             // send mail
             $isMailSend = config('app.is_send_mail');
-            $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+            if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
+                $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+            } else {
+                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email]);
+            }
         } elseif ($orderItem->status->value === 'completed') {
             $details = [
                 'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
@@ -316,8 +320,11 @@ class ApkBuildHistoryController extends Controller
 
             // send mail
             $isMailSend = config('app.is_send_mail');
-            $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-        }
+            if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
+                $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+            } else {
+                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email]);
+            }        }
 
         return $jsonResponse(Response::HTTP_OK, 'success');
     }
