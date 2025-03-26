@@ -8,7 +8,7 @@ Dear {{$details['customer_name']}} ,
     On the following link you will find your app files.
     <br>
 {{--    apk link : <a href="{{$details['apk_url']}}">click here</a>--}}
-    <a href="{{ route('download.page') }}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">
+    <a href="{{ route('download_apk') }}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">
         Go to Download apk
     </a>
     <br>
