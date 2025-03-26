@@ -7,7 +7,9 @@ Dear {{$details['customer_name']}} ,
 <p style="color: black;text-align: justify">
     On the following link you will find your app files.
     <br>
-    apk link : <a href="{{$details['apk_url']}}" target="_blank">Click here</a>
+    <a href="{{$details['apk_url']}}" onclick="window.location.href=this.href; return false;">Click here</a>
+
+    {{--    apk link : <a href="{{$details['apk_url']}}" target="_blank">Click here</a>--}}
     <br>
     aab link : <a href="{{$details['aab_url']}}" target="_blank">Click here</a>
 </p>
@@ -20,3 +22,14 @@ Dear {{$details['customer_name']}} ,
     <br>Thank you for choosing Appza
     <br><span style="color: black">{{config('app.company_name')}}</span>
 </p>
+
+
+<script>
+    function downloadApk() {
+        var link = document.createElement("a");
+        link.href = "{{$details['apk_url']}}";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
