@@ -134,6 +134,7 @@ class ApkBuildHistoryController extends Controller
                     'is_ios' => $findSiteUrl->is_ios,
                     'mail_template' => 'build_request'
                 ];
+                $isMailSend = config('app.is_send_mail');
                 $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
             } else {
                 Log::error('Invalid email detected', ['email' => $findSiteUrl->confirm_email]);
@@ -303,7 +304,6 @@ class ApkBuildHistoryController extends Controller
             ->where('license_key', $orderItem->license_key)
             ->where('package_name', $orderItem->package_name)
             ->first();
-
 
         if ($orderItem->status->value === 'failed') {
             $details = [
