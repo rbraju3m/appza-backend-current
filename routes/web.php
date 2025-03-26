@@ -44,7 +44,7 @@ Route::prefix('admin')
 
 
 Route::prefix('/appza')->middleware(['auth'])->group(function() {
-
+    Route::get('download/apk', [\App\Http\Controllers\Api\V1\ApkBuildHistoryController::class, 'downloadApk'])->name('download_apk');
     /* layout type route start */
     Route::prefix('layout-type')->group(function () {
         Route::get('list', [LayoutTypeController::class, 'index'])->name('layout_type_list');

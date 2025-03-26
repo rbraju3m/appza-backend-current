@@ -469,4 +469,15 @@ class ApkBuildHistoryController extends Controller
     }
 
 
+
+    public function downloadApk()
+    {
+//        $path = storage_path('app/public/your-app.apk');
+        $path = "https://pub-df31c5b8360c4944bed15058d93cf4cc.r2.dev/android-apk/woocommercelazycoders_build_018.apk";
+        return response()->download($path, 'check-app.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+        ]);
+    }
+
+
 }
