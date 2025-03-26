@@ -125,14 +125,19 @@ class ApkBuildHistoryController extends Controller
 
         // Send email notification
         if (config('app.is_send_mail')) {
-            Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail([
-                'customer_name' => $this->customerName,
-                'subject' => 'Your App Build Request is in Progress 🚀',
-                'app_name' => $buildHistory->app_name,
-                'is_android' => $findSiteUrl->is_android,
-                'is_ios' => $findSiteUrl->is_ios,
-                'mail_template' => 'build_request'
-            ]));
+            if (!empty($findSiteUrl->confirm_email) && filter_var($findSiteUrl->confirm_email, FILTER_VALIDATE_EMAIL)) {
+                $details = [
+                    'customer_name' => $this->customerName,
+                    'subject' => 'Your App Build Request is in Progress 🚀',
+                    'app_name' => $buildHistory->app_name,
+                    'is_android' => $findSiteUrl->is_android,
+                    'is_ios' => $findSiteUrl->is_ios,
+                    'mail_template' => 'build_request'
+                ];
+                $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+            } else {
+                Log::error('Invalid email detected', ['email' => $findSiteUrl->confirm_email]);
+            }
         }
 
         // Process Android Build
@@ -151,6 +156,8 @@ class ApkBuildHistoryController extends Controller
     private function processBuildOrder($findSiteUrl, $buildHistory, $data, $platform, $isBuilderON)
     {
 //        dump($findSiteUrl->package_name);
+        $data['license_key'] = $findSiteUrl->license_key;
+        $data['build_domain_id'] = $findSiteUrl->id;
         $data['build_target'] = $platform;
         $data['build_number'] = $this->getNextBuildNumber($findSiteUrl->site_url, $findSiteUrl->package_name, $platform);
 
@@ -291,7 +298,12 @@ class ApkBuildHistoryController extends Controller
         $orderItem->update($input);
 
         $getUserInfo = Lead::where('domain', $orderItem->domain)->ActiveAndOpen()->latest()->first();
-        $getBuildDomain = BuildDomain::where('site_url', $orderItem->domain)->where('package_name',$orderItem->package_name)->first();
+
+        $getBuildDomain = BuildDomain::where('site_url', $orderItem->domain)
+            ->where('license_key', $orderItem->license_key)
+            ->where('package_name', $orderItem->package_name)
+            ->first();
+
 
         if ($orderItem->status->value === 'failed') {
             $details = [
@@ -306,7 +318,7 @@ class ApkBuildHistoryController extends Controller
             if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
             } else {
-                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email]);
+                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
             }
         } elseif ($orderItem->status->value === 'completed') {
             $details = [
@@ -323,8 +335,9 @@ class ApkBuildHistoryController extends Controller
             if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
             } else {
-                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email]);
-            }        }
+                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
+            }
+        }
 
         return $jsonResponse(Response::HTTP_OK, 'success');
     }

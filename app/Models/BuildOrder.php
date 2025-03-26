@@ -33,7 +33,10 @@ class BuildOrder extends Model
         'aab_url',
         'android_output_url',
         'ios_output_url',
-        'build_plugin_slug'
+        'ios_output_url',
+        'build_plugin_slug',
+        'build_domain_id',
+        'license_key'
     ];
 
     protected $casts = [
