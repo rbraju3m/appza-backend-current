@@ -7,7 +7,8 @@ Dear {{$details['customer_name']}} ,
 <p style="color: black;text-align: justify">
     On the following link you will find your app files.
     <br>
-    <a href="{{$details['apk_url']}}" onclick="window.location.href=this.href; return false;">Click here</a>
+{{--    <a href="{{$details['apk_url']}}" onclick="window.location.href=this.href; return false;">Click here</a>--}}
+    <a href="#" onclick="forceApkDownload()">Click here</a>
 
     {{--    apk link : <a href="{{$details['apk_url']}}" target="_blank">Click here</a>--}}
     <br>
@@ -25,9 +26,10 @@ Dear {{$details['customer_name']}} ,
 
 
 <script>
-    function downloadApk() {
+    function forceApkDownload() {
         var link = document.createElement("a");
         link.href = "{{$details['apk_url']}}";
+        link.setAttribute("download", "app.apk");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
