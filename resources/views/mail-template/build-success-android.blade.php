@@ -7,11 +7,9 @@ Dear {{$details['customer_name']}} ,
 <p style="color: black;text-align: justify">
     On the following link you will find your app files.
     <br>
-    apk link : <a href="{{$details['apk_url']}}" download>click here</a>
-    {{$details['apk_url']}}
+    apk link : <a href="{{$details['apk_url']}}" target="_blank">Click here</a>
     <br>
-    aab link : <a href="{{$details['aab_url']}}" download>click here</a>
-    {{$details['aab_url']}}
+    aab link : <a href="{{$details['aab_url']}}" target="_blank">Click here</a>
 </p>
 
 <p style="color: black;text-align: justify;">
