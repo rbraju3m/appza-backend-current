@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 
@@ -169,6 +170,9 @@ class IosBuildValidationService {
                 }, $certificates['data']),
                 function($cert) {
                     return $cert['Type'] === 'DISTRIBUTION';
+                    /*$current_time = Carbon::now()->format('Y-m-d\TH:i:s.000+00:00');
+                    return $cert['attributes']['certificateType'] === 'DISTRIBUTION' &&
+                        ($cert['attributes']['expirationDate'] ?? '') > $current_time;*/
                 }
             );
 
@@ -180,6 +184,8 @@ class IosBuildValidationService {
             } else {
                 return null;
             }*/
+//            use Carbon\Carbon;
+
             if ($distributionCount >= 2) {
                 $randomKey = array_rand($distributionCerts); // Get a random key from the array
                 return $distributionCerts[$randomKey]['ID']; // Return the ID of the randomly selected item

@@ -288,6 +288,23 @@ class ApkBuildHistoryController extends Controller
                 'message' => $message,
             ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
         };
+        /*set_time_limit(3600);
+        ini_set('memory_limit', '-1');
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
+                'message' => $message,
+            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
+        };
+
+        $to_email = "raju.rightbrainsolution@gmail.com";
+
+        Log::info('mail send start');
+        Mail::raw('This is a test email from Laravel.', function ($message) use ($to_email) {
+            $message->to($to_email)
+                ->subject('Test Email');
+        });
+        Log::info('mail send end');*/
 
         $input = $request->validated();
         $orderItem = BuildOrder::find($id);
