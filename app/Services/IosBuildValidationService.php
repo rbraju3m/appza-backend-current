@@ -165,14 +165,17 @@ class IosBuildValidationService {
                         'ID' => $cert['id'],
                         'Name' => $cert['attributes']['name'],
                         'Type' => $cert['attributes']['certificateType'],
+                        'expirationDate' => $cert['attributes']['expirationDate'],
                         'Platforms' => isset($cert['attributes']['platforms']) ? $cert['attributes']['platforms'] : 'N/A'
                     ];
                 }, $certificates['data']),
                 function($cert) {
-                    return $cert['Type'] === 'DISTRIBUTION';
-                    /*$current_time = Carbon::now()->format('Y-m-d\TH:i:s.000+00:00');
-                    return $cert['attributes']['certificateType'] === 'DISTRIBUTION' &&
-                        ($cert['attributes']['expirationDate'] ?? '') > $current_time;*/
+                    // previous check that work okay
+//                    return $cert['Type'] === 'DISTRIBUTION';
+
+                    // next implement for saiful req for more validation
+                    $current_time = Carbon::now()->format('Y-m-d\TH:i:s.000+00:00');
+                    return $cert['Type'] === 'DISTRIBUTION' && ($cert['expirationDate'] ?? '') > $current_time;
                 }
             );
 
@@ -184,7 +187,6 @@ class IosBuildValidationService {
             } else {
                 return null;
             }*/
-//            use Carbon\Carbon;
 
             if ($distributionCount >= 2) {
                 $randomKey = array_rand($distributionCerts); // Get a random key from the array
