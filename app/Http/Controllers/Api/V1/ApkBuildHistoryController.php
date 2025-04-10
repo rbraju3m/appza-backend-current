@@ -120,7 +120,8 @@ class ApkBuildHistoryController extends Controller
             'domain' => $findSiteUrl->site_url,
             'base_suffix' => '/wp-json/appza/api/v1/',
             'base_url' => rtrim($findSiteUrl->site_url, '/') . '/wp-json/appza/api/v1/',
-            'icon_url' => url('') . '/upload/build-apk/logo/' . $buildHistory->app_logo
+            'icon_url' => url('') . '/upload/build-apk/logo/' . $buildHistory->app_logo,
+            'history_id' => $buildHistory->id,
         ];
 
         // Send email notification

@@ -36,7 +36,8 @@ class BuildOrder extends Model
         'ios_output_url',
         'build_plugin_slug',
         'build_domain_id',
-        'license_key'
+        'license_key',
+        'history_id'
     ];
 
     protected $casts = [

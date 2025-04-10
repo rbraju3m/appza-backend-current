@@ -30,7 +30,6 @@ class BuildOrderController extends Controller
     {
         // Retrieve active plugin entries
         $buildOrders = BuildOrder::orderByDesc('id')->paginate(20);
-//        dump($request->method());
 
         return view('build-order.index',compact('buildOrders'));
     }

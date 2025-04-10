@@ -29,8 +29,8 @@
                                     <th>{{__('messages.Domain')}}</th>
                                     <th>{{__('messages.buildTarget')}}</th>
                                     <th>{{__('messages.Status')}}</th>
-                                    <th>{{__('messages.AllFile')}}</th>
-                                    <th>{{__('messages.BuildLog')}}</th>
+                                    <th width="13%">{{__('messages.AllFile')}}</th>
+                                    <th width="14%">{{__('messages.BuildLog')}}</th>
                                 </tr>
                                 </thead>
 
@@ -41,20 +41,40 @@
                                             $currentPage = $buildOrders->currentPage();
                                             $perPage = $buildOrders->perPage();
                                             $serial = ($currentPage - 1) * $perPage + 1;
+                                            $previousHistoryId = null;
+                                            $previousProcessTime = null;
+
+                                            $serial = ($buildOrders->currentPage() - 1) * $buildOrders->perPage() + 1;
+                                            // Convert paginator to array for index access
+                                            $buildOrdersArray = $buildOrders->values(); // reindex from 0, 1, 2...
                                         @endphp
-                                        @foreach($buildOrders as $buildOrder)
+
+                                        @foreach($buildOrdersArray as $index => $buildOrder)
                                             <tr>
                                                 <td>{{$serial++}}</td>
-                                                <td>{{$buildOrder->created_at}}</td>
+                                                <td>{{$buildOrder->created_at->format('d-M-Y')}}</td>
                                                 <td>
                                                     @php
                                                         $created_at = Carbon::parse($buildOrder->created_at);
-                                                        $finished_at = Carbon::parse($buildOrder->updated_at);
+                                                        $updated_at = Carbon::parse($buildOrder->updated_at);
 
-                                                        $diffInMinutes = $created_at->diffInMinutes($finished_at);
-                                                        $process_time = $diffInMinutes;
+                                                        $currentProcessTime = $created_at->diffInMinutes($updated_at);
+                                                        $displayProcessTime = $currentProcessTime;
+
+                                                        // Check if there is a next row in this page
+                                                        $next = $buildOrdersArray->get($index + 1);
+
+                                                        if ($next && $buildOrder->history_id == $next->history_id) {
+                                                            // If the next row (logically previous) has same history_id,
+                                                            // perform your subtraction
+                                                            $nextCreatedAt = Carbon::parse($next->created_at);
+                                                            $nextUpdatedAt = Carbon::parse($next->updated_at);
+                                                            $nextProcessTime = $nextCreatedAt->diffInMinutes($nextUpdatedAt);
+
+                                                            $displayProcessTime = $currentProcessTime - $nextProcessTime;
+                                                        }
                                                     @endphp
-                                                    {{number_format($process_time,2).' minutes'}}
+                                                    {{number_format($displayProcessTime,2).' minutes'}}
                                                 </td>
                                                 <td>{{$buildOrder->build_plugin_slug}}</td>
                                                 <td>{{$buildOrder->package_name}}</td>
@@ -122,6 +142,12 @@
                                                     @if($buildOrder->android_output_url)
                                                         <button type="button" class="btn btn-primary" onclick="openFileInModal('{{ $buildOrder->android_output_url }}')">
                                                             📄 View
+                                                        </button>
+                                                    @endif
+
+                                                    @if($buildOrder->runner_url)
+                                                        <button type="button" class="btn btn-secondary" onclick="openFileInModal('{{ $buildOrder->runner_url }}')">
+                                                            📄 Runner
                                                         </button>
                                                     @endif
                                                 </td>
