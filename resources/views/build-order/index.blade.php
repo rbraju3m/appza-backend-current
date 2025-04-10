@@ -15,7 +15,7 @@
 
                     <div class="card-body">
                         @include('layouts.message')
-                        <form method="post" role="form" id="search-form">
+{{--                        <form method="post" role="form" id="search-form">--}}
                             <table id="leave_settings" class="table table-bordered datatable table-responsive mainTable text-center">
 
                                 <thead class="thead-dark">
@@ -152,7 +152,7 @@
                                     {{ $buildOrders->links('layouts.pagination') }}
                                 </div>
                             @endif
-                        </form>
+{{--                        </form>--}}
                     </div>
                 </div>
             </div>

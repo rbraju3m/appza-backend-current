@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BuildOrderController;
 use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ComponentGroupController;
@@ -24,6 +26,16 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// Show the form to request a password reset link
+Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+// Send the reset link
+Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+// Show the form to reset password with token
+Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+// Handle reset form submission
+Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+
 
 Route::get('/', function () {
     return view('welcome');

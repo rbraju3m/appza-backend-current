@@ -1,4 +1,5 @@
-<nav class="navbar navbar-expand navbar-light bg-light print-header-content">
+{{--<nav class="navbar navbar-expand navbar-light bg-light fixed-top ms-250">--}}
+    <nav class="navbar navbar-expand navbar-light bg-light print-header-content sticky-navbar">
     <ul class="navbar-nav me-auto">
         <li class="nav-item active">
             <a id="sidebar-toggle" class="sidebar-toggle nav-link" href="#">
@@ -16,7 +17,7 @@
 
     <div class="dropdown text-end">
         <a  href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-{{--            <img src="https://github.com/mdo.png" alt="mdo" class="rounded-circle" width="32" height="32">--}}
+            <img src="{{ asset('Fav.svg') }}" alt="mdo" class="rounded-circle" width="32" height="32">
             {{auth()->user()?auth()->user()->name:''}}
         </a>
         <ul class="dropdown-menu text-small" aria-labelledby="dropdownUser1" style="">
@@ -25,6 +26,8 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{{ route('user_reset_password',[app()->getLocale()]) }}">  Reset Password</a></li>
             @endif
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{route('password.request')}}">Reset Password</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
                 <a class="dropdown-item" href="{{ route('logout') }}"

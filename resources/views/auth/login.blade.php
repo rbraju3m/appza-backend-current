@@ -44,7 +44,7 @@
                     <br>
                     <div class="form-group">
                         <label for="exampleInputPassword1">Password</label>
-                        <a href="#" style="float:right;font-size:12px;">Forgot password?</a>
+                        <a href="{{route('password.request')}}" style="float:right;font-size:12px;">Forgot password?</a>
                         <input type="password" name="password" class="form-control form-control-sm @error('password') is-invalid @enderror" id="exampleInputPassword1" >
                     </div>
 
