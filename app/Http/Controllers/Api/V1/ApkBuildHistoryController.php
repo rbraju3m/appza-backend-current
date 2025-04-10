@@ -360,6 +360,25 @@ class ApkBuildHistoryController extends Controller
         return $jsonResponse(Response::HTTP_OK, 'success');
     }
 
+    public function processStart(BuildResponseRequest $request, $id) {
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
+                'message' => $message,
+            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
+        };
+
+        $orderItem = BuildOrder::find($id);
+
+        if (!$orderItem) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build order not found');
+        }
+
+        $orderItem->update(['process_start' => now()]);
+
+        return $jsonResponse(Response::HTTP_OK, 'success');
+    }
+
 
     // this is for test , not functional in the application , it's for builder application
     public function uploadApkIntoR2(Request $request) {

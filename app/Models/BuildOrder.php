@@ -35,6 +35,7 @@ class BuildOrder extends Model
         'ios_output_url',
         'ios_output_url',
         'build_plugin_slug',
+        'process_start',
         'build_domain_id',
         'license_key',
         'history_id'
@@ -44,4 +45,19 @@ class BuildOrder extends Model
         'key_properties' => 'json',
         'status' => BuildStatus::class,
     ];
+
+    public static function boot() {
+        parent::boot();
+        self::creating(function ($model) {
+            $date =  new \DateTime("now");
+            $model->created_at = $date;
+            $model->updated_at = $date;
+            $model->process_start = $date;
+        });
+
+        self::updating(function ($model) {
+            $date =  new \DateTime("now");
+            $model->updated_at = $date;
+        });
+    }
 }

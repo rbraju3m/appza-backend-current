@@ -56,6 +56,7 @@ Route::prefix('/appza/v1')
 
             // build response by builder application
             Route::post('/response/{id}', [ApkBuildHistoryController::class,'apkBuildResponse'])->name('building_apk_response');
+            Route::post('/process-start/{id}', [ApkBuildHistoryController::class,'processStart'])->name('building_apk_process_start');
             // check apk upload into r2
             Route::get('/r2/upload', [ApkBuildHistoryController::class,'uploadApkIntoR2'])->name('upload_apk_into_r2');
 //            Route::get('/r2/upload', [ApkBuildHistoryController::class,'checkSh'])->name('upload_apk_into_r2');

@@ -55,24 +55,14 @@
                                                 <td>{{$buildOrder->created_at->format('d-M-Y')}}</td>
                                                 <td>
                                                     @php
-                                                        $created_at = Carbon::parse($buildOrder->created_at);
+                                                        $created_at = Carbon::parse($buildOrder->process_start);
                                                         $updated_at = Carbon::parse($buildOrder->updated_at);
 
-                                                        $currentProcessTime = $created_at->diffInMinutes($updated_at);
-                                                        $displayProcessTime = $currentProcessTime;
+                                                        // Allow signed difference (can be negative)
+                                                        $currentProcessTime = $created_at->diffInMinutes($updated_at, false);
 
-                                                        // Check if there is a next row in this page
-                                                        $next = $buildOrdersArray->get($index + 1);
-
-                                                        if ($next && $buildOrder->history_id == $next->history_id) {
-                                                            // If the next row (logically previous) has same history_id,
-                                                            // perform your subtraction
-                                                            $nextCreatedAt = Carbon::parse($next->created_at);
-                                                            $nextUpdatedAt = Carbon::parse($next->updated_at);
-                                                            $nextProcessTime = $nextCreatedAt->diffInMinutes($nextUpdatedAt);
-
-                                                            $displayProcessTime = $currentProcessTime - $nextProcessTime;
-                                                        }
+                                                        // Set default if negative
+                                                        $displayProcessTime = $currentProcessTime < 0 ? 0 : $currentProcessTime;
                                                     @endphp
                                                     {{number_format($displayProcessTime,2).' minutes'}}
                                                 </td>
