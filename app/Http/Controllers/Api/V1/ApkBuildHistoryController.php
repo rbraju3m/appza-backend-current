@@ -82,12 +82,14 @@ class ApkBuildHistoryController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Builder not supported this plugin');
         }
 
-        $apkBuildExists = BuildOrder::whereIn('status', ['processing','pending'])
-            ->where('issuer_id', $findSiteUrl->ios_issuer_id)
-            ->exists();
+        if ($findSiteUrl->is_ios == 1) {
+            $apkBuildExists = BuildOrder::whereIn('status', ['processing', 'pending'])
+                ->where('issuer_id', $findSiteUrl->ios_issuer_id)
+                ->exists();
 
-        if ($apkBuildExists) {
-            return $jsonResponse(Response::HTTP_CONFLICT, 'An app building process is already going on. Please try again later.');
+            if ($apkBuildExists) {
+                return $jsonResponse(Response::HTTP_CONFLICT, 'An app building process is already going on. Please try again later.');
+            }
         }
 
         $buildHistory = ApkBuildHistory::create([
