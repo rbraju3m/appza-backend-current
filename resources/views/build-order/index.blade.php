@@ -26,7 +26,7 @@
                                     <th>{{__('messages.Plugin')}}</th>
                                     <th>{{__('messages.packageName')}}</th>
                                     <th>{{__('messages.appName')}}</th>
-                                    <th>{{__('messages.Domain')}}</th>
+{{--                                    <th>{{__('messages.Domain')}}</th>--}}
                                     <th>{{__('messages.buildTarget')}}</th>
                                     <th>{{__('messages.Status')}}</th>
                                     <th width="13%">{{__('messages.AllFile')}}</th>
@@ -51,7 +51,9 @@
 
                                         @foreach($buildOrdersArray as $index => $buildOrder)
                                             <tr>
-                                                <td>{{$serial++}}</td>
+                                                <td>
+                                                    {{$serial++.' #id :'.$buildOrder->id}}
+                                                </td>
                                                 <td>{{$buildOrder->created_at->format('d-M-Y')}}</td>
                                                 <td>
                                                     @php
@@ -69,7 +71,7 @@
                                                 <td>{{$buildOrder->build_plugin_slug}}</td>
                                                 <td>{{$buildOrder->package_name}}</td>
                                                 <td>{{$buildOrder->app_name}}</td>
-                                                <td>{{$buildOrder->domain}}</td>
+{{--                                                <td>{{$buildOrder->domain}}</td>--}}
                                                 <td>{{$buildOrder->build_target}}</td>
                                                 <td>
                                                     @php
