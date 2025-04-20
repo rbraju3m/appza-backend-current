@@ -9,8 +9,11 @@ use App\Models\ApkBuildHistory;
 use App\Models\BuildDomain;
 use App\Models\BuildOrder;
 use App\Models\Lead;
+use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -37,7 +40,8 @@ class ApkBuildHistoryController extends Controller
         $this->iosBuildValidationService = $iosBuildValidationService;
     }
 
-    public function apkBuild(FinalBuildRequest $request) {
+    public function apkBuild(FinalBuildRequest $request)
+    {
         $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
             return new JsonResponse(array_merge([
                 'status' => $statusCode,
@@ -47,8 +51,7 @@ class ApkBuildHistoryController extends Controller
             ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
         };
 
-        $isBuilderON = config('app.is_builder_on');
-
+        $isBuilderON = config('app.is_builder_on', false);
         if (!$isBuilderON) {
             return $jsonResponse(Response::HTTP_LOCKED, 'Builder is busy. Please try again later.');
         }
@@ -57,7 +60,7 @@ class ApkBuildHistoryController extends Controller
             return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 
-        if ($this->pluginName == 'lazy_task') {
+        if ($this->pluginName === 'lazy_task') {
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build process off for lazy task');
         }
 
@@ -72,16 +75,17 @@ class ApkBuildHistoryController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key wrong');
         }
 
-        // for builder application supports
-        $builderSupportsPlugin = ['woocommerce', 'tutor-lms','wordpress'];
+        // Supported plugins
+        $builderSupportsPlugin = ['woocommerce', 'tutor-lms', 'wordpress'];
         if (empty($findSiteUrl->build_plugin_slug)) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Plugin slug missing , first request build resource api.');
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Plugin slug missing, first request build resource API.');
         }
 
         if (!in_array($findSiteUrl->build_plugin_slug, $builderSupportsPlugin, true)) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Builder not supported this plugin');
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Builder does not support this plugin');
         }
 
+        // Check iOS concurrency lock
         if ($findSiteUrl->is_ios == 1) {
             $apkBuildExists = BuildOrder::whereIn('status', ['processing', 'pending'])
                 ->where('issuer_id', $findSiteUrl->ios_issuer_id)
@@ -92,28 +96,47 @@ class ApkBuildHistoryController extends Controller
             }
         }
 
-        $buildHistory = ApkBuildHistory::create([
-            'version_id' => $findSiteUrl->version_id,
-            'build_domain_id' => $findSiteUrl->id,
-            'fluent_id' => $findSiteUrl->fluent_id,
-            'app_name' => $findSiteUrl->app_name,
-            'ios_app_name' => $findSiteUrl->ios_app_name,
-            'app_logo' => $findSiteUrl->app_logo,
-            'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
-            'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
-            'ios_key_id' => $findSiteUrl->ios_key_id,
-            'ios_team_id' => $findSiteUrl->team_id,
-            'ios_p8_file_content' => $findSiteUrl->ios_p8_file_content,
-        ]);
+        // Transactionally create build history
+        try {
+            $buildHistory = DB::transaction(function () use ($findSiteUrl) {
+                $buildData = [
+                    'version_id' => $findSiteUrl->version_id,
+                    'build_domain_id' => $findSiteUrl->id,
+                    'fluent_id' => $findSiteUrl->fluent_id,
+                    'app_name' => $findSiteUrl->app_name,
+                    'app_logo' => $findSiteUrl->app_logo,
+                    'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
+                ];
 
-        // Start APK build job
-        $this->buildRequestProcessForJob($buildHistory, $findSiteUrl,$isBuilderON);
+                if ($findSiteUrl->is_ios == 1) {
+                    $buildData += [
+                        'ios_app_name' => $findSiteUrl->ios_app_name,
+                        'ios_issuer_id' => $findSiteUrl->ios_issuer_id,
+                        'ios_key_id' => $findSiteUrl->ios_key_id,
+                        'ios_team_id' => $findSiteUrl->team_id,
+                        'ios_p8_file_content' => $findSiteUrl->ios_p8_file_content,
+                    ];
+                }
 
-        return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
-            'data' => $buildHistory
-        ]);
+                return ApkBuildHistory::create($buildData);
+            });
+
+            // Dispatch job after transaction
+            $this->buildRequestProcessForJob($buildHistory, $findSiteUrl, $isBuilderON);
+
+            return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
+                'data' => $buildHistory->only(['id', 'version_id', 'build_domain_id', 'app_name'])
+            ]);
+        } catch (\Throwable $e) {
+            // Log the exception
+            Log::error('Failed to start APK build process.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to create build. Error: ' . $e->getMessage());
+        }
     }
-
     private function buildRequestProcessForJob($buildHistory, $findSiteUrl, $isBuilderON)
     {
         $data = [
@@ -127,7 +150,7 @@ class ApkBuildHistoryController extends Controller
         ];
 
         // Send email notification
-        if (config('app.is_send_mail')) {
+        if (config('app.is_send_mail',false)) {
             if (!empty($findSiteUrl->confirm_email) && filter_var($findSiteUrl->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $details = [
                     'customer_name' => $this->customerName,
@@ -137,29 +160,28 @@ class ApkBuildHistoryController extends Controller
                     'is_ios' => $findSiteUrl->is_ios,
                     'mail_template' => 'build_request'
                 ];
-                $isMailSend = config('app.is_send_mail');
+                $isMailSend = config('app.is_send_mail',false);
                 $isMailSend && Mail::to($findSiteUrl->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
             } else {
                 Log::error('Invalid email detected', ['email' => $findSiteUrl->confirm_email]);
             }
         }
 
-        // Process Android Build
-        if ($findSiteUrl->is_android) {
-            $data['app_name'] = $buildHistory->app_name;
-            $this->processBuildOrder($findSiteUrl, $buildHistory, $data, 'android', $isBuilderON);
-        }
+        $platforms = array_filter([
+            $findSiteUrl->is_android ? 'android' : null,
+            $findSiteUrl->is_ios ? 'ios' : null
+        ]);
 
-        // Process iOS Build
-        if ($findSiteUrl->is_ios) {
-            $data['app_name'] = $buildHistory->ios_app_name;
-            $this->processBuildOrder($findSiteUrl, $buildHistory, $data, 'ios', $isBuilderON);
+        foreach ($platforms as $platform) {
+            $this->processBuildOrder($findSiteUrl, $buildHistory, $data, $platform, $isBuilderON);
         }
     }
 
+    /**
+     * @throws Exception
+     */
     private function processBuildOrder($findSiteUrl, $buildHistory, $data, $platform, $isBuilderON)
     {
-//        dump($findSiteUrl->package_name);
         $data['license_key'] = $findSiteUrl->license_key;
         $data['build_domain_id'] = $findSiteUrl->id;
         $data['build_target'] = $platform;
@@ -176,9 +198,8 @@ class ApkBuildHistoryController extends Controller
 
             $data['jks_url'] = url('') . '/android/upload-keystore.jks';
             $data['key_properties_url'] = url('') . '/android/key.properties';
+            $data['app_name'] = $buildHistory->app_name;
         }
-//        dump($data);
-
         // Specific fields for iOS
         if ($platform === 'ios') {
             $data['jks_url'] = null;
@@ -189,15 +210,22 @@ class ApkBuildHistoryController extends Controller
             $data['api_key_url'] = url('') . '/upload/build-apk/p8file/' . $buildHistory->ios_p8_file_content;
             $data['team_id'] = $buildHistory->ios_team_id;
             $data['app_identifier'] = $findSiteUrl->package_name;
+            $data['app_name'] = $buildHistory->ios_app_name;
         }
 
         try {
             $order = BuildOrder::create($data);
             if ($isBuilderON) {
-                dispatch(new ProcessBuild($order->id));
+                dispatch(new ProcessBuild($order->id))
+                    ->onQueue('builds')
+                    ->delay(now()->addSeconds(10)); // Small delay to prevent race conditions
             }
-        } catch (\Exception $e) {
-            Log::error("BuildOrder creation failed for {$platform}: " . $e->getMessage());
+        } catch (QueryException $e) {
+            Log::error("Database error creating build order: " . $e->getMessage());
+            // Notify admins
+        } catch (Exception $e) {
+            Log::error("Unexpected error in build process: " . $e->getMessage());
+            throw $e; // Re-throw for Laravel to handle
         }
     }
 
@@ -334,7 +362,7 @@ class ApkBuildHistoryController extends Controller
             ];
 
             // send mail
-            $isMailSend = config('app.is_send_mail');
+            $isMailSend = config('app.is_send_mail',false);
             if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
             } else {
@@ -351,7 +379,7 @@ class ApkBuildHistoryController extends Controller
             ];
 
             // send mail
-            $isMailSend = config('app.is_send_mail');
+            $isMailSend = config('app.is_send_mail',false);
             if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
             } else {
@@ -426,7 +454,7 @@ class ApkBuildHistoryController extends Controller
         ]);
 
         // Return public download URL
-        return config('app.image_public_path') . $filePath;
+        return config('app.image_public_path',false) . $filePath;
     }
 
     public function apkBuildList(Request $request) {
