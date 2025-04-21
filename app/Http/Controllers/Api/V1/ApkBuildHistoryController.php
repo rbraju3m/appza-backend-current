@@ -68,7 +68,7 @@ class ApkBuildHistoryController extends Controller
 
         $findSiteUrl = BuildDomain::where('site_url', $input["site_url"])
             ->where('license_key', $input['license_key'])
-            ->where('package_name', $input['package_name'])
+            #->where('package_name', $input['package_name'])
             ->first();
 
         if (!$findSiteUrl) {
@@ -124,8 +124,23 @@ class ApkBuildHistoryController extends Controller
             // Dispatch job after transaction
             $this->buildRequestProcessForJob($buildHistory, $findSiteUrl, $isBuilderON);
 
+            $data = $buildHistory->only([
+                'id',
+                'version_id',
+                'build_domain_id',
+                'app_name',
+            ]);
+
+            if ($buildHistory->ios_app_name !== null) {
+                $data['ios_app_name'] = $buildHistory->ios_app_name;
+            }
+
+            if ($buildHistory->app_name !== null) {
+                $data['app_name'] = $buildHistory->app_name;
+            }
+
             return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
-                'data' => $buildHistory->only(['id', 'version_id', 'build_domain_id', 'app_name'])
+                'data' => $data
             ]);
         } catch (\Throwable $e) {
             // Log the exception

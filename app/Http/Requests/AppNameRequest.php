@@ -26,7 +26,6 @@ class AppNameRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'app' => 'required|string',
             'site_url' => 'required|url',
             'license_key' => 'required',
         ];

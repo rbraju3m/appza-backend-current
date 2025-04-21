@@ -28,7 +28,6 @@ class FinalBuildRequest extends FormRequest
         $rules = [
             'site_url' => 'required|url',
             'license_key' => 'required',
-            'package_name' => 'required',
         ];
 
         return $rules;

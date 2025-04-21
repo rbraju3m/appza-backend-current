@@ -50,9 +50,9 @@ Route::prefix('/appza/v1')
             Route::get('list', [ApkBuildHistoryController::class,'apkBuildList'])->name('build_apk_list');
 
             Route::post('resource', [ApkBuildResourceController::class,'buildResource'])->name('create_build_resource');
-            Route::post('ios-resource', [ApkBuildResourceController::class,'iosResource'])->name('create_ios_resource');
-            Route::post('ios-app', [ApkBuildResourceController::class,'iosAppName'])->name('create_ios_resource_appname');
-            Route::post('apk', [ApkBuildHistoryController::class,'apkBuild'])->name('create_building_apk');
+            Route::post('ios-keys-verify', [ApkBuildResourceController::class,'iosResourceAndVerify'])->name('create_ios_resource_and_verify');
+            Route::post('ios-check-app-name', [ApkBuildResourceController::class,'iosCheckAppName'])->name('ios_app_name_check');;
+            Route::post('', [ApkBuildHistoryController::class,'apkBuild'])->name('create_building_apk');
 
             // build response by builder application
             Route::post('/response/{id}', [ApkBuildHistoryController::class,'apkBuildResponse'])->name('building_apk_response');

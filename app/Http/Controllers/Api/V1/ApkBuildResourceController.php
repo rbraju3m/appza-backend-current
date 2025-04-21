@@ -34,7 +34,7 @@ class ApkBuildResourceController extends Controller
 
     public function buildResource(ApkBuildRequest $request){
 
-        $input = $request->all();
+        $input = $request->validated();
 
         $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
             return new JsonResponse(array_merge([
@@ -159,15 +159,23 @@ class ApkBuildResourceController extends Controller
 
         $findAppVersion = AppVersion::where('is_active', 1)->latest()->first();
 
+        // First, extract the platform array from the request
+        $platforms = $request->input('platform', []);
+
+        // Set the boolean values based on whether the array contains these values
+        $isAndroid = in_array('android', $platforms);
+        $isIos = in_array('ios', $platforms);
+
         $findSiteUrl->update([
+            'plugin_name' => $this->pluginName,
             'version_id' => $findAppVersion->id,
             'build_domain_id' => $findSiteUrl->id,
             'fluent_id' => $data['item_id'],
             'app_name' => $request->input('app_name'),
             'app_logo' => $appLogo,
             'app_splash_screen_image' => $splash_screen_image,
-            'is_android' => $request->input('is_android'),
-            'is_ios' => $request->input('is_ios'),
+            'is_android' => $isAndroid,
+            'is_ios' => $isIos,
             'confirm_email' => $request->input('email'),
             'build_plugin_slug' => $request->input('plugin_slug'),
         ]);
@@ -180,7 +188,7 @@ class ApkBuildResourceController extends Controller
         ]);
     }
 
-    public function iosResource(IosBuildRequest $request) {
+    public function iosResourceAndVerify(IosBuildRequest $request) {
         $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
             return new JsonResponse(array_merge([
                 'status' => $statusCode,
@@ -244,7 +252,7 @@ class ApkBuildResourceController extends Controller
     }
 
 
-    public function iosAppName(AppNameRequest $request) {
+    public function iosCheckAppName(AppNameRequest $request) {
         $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
             return new JsonResponse(array_merge([
                 'status' => $statusCode,
@@ -264,21 +272,23 @@ class ApkBuildResourceController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key wrong');
         }
 
-        $iosResponse = $this->iosBuildValidationService->iosBuildProcessValidation2($findSiteUrl, $input['app']);
+        $iosAppName = $this->iosBuildValidationService->iosBuildProcessValidation2($findSiteUrl);
 
-        if ($iosResponse) {
-            $findSiteUrl->update(['ios_app_name' => $input['app']]);
-            return $jsonResponse(Response::HTTP_OK, 'The iOS app name is matched with your account.', [
+        if ($iosAppName['status'] && !empty($iosAppName['app_name'])) {
+            $findSiteUrl->update(['ios_app_name' => $iosAppName['app_name']]);
+            return $jsonResponse(Response::HTTP_OK, 'Your ios app name has been taken from your app store.', [
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
                     'bundle_name' => $findSiteUrl->package_name,
+                    'ios_app_name' => $iosAppName['app_name'],
                 ]
             ]);
         } else {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Please give the app name you have created on the app store.', [
+            return $jsonResponse(Response::HTTP_NOT_FOUND, "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.", [
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
                     'bundle_name' => $findSiteUrl->package_name,
+                    'ios_app_name' => null,
                 ]
             ]);
         }

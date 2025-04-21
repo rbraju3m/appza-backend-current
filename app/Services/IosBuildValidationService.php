@@ -26,14 +26,13 @@ class IosBuildValidationService {
         return true;
     }
 
-    function iosBuildProcessValidation2($findSiteUrl,$app)
+    function iosBuildProcessValidation2($findSiteUrl)
     {
         $token = $this->generateJwt($findSiteUrl);
-        if($app == '' || $app == null){
-            return false;
-        }
-        $appExists = $this->checkAppExists($token,$findSiteUrl->package_name,$app);
-        if ($appExists == true){
+
+        $appName = $this->checkAppExists($token,$findSiteUrl->package_name);
+
+        if ($appName){
             $cert = $this->getDistributionCertificate($token);
             if ($cert != null){
                 $this->apiRequest('DELETE', "certificates/$cert", $token);
@@ -44,9 +43,9 @@ class IosBuildValidationService {
                 $this->apiRequest('DELETE', "profiles/$profile", $token);
                 return true;
             }
-            return true;
+            return ['status' => true, 'app_name' => $appName];
         }else{
-            return false;
+            return ['status' => false, 'app_name' => null];
         }
     }
 
@@ -132,14 +131,23 @@ class IosBuildValidationService {
         return null;
     }
 
-    function checkAppExists($token, $bundleId ,$appName) {
+    function checkAppExists($token, $bundleId) {
         $apps = $this->apiRequest('get','apps?limit=200',$token,null);
 
-        if ($appName){
+        if ($apps && isset($apps['data'])) {
+            foreach ($apps['data'] as $app) {
+                if ($app['attributes']['bundleId'] === $bundleId) {
+                    return $app['attributes']['name'];
+                }
+            }
+        }
+//        dump($apps);
+
+        /*if ($appName){
             if ($apps && isset($apps['data'])) {
                 foreach ($apps['data'] as $app) {
-                    if ($app['attributes']['name'] === $appName && $app['attributes']['bundleId'] === $bundleId) {
-                        return true;
+                    if ($app['attributes']['bundleId'] === $bundleId) {
+                        return $app['attributes']['name'];
                     }
                 }
             }
@@ -151,8 +159,8 @@ class IosBuildValidationService {
                     }
                 }
             }
-        }
-        return false;
+        }*/
+//        return false;
     }
 
     function getDistributionCertificate($token) {

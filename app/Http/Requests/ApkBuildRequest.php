@@ -33,6 +33,7 @@ class ApkBuildRequest extends FormRequest
             'license_key' => 'required',
             'email' => 'required|email',
             'plugin_slug' => 'required',
+            'platform' => 'required|array|in:android,ios'
         ];
 
         $iosFields = ['ios_issuer_id', 'ios_key_id', 'ios_p8_file_content', 'ios_team_id'];
