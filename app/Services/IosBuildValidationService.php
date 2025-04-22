@@ -41,7 +41,7 @@ class IosBuildValidationService {
             $profile = $this->checkProfileExists($token,$profileName);
             if ($profile != null){
                 $this->apiRequest('DELETE', "profiles/$profile", $token);
-                return true;
+                return ['status' => true, 'app_name' => $appName];
             }
             return ['status' => true, 'app_name' => $appName];
         }else{
