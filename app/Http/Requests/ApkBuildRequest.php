@@ -26,7 +26,7 @@ class ApkBuildRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'app_name' => 'required|string',
+            'app_name' => 'string',
             'app_logo' => 'required|string',
             'app_splash_screen_image' => 'required|string',
             'site_url' => 'required|url',
