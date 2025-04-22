@@ -328,15 +328,9 @@ class ApkBuildHistoryController extends Controller
         return str_pad($num + 1, 3, '0', STR_PAD_LEFT);
     }
 
-    public function apkBuildResponse(BuildResponseRequest $request, $id) {
-        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
-            return new JsonResponse(array_merge([
-                'status' => $statusCode,
-                'message' => $message,
-            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
-        };
-        /*set_time_limit(3600);
-        ini_set('memory_limit', '-1');
+    public function apkBuildResponse(BuildResponseRequest $request, $id)
+    {
+        // Helper function for consistent JSON responses
         $jsonResponse = function ($statusCode, $message, $additionalData = []) {
             return new JsonResponse(array_merge([
                 'status' => $statusCode,
@@ -344,14 +338,98 @@ class ApkBuildHistoryController extends Controller
             ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
         };
 
-        $to_email = "raju.rightbrainsolution@gmail.com";
+        $input = $request->validated();
+        $buildOrder = BuildOrder::find($id);
 
-        Log::info('mail send start');
-        Mail::raw('This is a test email from Laravel.', function ($message) use ($to_email) {
-            $message->to($to_email)
-                ->subject('Test Email');
-        });
-        Log::info('mail send end');*/
+        if (!$buildOrder) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build order not found');
+        }
+
+        $buildOrder->update($input);
+
+        // Only proceed with email logic if the status is 'failed' or 'completed'
+        if (!in_array($buildOrder->status->value, ['failed', 'completed'])) {
+            return $jsonResponse(Response::HTTP_OK, 'success');
+        }
+
+        // Get user info
+        $userInfo = Lead::where('domain', $buildOrder->domain)
+            ->ActiveAndOpen()
+            ->latest()
+            ->first();
+
+        // Get build domain info
+        $buildDomain = BuildDomain::where('site_url', $buildOrder->domain)
+            ->where('license_key', $buildOrder->license_key)
+            ->where('package_name', $buildOrder->package_name)
+            ->first();
+
+        // If we don't have the necessary information, return early
+        if (!$userInfo || !$buildDomain) {
+            Log::error('Missing information for build notification', [
+                'order_id' => $buildOrder->id,
+                'has_user_info' => (bool)$userInfo,
+                'has_build_domain' => (bool)$buildDomain
+            ]);
+            return $jsonResponse(Response::HTTP_OK, 'success');
+        }
+
+        // Determine if we're dealing with iOS or Android
+        $isIos = $buildOrder->build_target == 'ios';
+
+        // Configure email details based on build status and target platform
+        $customerName = $userInfo->first_name . ' ' . $userInfo->last_name;
+        $appName = $isIos ? $buildDomain->ios_app_name : $buildDomain->app_name;
+
+        $details = [
+            'customer_name' => $customerName,
+            'app_name' => $appName,
+        ];
+
+        if ($buildOrder->status->value === 'failed') {
+            $details['subject'] = $isIos
+                ? 'Update on Your iOS App Build: Action Required'
+                : 'Update on Your Android App Build: Action Required';
+            $details['mail_template'] = $isIos ? 'build_failed_ios' : 'build_failed_android';
+        } else { // completed
+            $details['subject'] = $isIos
+                ? 'Your iOS App Build Is Complete! 🎉'
+                : 'Your Android App Build Is Complete! 🎉';
+            $details['mail_template'] = $isIos ? 'build_complete_ios' : 'build_complete_android';
+            $details['apk_url'] = $buildOrder->apk_url;
+            $details['aab_url'] = $buildOrder->aab_url;
+        }
+
+        // Send email if configuration allows and email is valid
+        $isMailSendEnabled = config('app.is_send_mail', false);
+        $recipientEmail = $buildDomain->confirm_email;
+
+        if ($isMailSendEnabled && !empty($recipientEmail) && filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            Mail::to($recipientEmail)->send(new \App\Mail\BuildRequestMail($details));
+            Log::info('Mail sent', [
+                'email' => $recipientEmail,
+                'order_id' => $buildOrder->id,
+                'status' => $buildOrder->status->value
+            ]);
+        } else {
+            Log::error('Email not sent', [
+                'is_mail_enabled' => $isMailSendEnabled,
+                'email' => $recipientEmail ?? 'null',
+                'is_valid_email' => !empty($recipientEmail) && filter_var($recipientEmail, FILTER_VALIDATE_EMAIL),
+                'order_id' => $buildOrder->id
+            ]);
+        }
+
+        return $jsonResponse(Response::HTTP_OK, 'success');
+    }
+
+    /*public function apkBuildResponse(BuildResponseRequest $request, $id) {
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
+                'message' => $message,
+            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
+        };
 
         $input = $request->validated();
         $orderItem = BuildOrder::find($id);
@@ -381,6 +459,7 @@ class ApkBuildHistoryController extends Controller
             $isMailSend = config('app.is_send_mail',false);
             if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+                Log::info('mail send', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
             } else {
                 Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
             }
@@ -398,13 +477,14 @@ class ApkBuildHistoryController extends Controller
             $isMailSend = config('app.is_send_mail',false);
             if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
                 $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
+                Log::info('mail send', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
             } else {
                 Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
             }
         }
 
         return $jsonResponse(Response::HTTP_OK, 'success');
-    }
+    }*/
 
     public function processStart(BuildResponseRequest $request, $id) {
         $jsonResponse = function ($statusCode, $message, $additionalData = []) {
@@ -423,54 +503,6 @@ class ApkBuildHistoryController extends Controller
         $orderItem->update(['process_start' => now()]);
 
         return $jsonResponse(Response::HTTP_OK, 'success');
-    }
-
-
-    // this is for test , not functional in the application , it's for builder application
-    public function uploadApkIntoR2(Request $request) {
-        $directory = "/var/www/html/appza-backend/public/apk-upload";
-        $folder = "android-apk";
-
-        try {
-            $path = $this->getPublicUrlForUploadApk($directory, $folder);
-            return response()->json([
-                'status' => Response::HTTP_OK,
-                'message' => 'success',
-                'download-path' => $path
-            ], Response::HTTP_OK, ['Content-Type' => 'application/json'], JSON_UNESCAPED_SLASHES);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => Response::HTTP_BAD_REQUEST,
-                'message' => $e->getMessage()
-            ], Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function getPublicUrlForUploadApk($directory, $r2Folder)
-    {
-        // Get the first APK file in the directory
-        $apkFiles = collect(glob($directory . '/*.apk'));
-
-        if ($apkFiles->isEmpty()) {
-            throw new \Exception("No APK file found in the specified directory: $directory");
-        }
-
-        $apkFile = $apkFiles->first();
-        $fileName = basename($apkFile);
-        $filePath = $r2Folder . '/' . $fileName;
-        $fileContents = file_get_contents($apkFile);
-
-        // Upload with correct MIME type
-        Storage::disk('r2')->put($filePath, $fileContents, [
-            'visibility' => 'public',
-            'Content-Type' => 'application/vnd.android.package-archive',
-        ]);
-
-        // Return public download URL
-        return config('app.image_public_path',false) . $filePath;
     }
 
     public function apkBuildList(Request $request) {
