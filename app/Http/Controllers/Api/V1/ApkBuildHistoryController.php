@@ -103,7 +103,7 @@ class ApkBuildHistoryController extends Controller
                     'version_id' => $findSiteUrl->version_id,
                     'build_domain_id' => $findSiteUrl->id,
                     'fluent_id' => $findSiteUrl->fluent_id,
-                    'app_name' => $findSiteUrl->app_name,
+                    'app_name' => $findSiteUrl->app_name ?? $findSiteUrl->ios_app_name,
                     'app_logo' => $findSiteUrl->app_logo,
                     'app_splash_screen_image' => $findSiteUrl->app_splash_screen_image,
                 ];
@@ -422,69 +422,6 @@ class ApkBuildHistoryController extends Controller
 
         return $jsonResponse(Response::HTTP_OK, 'success');
     }
-
-    /*public function apkBuildResponse(BuildResponseRequest $request, $id) {
-        $jsonResponse = function ($statusCode, $message, $additionalData = []) {
-            return new JsonResponse(array_merge([
-                'status' => $statusCode,
-                'message' => $message,
-            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
-        };
-
-        $input = $request->validated();
-        $orderItem = BuildOrder::find($id);
-
-        if (!$orderItem) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build order not found');
-        }
-
-        $orderItem->update($input);
-
-        $getUserInfo = Lead::where('domain', $orderItem->domain)->ActiveAndOpen()->latest()->first();
-
-        $getBuildDomain = BuildDomain::where('site_url', $orderItem->domain)
-            ->where('license_key', $orderItem->license_key)
-            ->where('package_name', $orderItem->package_name)
-            ->first();
-
-        if ($orderItem->status->value === 'failed') {
-            $details = [
-                'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
-                'subject' => $orderItem->build_target=='ios'?'Update on Your iOS App Build: Action Required':'Update on Your Android App Build: Action Required',
-                'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
-                'mail_template' => $orderItem->build_target=='ios'?'build_failed_ios':'build_failed_android'
-            ];
-
-            // send mail
-            $isMailSend = config('app.is_send_mail',false);
-            if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
-                $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-                Log::info('mail send', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
-            } else {
-                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
-            }
-        } elseif ($orderItem->status->value === 'completed') {
-            $details = [
-                'customer_name' => $getUserInfo->first_name . ' ' . $getUserInfo->last_name,
-                'subject' => $orderItem->build_target=='ios'?'Your IOS App Build Is Complete! 🎉':'Your Android App Build Is Complete! 🎉',
-                'app_name' => $orderItem->build_target=='android'?$getBuildDomain->app_name:$getBuildDomain->ios_app_name,
-                'apk_url' => $orderItem->apk_url,
-                'aab_url' => $orderItem->aab_url,
-                'mail_template' => $orderItem->build_target=='ios'?'build_complete_ios':'build_complete_android'
-            ];
-
-            // send mail
-            $isMailSend = config('app.is_send_mail',false);
-            if (!empty($getBuildDomain->confirm_email) && filter_var($getBuildDomain->confirm_email, FILTER_VALIDATE_EMAIL)) {
-                $isMailSend && Mail::to($getBuildDomain->confirm_email)->send(new \App\Mail\BuildRequestMail($details));
-                Log::info('mail send', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
-            } else {
-                Log::error('Invalid email detected', ['email' => $getBuildDomain->confirm_email,'order_id' => $orderItem->id]);
-            }
-        }
-
-        return $jsonResponse(Response::HTTP_OK, 'success');
-    }*/
 
     public function processStart(BuildResponseRequest $request, $id) {
         $jsonResponse = function ($statusCode, $message, $additionalData = []) {
