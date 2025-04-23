@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -180,12 +181,29 @@ class ApkBuildResourceController extends Controller
             'build_plugin_slug' => $request->input('plugin_slug'),
         ]);
 
-        return $jsonResponse(Response::HTTP_OK, 'App selection for build requests is confirmed.',[
+        // for response
+        $status = Response::HTTP_OK;
+        $payload = [
+            'status' => $status,
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'message' => 'App selection for build requests is confirmed.',
             'data' => [
                 'package_name' => $findSiteUrl->package_name,
                 'bundle_name' => $findSiteUrl->package_name,
             ]
-        ]);
+        ];
+        // Log the response
+        Log::info('Build resource response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
+        // Return it
+        return response()->json($payload, $status);
+
+        /*return $jsonResponse(Response::HTTP_OK, 'App selection for build requests is confirmed.',[
+            'data' => [
+                'package_name' => $findSiteUrl->package_name,
+                'bundle_name' => $findSiteUrl->package_name,
+            ]
+        ]);*/
     }
 
     public function iosResourceAndVerify(IosBuildRequest $request) {
@@ -240,12 +258,29 @@ class ApkBuildResourceController extends Controller
                 return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Your given information is not right, Please try with proper information.');
             }
 
-            return $jsonResponse(Response::HTTP_OK, 'IOS Resource information is valid.', [
+            // for response
+            $status = Response::HTTP_OK;
+            $payload = [
+                'status' => $status,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'message' => 'IOS Resource information is valid.',
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
                     'bundle_name' => $findSiteUrl->package_name,
                 ]
-            ]);
+            ];
+            // Log the response
+            Log::info('Build ios-keys-verify response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
+            // Return it
+            return response()->json($payload, $status);
+
+            /*return $jsonResponse(Response::HTTP_OK, 'IOS Resource information is valid.', [
+                'data' => [
+                    'package_name' => $findSiteUrl->package_name,
+                    'bundle_name' => $findSiteUrl->package_name,
+                ]
+            ]);*/
         }
 
         return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'An unknown error occurred while processing IOS resources.');
@@ -276,21 +311,56 @@ class ApkBuildResourceController extends Controller
 
         if ($iosAppName['status'] && !empty($iosAppName['app_name'])) {
             $findSiteUrl->update(['ios_app_name' => $iosAppName['app_name']]);
-            return $jsonResponse(Response::HTTP_OK, 'Your ios app name has been taken from your app store.', [
+            /*return $jsonResponse(Response::HTTP_OK, 'Your ios app name has been taken from your app store.', [
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
                     'bundle_name' => $findSiteUrl->package_name,
                     'ios_app_name' => $iosAppName['app_name'],
                 ]
-            ]);
+            ]);*/
+            // for response
+            $status = Response::HTTP_OK;
+            $payload = [
+                'status' => $status,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'message' => 'Your ios app name has been taken from your app store.',
+                'data' => [
+                    'package_name' => $findSiteUrl->package_name,
+                    'bundle_name' => $findSiteUrl->package_name,
+                    'ios_app_name' => $iosAppName['app_name'],
+                ]
+            ];
+            // Log the response
+            Log::info('Build app name response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
+            // Return it
+            return response()->json($payload, $status);
         } else {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.", [
+            /*return $jsonResponse(Response::HTTP_NOT_FOUND, "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.", [
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
                     'bundle_name' => $findSiteUrl->package_name,
                     'ios_app_name' => null,
                 ]
-            ]);
+            ]);*/
+
+            // for response
+            $status = Response::HTTP_NOT_FOUND;
+            $payload = [
+                'status' => $status,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'message' => "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.",
+                'data' => [
+                    'package_name' => $findSiteUrl->package_name,
+                    'bundle_name' => $findSiteUrl->package_name,
+                    'ios_app_name' => null,
+                ]
+            ];
+            // Log the response
+            Log::info('Build app name response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
+            // Return it
+            return response()->json($payload, $status);
         }
     }
 }

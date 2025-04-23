@@ -148,7 +148,9 @@ class ApkBuildHistoryController extends Controller
             $status = Response::HTTP_OK;
 
             $payload = [
-                'status' => $status,  // This adds the status code to the response body
+                'status' => $status,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
                 'message' => 'Your App building process has been started successfully.',
                 'data' => $data
             ];
