@@ -156,6 +156,7 @@ class ApkBuildHistoryController extends Controller
             ];
 
             // Log the response
+            Log::info("=============================================================================================================");
             Log::info('Build process response:', ['status' => $status, 'response' => $payload,'payload' => $input]);
 
             // Return it

@@ -194,6 +194,7 @@ class ApkBuildResourceController extends Controller
             ]
         ];
         // Log the response
+        Log::info("=============================================================================================================");
         Log::info('Build resource response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
         // Return it
         return response()->json($payload, $status);
@@ -271,6 +272,7 @@ class ApkBuildResourceController extends Controller
                 ]
             ];
             // Log the response
+            Log::info("=============================================================================================================");
             Log::info('Build ios-keys-verify response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
             // Return it
             return response()->json($payload, $status);
@@ -332,6 +334,7 @@ class ApkBuildResourceController extends Controller
                 ]
             ];
             // Log the response
+            Log::info("=============================================================================================================");
             Log::info('Build app name response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
             // Return it
             return response()->json($payload, $status);
