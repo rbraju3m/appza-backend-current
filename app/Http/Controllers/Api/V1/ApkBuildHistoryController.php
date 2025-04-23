@@ -139,9 +139,33 @@ class ApkBuildHistoryController extends Controller
                 $data['app_name'] = $buildHistory->app_name;
             }
 
-            return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
+            $status = Response::HTTP_OK;
+
+            $payload = [
+                'status' => $status,  // This adds the status code to the response body
+                'message' => 'Your App building process has been started successfully.',
+                'data' => $data
+            ];
+
+            // Log the response
+            Log::info('Build process response:', ['status' => $status, 'response' => $payload,'payload' => $input]);
+
+            // Return it
+            return response()->json($payload, $status);
+
+
+            /*// Log the process
+            Log::info('App building process started successfully.', [
+                'action' => 'start_app_build',
+                'timestamp' => now(),
+                'payload' => $input,
                 'data' => $data
             ]);
+
+            return $jsonResponse(Response::HTTP_OK, 'Your App building process has been started successfully.', [
+                'data' => $data
+            ]);*/
+
         } catch (\Throwable $e) {
             // Log the exception
             Log::error('Failed to start APK build process.', [
