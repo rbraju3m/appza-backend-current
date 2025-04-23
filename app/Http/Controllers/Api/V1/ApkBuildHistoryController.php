@@ -124,6 +124,8 @@ class ApkBuildHistoryController extends Controller
             // Dispatch job after transaction
             $this->buildRequestProcessForJob($buildHistory, $findSiteUrl, $isBuilderON);
 
+            $findBuildOrder = BuildOrder::where('history_id', $buildHistory->id)->first();
+
             $data = $buildHistory->only([
                 'id',
                 'version_id',
@@ -137,6 +139,10 @@ class ApkBuildHistoryController extends Controller
 
             if ($buildHistory->app_name !== null) {
                 $data['app_name'] = $buildHistory->app_name;
+            }
+
+            if ($findBuildOrder->id !== null) {
+                $data['build_id'] = $findBuildOrder->id;
             }
 
             $status = Response::HTTP_OK;
