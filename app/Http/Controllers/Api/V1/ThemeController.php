@@ -111,18 +111,26 @@ class ThemeController extends Controller
             return $response;
         }
         try{
-            $themeSlug = $request->query('slug');
+            $requiredParams = [
+                'slug' => 'Theme slug is required',
+                'plugin_slug' => 'Plugin slug is required',
+            ];
 
-            if (!$themeSlug) {
-                return response()->json([
-                    'status' => Response::HTTP_NOT_FOUND,
-                    'url' => $request->getUri(),
-                    'method' => $request->getMethod(),
-                    'message' => 'Theme slug missing',
-                ], Response::HTTP_NOT_FOUND);
+            foreach ($requiredParams as $param => $message) {
+                if (!$request->query($param)) {
+                    return response()->json([
+                        'status' => Response::HTTP_BAD_REQUEST,
+                        'url' => $request->getUri(),
+                        'method' => $request->getMethod(),
+                        'message' => $message,
+                    ], Response::HTTP_BAD_REQUEST);
+                }
             }
 
-            $theme = Theme::where('slug',$themeSlug)->first();
+            $themeSlug = $request->query('slug');
+            $pluginSlug = $request->query('plugin_slug');
+
+            $theme = Theme::where('slug',$themeSlug)->where('plugin_slug',$pluginSlug)->first();
 
             if (!$theme) {
                 return response()->json([
@@ -134,7 +142,6 @@ class ThemeController extends Controller
             }
 
             $themeID = $theme->id;
-            $pluginSlug = $theme->plugin_slug;
 
             // Fetch theme data with relationships and necessary conditions
             $data = Theme::select([

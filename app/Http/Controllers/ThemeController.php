@@ -91,17 +91,12 @@ class ThemeController extends Controller
     {
         // Validate the incoming request
         $this->validate($request, [
-            'name' => 'required|unique:appfiy_theme,name',
-//            'appbar_id' => 'required',
-//            'navbar_id' => 'required',
-//            'drawer_id' => 'required',
+//            'name' => 'required|unique:appfiy_theme,name',
+            'name' => 'required',
             'plugin_slug' => 'required',
         ], [
             'name.required' => __('messages.enterThemeName'),
             'name.unique' => __('messages.themeNameMustbeUnique'),
-//            'appbar_id.required' => __('messages.chooseAppbar'),
-//            'navbar_id.required' => __('messages.chooseNavbar'),
-//            'drawer_id.required' => __('messages.chooseDrawer'),
             'plugin_slug.required' => __('messages.choosePlugin'),
         ]);
 
@@ -417,7 +412,8 @@ class ThemeController extends Controller
     {
         // Validate the incoming request
         $this->validate($request, [
-            'name' => 'required|unique:appfiy_theme,name,' . $id,
+//            'name' => 'required|unique:appfiy_theme,name,' . $id,
+            'name' => 'required',
             'appbar_id' => 'required',
             'navbar_id' => 'required',
             'drawer_id' => 'required',
@@ -438,6 +434,7 @@ class ThemeController extends Controller
 
             $input = $this->prepareInput($request, $id);
             $theme = Theme::findOrFail($id);
+            $input['slug'] = Str::slug($input['name']);
             $theme->update($input);
 
             // Update ThemeConfig, ThemePage, and Components
