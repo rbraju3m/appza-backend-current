@@ -551,7 +551,8 @@ class ApkBuildHistoryController extends Controller
 //                $item['team_id'] = $build->team_id;
             }
 
-            $grouped_builds[$build->build_target][] = $item; // Use object notation
+//            $grouped_builds[$build->build_target][] = $item; // Use object notation
+            $grouped_builds[] = $item; // Use object notation
         }
 
         return $jsonResponse(Response::HTTP_OK, 'Data found', [
