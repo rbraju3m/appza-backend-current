@@ -542,6 +542,8 @@ class ApkBuildHistoryController extends Controller
             if ($build->build_target === 'android') {
 //                $item['jks_url'] = $build->jks_url;
 //                $item['key_properties_url'] = $build->key_properties_url;
+                $item['apk_name'] = basename($build->apk_url);
+                $item['aab_name'] = basename($build->aab_url);
                 $item['apk_url'] = $build->apk_url;
                 $item['aab_url'] = $build->aab_url;
             } elseif ($build->build_target === 'ios') {
