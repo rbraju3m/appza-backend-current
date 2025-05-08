@@ -504,7 +504,7 @@ class ApkBuildHistoryController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain not found');
         }
 
-        $buildOrders = BuildOrder::where('domain', $siteUrl)->where('license_key',$licenseKey)->get();
+        $buildOrders = BuildOrder::where('domain', $siteUrl)->get();
         if ($buildOrders->isEmpty()) {
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Build domain not found');
         }
