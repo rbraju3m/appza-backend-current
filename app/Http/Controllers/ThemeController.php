@@ -434,7 +434,7 @@ class ThemeController extends Controller
 
             $input = $this->prepareInput($request, $id);
             $theme = Theme::findOrFail($id);
-//            $input['slug'] = Str::slug($input['name']);
+            $input['slug'] = Str::slug($input['name']);
             $theme->update($input);
 
             // Update ThemeConfig, ThemePage, and Components
