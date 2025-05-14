@@ -30,7 +30,8 @@ class GlobalConfigController extends Controller
 
     public function index(Request $request)
     {
-        if (!$this->authorization) {
+        $isHashAuthorization = config('app.is_hash_authorization');
+        if ($isHashAuthorization && !$this->authorization) {
             return $this->buildJsonResponse(
                 Response::HTTP_UNAUTHORIZED,
                 $request,

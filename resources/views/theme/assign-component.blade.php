@@ -50,15 +50,15 @@
                         @endif--}}
                         <br>
                         @if(count($themePages)>0)
-                            <p class="d-inline-flex gap-1">
+                            <div class="d-flex flex-wrap gap-2">
                                 @foreach($themePages as $page)
-                                <a class="btn btn-primary" data-bs-toggle="collapse" href="#{{$page['slug']}}" role="button" aria-expanded="false" aria-controls="collapseExample">
-                                    {{$page['name']}}
-                                </a>
+                                    <a class="btn btn-danger" data-bs-toggle="collapse" href="#{{$page['slug']}}" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                        {{$page['name']}}
+                                    </a>
                                 @endforeach
-                            </p>
+                            </div>
 
-                            @foreach($themePages as $page)
+                        @foreach($themePages as $page)
                                 <div class="collapse" id="{{$page['slug']}}">
                                     <div class="card card-body" style="margin-bottom: 0px">
                                         <h2>{{$page['name']}}</h2>
@@ -108,7 +108,17 @@
 
                                             <div class="col-sm-4">
                                                 <a data-href="{{route('theme_page_inline_update')}}" id="persistent_footer_buttons_route"></a>
-                                                <input type="number" value="{{$page['persistent_footer_buttons']}}" class="form-control persistent_footer_buttons" placeholder="{{__('messages.persistent_footer_buttons')}}" data-id="{{$page['theme_page_id']}}" id="persistent_footer_buttons_{{$page['theme_page_id']}}">
+                                                <input type="number" value="{{$page['persistent_footer_buttons']}}" class="form-control persistent_footer_buttons" placeholder="{{__('messages.persistent_footer_buttons')}}" name="persistent_footer_buttons" data-id="{{$page['theme_page_id']}}" id="persistent_footer_buttons_{{$page['theme_page_id']}}">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group row mg-top">
+                                            <div class="col-sm-2">
+                                                <label for="" class="form-label">{{__('messages.pageSortOrder')}}</label>
+                                            </div>
+
+                                            <div class="col-sm-4">
+                                                <input type="number" value="{{$page['sort_order']}}" class="form-control page_sort_order" placeholder="{{__('messages.pageSortOrder')}}" name="sort_order" data-id="{{$page['theme_page_id']}}" id="persistent_footer_buttons_{{$page['sort_order']}}">
                                             </div>
                                         </div>
                                     </div>
@@ -192,15 +202,16 @@
             return false;
         });
 
-        $(document).delegate('.persistent_footer_buttons','blur',function(){
+        $(document).on('blur', '.persistent_footer_buttons, .page_sort_order', function() {
             let id = $(this).attr('data-id')
+            let fieldName = $(this).attr('name')
             let value = $(this).val();
             let route = $('#persistent_footer_buttons_route').attr('data-href');
             $.ajax({
                 url: route,
                 method: "get",
                 dataType: "json",
-                data: {id: id,value:value,fieldName:'persistent_footer_buttons'},
+                data: {id: id,value:value,fieldName:fieldName},
                 beforeSend: function( xhr ) {
 
                 }

@@ -28,7 +28,8 @@ class PluginController extends Controller
 
     public function allPlugin(Request $request)
     {
-        if (!$this->authorization) {
+        $isHashAuthorization = config('app.is_hash_authorization');
+        if ($isHashAuthorization && !$this->authorization) {
             return $this->buildJsonResponse(
                 Response::HTTP_UNAUTHORIZED,
                 $request,
@@ -68,7 +69,8 @@ class PluginController extends Controller
 
     public function checkDisablePlugin(Request $request)
     {
-        if (!$this->authorization) {
+        $isHashAuthorization = config('app.is_hash_authorization');
+        if ($isHashAuthorization && !$this->authorization) {
             return $this->buildJsonResponse(
                 Response::HTTP_UNAUTHORIZED,
                 $request,

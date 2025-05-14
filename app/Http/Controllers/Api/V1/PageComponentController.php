@@ -27,7 +27,8 @@ class PageComponentController extends Controller
     }
 
     public function index(Request $request) {
-        if (!$this->authorization) {
+        $isHashAuthorization = config('app.is_hash_authorization');
+        if ($isHashAuthorization && !$this->authorization) {
             return new JsonResponse([
                 'status' => Response::HTTP_UNAUTHORIZED,
                 'url' => $request->getUri(),

@@ -128,6 +128,7 @@ return [
     'chooseProductType' => 'Choose class type',
     'imageUrl' => 'Image Url',
     'persistent_footer_buttons' => 'Persistent footer buttons',
+    'pageSortOrder' => 'Page sort order',
     /*
     |--------------------------------------------------------------------------
     | Component language End

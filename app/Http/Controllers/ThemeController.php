@@ -262,6 +262,7 @@ class ThemeController extends Controller
                     'page_id' => $themePage->page_id,
                     'name' => $themePage->page->name,
                     'slug' => $themePage->page->slug,
+                    'sort_order' => $themePage->sort_order,
                     'persistent_footer_buttons' => $themePage->persistent_footer_buttons,
                     'background_color' => $themePage->background_color,
                     'border_color' => $themePage->border_color,
@@ -328,6 +329,11 @@ class ThemeController extends Controller
         if ($fieldName === 'persistent_footer_buttons') {
             $themePage->update([
                 'persistent_footer_buttons' => $value ? $value : null
+            ]);
+            $response['status'] = 'ok';
+        } elseif ($fieldName === 'sort_order'){
+            $themePage->update([
+                'sort_order' => $value ?? null
             ]);
             $response['status'] = 'ok';
         } else {

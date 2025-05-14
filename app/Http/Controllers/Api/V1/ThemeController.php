@@ -34,8 +34,9 @@ class ThemeController extends Controller
 
     public function index(Request $request)
     {
+        $isHashAuthorization = config('app.is_hash_authorization');
         // Check if the user is authorized
-        if (!$this->authorization) {
+        if ($isHashAuthorization && !$this->authorization) {
             return response()->json([
                 'status' => Response::HTTP_UNAUTHORIZED,
                 'url' => $request->getUri(),
@@ -100,7 +101,8 @@ class ThemeController extends Controller
 
 
     public function getTheme(Request $request){
-        if (!$this->authorization){
+        $isHashAuthorization = config('app.is_hash_authorization');
+        if ($isHashAuthorization && !$this->authorization){
             $response = new JsonResponse([
                 'status'=>Response::HTTP_UNAUTHORIZED,
                 'url' => $request->getUri(),
@@ -181,7 +183,8 @@ class ThemeController extends Controller
                             'appfiy_page.name',
                             'appfiy_page.component_limit',
                             'appfiy_page.slug',
-                        ])->join('appfiy_page', 'appfiy_page.id', '=', 'appfiy_theme_page.page_id');
+                        ])->join('appfiy_page', 'appfiy_page.id', '=', 'appfiy_theme_page.page_id')
+                        ->orderby('appfiy_theme_page.sort_order');
                     },
                 ])
                 ->where('appfiy_theme.id', $themeID)

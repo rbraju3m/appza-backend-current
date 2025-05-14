@@ -14,15 +14,16 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'fluent_api_url' => env('FLUENT_API_URL', 'default_value'),
-    'fluent_item_id' => env('FLUENT_ITEM_ID', 'default_value'),
-    'image_public_path' => env('IMAGE_PUBLIC_PATH', 'default_value'),
-    'company_name' => env('COMPANY_NAME', 'default_value'),
-    'is_show_scanner' => env('IS_SHOW_SCANNER', 'default_value'),
-    'is_send_mail' => env('IS_SEND_MAIL', 'default_value'),
-    'is_builder_on' => env('IS_BUILDER_ON', 'default_value'),
-    'is_fluent_check' => env('IS_FLUENT_CHECK', 'default_value'),
-    'is_image_update' => env('IS_IMAGE_UPDATE', 'default_value'),
+    'fluent_api_url' => env('FLUENT_API_URL', ''),
+    'fluent_item_id' => env('FLUENT_ITEM_ID', ''),
+    'image_public_path' => env('IMAGE_PUBLIC_PATH', ''),
+    'company_name' => env('COMPANY_NAME', 'LazyCoder'),
+    'is_show_scanner' => env('IS_SHOW_SCANNER', true),
+    'is_send_mail' => env('IS_SEND_MAIL', true),
+    'is_builder_on' => env('IS_BUILDER_ON', true),
+    'is_fluent_check' => env('IS_FLUENT_CHECK', true),
+    'is_image_update' => env('IS_IMAGE_UPDATE', false),
+    'is_hash_authorization' => env('IS_HASH_AUTHORIZATION', true),
 
     /*
     |--------------------------------------------------------------------------
