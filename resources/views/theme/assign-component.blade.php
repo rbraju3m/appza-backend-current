@@ -118,7 +118,7 @@
                                             </div>
 
                                             <div class="col-sm-4">
-                                                <input type="number" value="{{$page['sort_order']}}" class="form-control page_sort_order" placeholder="{{__('messages.pageSortOrder')}}" name="sort_order" data-id="{{$page['theme_page_id']}}" id="persistent_footer_buttons_{{$page['sort_order']}}">
+                                                <input type="text" value="{{$page['sort_order']}}" class="form-control page_sort_order" placeholder="{{__('messages.pageSortOrder')}}" name="sort_order" data-id="{{$page['theme_page_id']}}" id="persistent_footer_buttons_{{$page['sort_order']}}">
                                             </div>
                                         </div>
                                     </div>
