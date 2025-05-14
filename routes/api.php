@@ -45,6 +45,11 @@ Route::prefix('/appza/v1')
             Route::post('activate', [LicenseController::class,'activate'])->name('license_activate');
         });
 
+        // for app api
+        Route::prefix('app')->group(function () {
+            Route::get('license-check', [LicenseController::class,'appLicenseCheck'])->name('app_license_check');
+        });
+
         // build api
         Route::prefix('build')->group(function () {
             Route::post('', [ApkBuildHistoryController::class,'apkBuild'])->name('create_building_apk');

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\BuildDomain;
 use App\Models\Lead;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -131,7 +133,113 @@ class LicenseController extends Controller
         return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
     }
 
+    public function appLicenseCheck(Request $request)
+    {
+        // Helper function for JSON responses
+        $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
+            return new JsonResponse(array_merge([
+                'status' => $statusCode,
+                'url' => $request->getUri(),
+                'method' => $request->getMethod(),
+                'message' => $message,
+            ], $additionalData), $statusCode);
+        };
 
+        // Validate required parameters
+        $requiredFields = ['site_url'];
+        foreach ($requiredFields as $field) {
+            if (!$request->get($field)) {
+                return $jsonResponse(Response::HTTP_NOT_FOUND, ucfirst(str_replace('_', ' ', $field)) . ' missing.');
+            }
+        }
+
+        if (!config('app.is_fluent_check')){
+            /* START manually added for fluent issue & after fluent is okay it will be remove*/
+            return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
+                "success" => true,
+                "license"=> "valid",
+                "item_id"=> config('app.fluent_item_id'),
+                "item_name"=> "",
+                "license_limit"=> "25",
+                "site_count"=> 1,
+                "expires"=> "2028-01-01 06:19:01",
+                "activations_left"=> 24,
+                "customer_name"=> "Testing All Product",
+                "customer_email"=> "test@test.com",
+                "price_id"=> "9",
+                "checksum"=> "4b096d7dc1f3dc6fe741f57c8b45f6cb",
+                "fluent_check" => config('app.is_fluent_check')?"True":"False"." by raju",
+            ]]);
+            /* END manually added for fluent issue & after fluent is okay it will be remove*/
+        }
+
+        // Setup API parameters
+        $fluentApiUrl = config('app.fluent_api_url');
+        // Check if it's null
+        if (is_null($fluentApiUrl)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');
+        }
+
+        // External variable Call
+        $fluentItemId = config('app.fluent_item_id');
+
+        // Check if it's null
+        if (is_null($fluentItemId)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is null or not set in the configuration.');
+        }
+
+        // Check if it's a number (integer or float)
+        if (!is_numeric($fluentItemId)) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is not a valid number.');
+        }
+
+        $getBuildDomain = BuildDomain::where([['site_url', $request->get('site_url')],['is_app_license_check',1]])->first();
+
+        if (empty($getBuildDomain)) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Active domain not found.');
+        }
+
+        $params = [
+            'fluent_cart_action' => 'check_license',
+            'license' => $getBuildDomain->license_key,
+            'item_id' => $fluentItemId,
+            'url' => $request->get('site_url'),
+        ];
+
+        // Send API Request
+        try {
+            $response = Http::get($fluentApiUrl, $params);
+        } catch (\Exception $e) {
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
+        }
+
+        // Decode response
+        $data = json_decode($response->getBody()->getContents(), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
+        }
+
+        // Handle license errors
+        if (!$data['success'] ?? false) {
+            $messages = [
+                'missing' => 'License not found.',
+                'expired' => 'License has expired.',
+                'disabled' => 'License key revoked.',
+                'invalid_item_id' => 'Item id is invalid.',
+            ];
+            $message = $messages[$data['error']] ?? 'License not valid.';
+            return $jsonResponse(Response::HTTP_NOT_FOUND, $message);
+        }
+
+        // Success response
+        return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
+    }
+
+
+    /**
+     * @throws \Throwable
+     * @throws ConnectionException
+     */
     public function activate(Request $request)
     {
         // Helper function for JSON responses
@@ -255,23 +363,46 @@ class LicenseController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, $errorMessage);
         }
 
-        // Check or Create BuildDomain Entry
-        BuildDomain::firstOrCreate(
-            [
-                'site_url' => $data['site_url'],
-                'license_key' => $data['license_key'],
-            ],
-            [
-                'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
-                'email' => $data['email'] ?? $this->email,
-                'plugin_name' => $this->pluginName,
-                'fluent_item_id' => $fluentItemId,
-            ]
-        );
 
-        return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', [
-            'data' => $res
-        ]);
+        try {
+            // Begin transaction
+            DB::beginTransaction();
+
+            $buildDomain = BuildDomain::updateOrCreate(
+                [
+                    'site_url' => $data['site_url'],
+                    'license_key' => $data['license_key'],
+                ],
+                [
+                    'package_name' => 'com.' . $this->getSubdomainAndDomain($data['site_url']) . '.live',
+                    'email' => $data['email'] ?? $this->email,
+                    'plugin_name' => $this->pluginName,
+                    'fluent_item_id' => $fluentItemId,
+                    'is_app_license_check' => 1
+                ]
+            );
+
+            // Update all other records with same site_url in a single query
+            BuildDomain::where('site_url', $buildDomain->site_url)
+                ->where('id', '!=', $buildDomain->id)
+                ->update(['is_app_license_check' => 0]);
+
+            // Commit the transaction
+            DB::commit();
+
+            return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', [
+                'data' => $res
+            ]);
+
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            DB::rollBack();
+
+            // Handle or log the exception
+            \Log::error('Failed to update build domain: ' . $e->getMessage());
+
+            throw $e; // Or handle the error according to your application's needs
+        }
     }
 
 

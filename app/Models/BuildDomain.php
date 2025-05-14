@@ -34,6 +34,7 @@ class BuildDomain extends Model
         'is_ios',
         'fluent_item_id',
         'ios_app_name',
+        'is_app_license_check',
         'build_plugin_slug'
     ];
 
