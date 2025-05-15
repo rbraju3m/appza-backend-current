@@ -39,6 +39,7 @@ class BuildOrder extends Model
         'build_domain_id',
         'license_key',
         'is_build_dir_delete',
+        'build_orders',
         'history_id'
     ];
 
