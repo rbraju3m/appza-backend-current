@@ -145,7 +145,7 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(($buildOrder->status?->value == 'completed' || $buildOrder->status?->value == 'failed') && !$buildOrder->is_build_dir_delete)
+                                                    @if(($buildOrder->status?->value == 'completed' || $buildOrder->status?->value == 'failed') && !$buildOrder->is_build_dir_delete && !empty($buildOrder->build_dir))
                                                         <button
                                                             title="Delete build directory"
                                                             class="btn delete-build-dir-btn"
