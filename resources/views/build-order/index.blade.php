@@ -227,6 +227,7 @@
                     }
 
                     const buildOrderId = this.dataset.buildOrderId;
+                    console.log(buildOrderId)
                     const url = `/build-orders/${buildOrderId}/delete-dir`;
 
                     // Show loading state
