@@ -24,14 +24,14 @@
                                     <th>{{__('messages.OrderAt')}}</th>
                                     <th>Process Time</th>
                                     <th>{{__('messages.Plugin')}}</th>
-                                    <th>{{__('messages.packageName')}}</th>
+{{--                                    <th>{{__('messages.packageName')}}</th>--}}
                                     <th>{{__('messages.appName')}}</th>
                                     <th>{{__('messages.Domain')}}</th>
                                     <th>{{__('messages.buildTarget')}}</th>
                                     <th>{{__('messages.Status')}}</th>
                                     <th width="13%">{{__('messages.AllFile')}}</th>
                                     <th width="14%">{{__('messages.BuildLog')}}</th>
-                                    <th>Dir Delete</th>
+                                    <th></th>
                                 </tr>
                                 </thead>
 
@@ -53,7 +53,7 @@
                                         @foreach($buildOrdersArray as $index => $buildOrder)
                                             <tr>
                                                 <td>
-                                                    {{$serial++}}
+                                                    {{$serial++." #".$buildOrder->id}}
                                                 </td>
                                                 <td>{{$buildOrder->created_at->format('d-M-Y')}}</td>
                                                 <td>
@@ -70,7 +70,7 @@
                                                     {{number_format($displayProcessTime,2).' minutes'}}
                                                 </td>
                                                 <td>{{$buildOrder->build_plugin_slug}}</td>
-                                                <td>{{$buildOrder->package_name}}</td>
+{{--                                                <td>{{$buildOrder->package_name}}</td>--}}
                                                 <td>{{$buildOrder->app_name}}</td>
                                                 <td>{{$buildOrder->domain}}</td>
                                                 <td>{{$buildOrder->build_target}}</td>
@@ -150,7 +150,7 @@
                                                             class="btn btn-danger delete-build-dir-btn"
                                                             data-build-order-id="{{ $buildOrder->id }}"
                                                         >
-                                                            Delete Directory
+                                                            Dir
                                                         </button>
                                                     @endif
                                                 </td>
