@@ -106,7 +106,7 @@ class BuildOrderController extends Controller
         dispatch(new DeleteBuildDir($buildOrder->id));
 
         return response()->json([
-            'message' => 'Delete build directory job has been dispatched.',
+            'message' => 'Build directory delete processing .....',
             'status' => 'success'
         ]);
     }
