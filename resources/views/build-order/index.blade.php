@@ -53,7 +53,7 @@
                                         @foreach($buildOrdersArray as $index => $buildOrder)
                                             <tr>
                                                 <td>
-                                                    {{$serial++." #".$buildOrder->id}}
+                                                    {{$serial++}}
                                                 </td>
                                                 <td>{{$buildOrder->created_at->format('d-M-Y')}}</td>
                                                 <td>
