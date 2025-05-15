@@ -54,6 +54,8 @@ Route::prefix('admin')
         Route::get('/home', [HomeController::class, 'index'])->name('admin.home');
     });
 
+Route::post('/build-orders/{id}/delete-dir', [BuildOrderController::class, 'deleteBuildDir'])
+    ->name('build-orders.delete-dir');
 
 Route::prefix('/appza')->middleware(['auth'])->group(function() {
     Route::get('download/apk', [\App\Http\Controllers\Api\V1\ApkBuildHistoryController::class, 'downloadApk'])->name('download_apk');

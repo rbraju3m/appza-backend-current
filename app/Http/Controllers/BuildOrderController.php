@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PluginRequest;
+use App\Jobs\DeleteBuildDir;
+use App\Jobs\ProcessBuild;
 use App\Models\BuildOrder;
 use App\Models\Component;
 use App\Models\Page;
@@ -11,6 +13,7 @@ use App\Models\SupportsPlugin;
 use App\Traits\HandlesFileUploads;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -77,6 +80,35 @@ class BuildOrderController extends Controller
 
             return redirect()->route('page_list')->with('error', 'Failed to delete the page. Please try again.');
         }
+    }
+
+
+    /**
+     * Delete build directory for a specific build order.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function deleteBuildDir(Request $request, int $id): JsonResponse
+    {
+        $buildOrder = BuildOrder::findOrFail($id);
+
+        // Check if the build dir is already deleted
+        if ($buildOrder->is_build_dir_delete) {
+            return response()->json([
+                'message' => 'Build directory is already deleted.',
+                'status' => 'success'
+            ]);
+        }
+
+        // Dispatch the job to delete the build directory
+        dispatch(new DeleteBuildDir($buildOrder->id));
+
+        return response()->json([
+            'message' => 'Delete build directory job has been dispatched.',
+            'status' => 'success'
+        ]);
     }
 
 }

@@ -31,6 +31,7 @@
                                     <th>{{__('messages.Status')}}</th>
                                     <th width="13%">{{__('messages.AllFile')}}</th>
                                     <th width="14%">{{__('messages.BuildLog')}}</th>
+                                    <th>Dir Delete</th>
                                 </tr>
                                 </thead>
 
@@ -143,6 +144,16 @@
                                                         </button>
                                                     @endif
                                                 </td>
+                                                <td>
+                                                    @if(($buildOrder->status?->value == 'completed' || $buildOrder->status?->value == 'failed') && !$buildOrder->is_build_dir_delete)
+                                                        <button
+                                                            class="btn btn-danger delete-build-dir-btn"
+                                                            data-build-order-id="{{ $buildOrder->id }}"
+                                                        >
+                                                            Delete Directory
+                                                        </button>
+                                                    @endif
+                                                </td>
                                             </tr>
                                             @php $i++; @endphp
                                         @endforeach
@@ -202,6 +213,61 @@
 @endsection
 
 @section('footer.scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all delete buttons with the specific class
+            const deleteButtons = document.querySelectorAll('.delete-build-dir-btn');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    if (!confirm('Are you sure you want to delete this build directory?')) {
+                        return;
+                    }
+
+                    const buildOrderId = this.dataset.buildOrderId;
+                    const url = `/build-orders/${buildOrderId}/delete-dir`;
+
+                    // Show loading state
+                    this.disabled = true;
+                    this.textContent = 'Deleting...';
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert(data.message);
+                                // Hide the delete button or update UI as needed
+                                this.style.display = 'none';
+
+                                // Update any status indicators on the page
+                                const statusElement = document.querySelector(`#build-status-${buildOrderId}`);
+                                if (statusElement) {
+                                    statusElement.textContent = 'Delete in progress';
+                                }
+                            } else {
+                                alert('Error: ' + data.message);
+                                this.disabled = false;
+                                this.textContent = 'Delete Directory';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while deleting the build directory.');
+                            this.disabled = false;
+                            this.textContent = 'Delete Directory';
+                        });
+                });
+            });
+        });
+    </script>
     <script>
         function openFileInModal(fileUrl) {
             // Set the iframe source to the file URL
