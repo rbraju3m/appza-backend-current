@@ -11,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::table('build_orders', function (Blueprint $table) {
+            $table->boolean('is_build_dir_delete')->default(false);
+        });
     }
 
     /**
