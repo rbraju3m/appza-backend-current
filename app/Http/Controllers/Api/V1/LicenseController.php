@@ -191,8 +191,14 @@ class LicenseController extends Controller
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');
         }
 
+        $getBuildDomain = BuildDomain::where([['site_url', $request->get('site_url')],['is_app_license_check',1]])->first();
+
+        if (empty($getBuildDomain)) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Active domain not found.');
+        }
+
         // External variable Call
-        $fluentItemId = $this->pluginName === 'appza'
+        $fluentItemId = $getBuildDomain->plugin_name === 'appza'
             ? config('app.fluent_item_id_for_appza')
             : config('app.fluent_item_id_for_lazytask');
 
@@ -206,31 +212,25 @@ class LicenseController extends Controller
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is not a valid number.');
         }
 
-        $getBuildDomain = BuildDomain::where([['site_url', $request->get('site_url')],['is_app_license_check',1]])->first();
-
-        if (empty($getBuildDomain)) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Active domain not found.');
-        }
-
         $params = [
             'fluent_cart_action' => 'check_license',
             'license' => $getBuildDomain->license_key,
             'item_id' => $fluentItemId,
             'url' => $request->get('site_url'),
         ];
-        Log::info("params " . json_encode($params));
+//        Log::info("params " . json_encode($params));
 
         // Send API Request
         try {
             $response = Http::get($fluentApiUrl, $params);
-            Log::info("response ".json_encode($response));
+//            Log::info("response ".json_encode($response));
         } catch (\Exception $e) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
         }
 
         // Decode response
         $data = json_decode($response->getBody()->getContents(), true);
-        Log::info("response data ".json_encode($data));
+//        Log::info("response data ".json_encode($data));
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
         }
