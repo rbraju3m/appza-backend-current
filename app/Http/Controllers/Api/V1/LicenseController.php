@@ -218,19 +218,19 @@ class LicenseController extends Controller
             'item_id' => $fluentItemId,
             'url' => $request->get('site_url'),
         ];
-        Log::info("params " . $params);
+        Log::info("params " . json_encode($params));
 
         // Send API Request
         try {
             $response = Http::get($fluentApiUrl, $params);
-            Log::info("response ".$response);
+            Log::info("response ".json_encode($response));
         } catch (\Exception $e) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
         }
 
         // Decode response
         $data = json_decode($response->getBody()->getContents(), true);
-        Log::info("response data ".$data);
+        Log::info("response data ".json_encode($data));
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
         }
