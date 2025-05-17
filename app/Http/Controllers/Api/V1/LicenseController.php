@@ -218,19 +218,16 @@ class LicenseController extends Controller
             'item_id' => $fluentItemId,
             'url' => $request->get('site_url'),
         ];
-//        Log::info("params " . json_encode($params));
 
         // Send API Request
         try {
             $response = Http::get($fluentApiUrl, $params);
-//            Log::info("response ".json_encode($response));
         } catch (\Exception $e) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
         }
 
         // Decode response
         $data = json_decode($response->getBody()->getContents(), true);
-//        Log::info("response data ".json_encode($data));
         if (json_last_error() !== JSON_ERROR_NONE) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
         }
@@ -287,6 +284,11 @@ class LicenseController extends Controller
         }
         $data = $request->only('site_url', 'license_key', 'email');
 
+        // External variable Call
+        $fluentItemId = $this->pluginName === 'appza'
+            ? config('app.fluent_item_id_for_appza')
+            : config('app.fluent_item_id_for_lazytask');
+
         if (!config('app.is_fluent_check')) {
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
             // Check or Create BuildDomain Entry
@@ -302,10 +304,6 @@ class LicenseController extends Controller
                     'fluent_item_id' => '540',
                 ]
             );
-
-            $fluentItemId = $this->pluginName === 'appza'
-                ? config('app.fluent_item_id_for_appza')
-                : config('app.fluent_item_id_for_lazytask');
 
             return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => [
                 "success" => true,
@@ -325,11 +323,6 @@ class LicenseController extends Controller
             /* END manually added for fluent issue & after fluent is okay it will be remove*/
         }
 
-
-        // External variable Call
-        $fluentItemId = $this->pluginName === 'appza'
-            ? config('app.fluent_item_id_for_appza')
-            : config('app.fluent_item_id_for_lazytask');
         // Check if it's null
         if (is_null($fluentItemId)) {
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is null or not set in the configuration.');
