@@ -31,7 +31,7 @@
                                     <th>{{__('messages.Status')}}</th>
                                     <th width="13%">{{__('messages.AllFile')}}</th>
                                     <th width="14%">{{__('messages.BuildLog')}}</th>
-                                    <th>Delete</th>
+{{--                                    <th>Delete</th>--}}
                                 </tr>
                                 </thead>
 
@@ -144,7 +144,7 @@
                                                         </button>
                                                     @endif
                                                 </td>
-                                                <td>
+                                                {{--<td>
                                                     @if(($buildOrder->status?->value == 'completed' || $buildOrder->status?->value == 'failed') && !$buildOrder->is_build_dir_delete && !empty($buildOrder->build_dir))
                                                         <button
                                                             title="Delete build directory"
@@ -154,7 +154,7 @@
                                                             ❌
                                                         </button>
                                                     @endif
-                                                </td>
+                                                </td>--}}
                                             </tr>
                                             @php $i++; @endphp
                                         @endforeach
