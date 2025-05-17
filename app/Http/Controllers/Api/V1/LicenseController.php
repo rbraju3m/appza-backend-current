@@ -58,11 +58,15 @@ class LicenseController extends Controller
         }
 
         if (!config('app.is_fluent_check')){
+            // External variable Call
+            $fluentItemId = $this->pluginName === 'appza'
+                ? config('app.fluent_item_id_for_appza')
+                : config('app.fluent_item_id_for_lazytask');
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
             return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
                 "success" => true,
                 "license"=> "valid",
-                "item_id"=> config('app.fluent_item_id'),
+                "item_id"=> $fluentItemId,
                 "item_name"=> "",
                 "license_limit"=> "25",
                 "site_count"=> 1,
@@ -85,7 +89,10 @@ class LicenseController extends Controller
         }
 
         // External variable Call
-        $fluentItemId = config('app.fluent_item_id');
+        $fluentItemId = $this->pluginName === 'appza'
+            ? config('app.fluent_item_id_for_appza')
+            : config('app.fluent_item_id_for_lazytask');
+
 
         // Check if it's null
         if (is_null($fluentItemId)) {
@@ -154,11 +161,14 @@ class LicenseController extends Controller
         }
 
         if (!config('app.is_fluent_check')){
+            $fluentItemId = $this->pluginName === 'appza'
+                ? config('app.fluent_item_id_for_appza')
+                : config('app.fluent_item_id_for_lazytask');
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
             return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
                 "success" => true,
                 "license"=> "valid",
-                "item_id"=> config('app.fluent_item_id'),
+                "item_id"=> $fluentItemId,
                 "item_name"=> "",
                 "license_limit"=> "25",
                 "site_count"=> 1,
@@ -181,7 +191,9 @@ class LicenseController extends Controller
         }
 
         // External variable Call
-        $fluentItemId = config('app.fluent_item_id');
+        $fluentItemId = $this->pluginName === 'appza'
+            ? config('app.fluent_item_id_for_appza')
+            : config('app.fluent_item_id_for_lazytask');
 
         // Check if it's null
         if (is_null($fluentItemId)) {
@@ -287,10 +299,14 @@ class LicenseController extends Controller
                 ]
             );
 
+            $fluentItemId = $this->pluginName === 'appza'
+                ? config('app.fluent_item_id_for_appza')
+                : config('app.fluent_item_id_for_lazytask');
+
             return $jsonResponse(Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => [
                 "success" => true,
                 "license" => "valid",
-                "item_id" => config('app.fluent_item_id'),
+                "item_id" => $fluentItemId,
                 "item_name" => "",
                 "license_limit" => "25",
                 "site_count" => 1,
@@ -307,8 +323,9 @@ class LicenseController extends Controller
 
 
         // External variable Call
-        $fluentItemId = config('app.fluent_item_id');
-
+        $fluentItemId = $this->pluginName === 'appza'
+            ? config('app.fluent_item_id_for_appza')
+            : config('app.fluent_item_id_for_lazytask');
         // Check if it's null
         if (is_null($fluentItemId)) {
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent item id is null or not set in the configuration.');
