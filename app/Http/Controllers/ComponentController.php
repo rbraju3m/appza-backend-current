@@ -203,7 +203,7 @@ class ComponentController extends Controller
      * @param Collection $styleGroups
      * @return array
      */
-    protected function getComponentStyleGroupProperties($componentId, $styleGroups)
+    /*protected function getComponentStyleGroupProperties($componentId, $styleGroups)
     {
         $componentStyleGroup = ComponentStyleGroup::where('component_id', $componentId)
             ->with('styleGroup:id,name,slug') // Eager load related style group
@@ -219,7 +219,106 @@ class ComponentController extends Controller
         }
 
         return $properties;
+    }*/
+    protected function getComponentStyleGroupProperties($componentId, $styleGroups)
+    {
+        // Get all style group IDs from the included styleGroups
+        $styleGroupIds = $styleGroups->pluck('id')->toArray();
+
+        // Step 1: Load all related ComponentStyleGroups with related styleGroup (eager load)
+        $componentStyleGroups = ComponentStyleGroup::with('styleGroup:id,name,slug')
+            ->where('component_id', $componentId)
+            ->whereIn('style_group_id', $styleGroupIds)
+            ->get();
+
+        // Step 2: Batch fetch all valid StyleGroupProperties and join with style_properties
+        $validProperties = StyleGroupProperties::whereIn('style_group_id', $styleGroupIds)
+            ->join('appfiy_style_properties', 'appfiy_style_properties.id', '=', 'appfiy_style_group_properties.style_property_id')
+            ->where('appfiy_style_properties.is_active', 1)
+            ->select(
+                'appfiy_style_group_properties.style_group_id',
+                'appfiy_style_properties.name',
+                'appfiy_style_properties.input_type',
+                'appfiy_style_properties.value',
+                'appfiy_style_properties.default_value'
+            )
+            ->get()
+            ->groupBy('style_group_id');
+
+        // Step 3: Batch fetch all existing ComponentStyleGroupProperties
+        $existingProperties = ComponentStyleGroupProperties::where('component_id', $componentId)
+            ->whereIn('style_group_id', $styleGroupIds)
+            ->get()
+            ->groupBy('style_group_id');
+
+        // Final result to return
+        $properties = [];
+
+        // Step 4: Loop through each ComponentStyleGroup and sync properties
+        foreach ($componentStyleGroups as $group) {
+            $groupId = $group->style_group_id;
+
+            // Valid properties (from style group definition)
+            $valid = $validProperties[$groupId] ?? collect();
+
+            // Existing properties saved already for this component
+            $existingGroupItems = $existingProperties[$groupId] ?? collect();
+
+            // Index existing by 'name'
+            $existing = $existingGroupItems->keyBy('name');
+
+            // Extract name lists
+            $validNames = $valid->pluck('name')->unique()->toArray();
+            $existingNames = $existingGroupItems->pluck('name')->unique()->toArray();
+
+            // Compute differences
+            $namesToAdd = array_diff($validNames, $existingNames);
+            $namesToDelete = array_diff($existingNames, $validNames);
+
+            // Step 5: Delete obsolete component properties
+            if (!empty($namesToDelete)) {
+                ComponentStyleGroupProperties::where('component_id', $componentId)
+                    ->where('style_group_id', $groupId)
+                    ->whereIn('name', $namesToDelete)
+                    ->delete();
+            }
+
+            // Step 6: Add any missing properties
+            foreach ($namesToAdd as $name) {
+                $prop = $valid->firstWhere('name', $name);
+                if ($prop) {
+                    ComponentStyleGroupProperties::create([
+                        'component_id' => $componentId,
+                        'style_group_id' => $groupId,
+                        'name' => $prop->name,
+                        'input_type' => $prop->input_type,
+                        'value' => $prop->value,
+                        'default_value' => $prop->default_value,
+                    ]);
+
+                    // Add to in-memory collection too for return
+                    $existing->put($name, (object)[
+                        'component_id' => $componentId,
+                        'style_group_id' => $groupId,
+                        'name' => $prop->name,
+                        'input_type' => $prop->input_type,
+                        'value' => $prop->value,
+                        'default_value' => $prop->default_value,
+                    ]);
+                }
+            }
+
+            // Step 7: Finalize return data structure
+            $groupArray = $group->toArray();
+            $groupArray['properties'] = $existing->values()->toArray(); // Final properties list
+            $groupArray['style_group_id'] = $groupId;
+
+            $properties[] = $groupArray;
+        }
+
+        return $properties;
     }
+
 
     /**
      * Sync and fetch the component's style group properties.
@@ -228,7 +327,7 @@ class ComponentController extends Controller
      * @param int $styleGroupId
      * @return array
      */
-    protected function syncAndFetchComponentStyleGroupProperties($componentId, $styleGroupId)
+    /*protected function syncAndFetchComponentStyleGroupProperties($componentId, $styleGroupId)
     {
         // Fetch valid and existing properties
         $validProperties = StyleGroupProperties::where('style_group_id', $styleGroupId)
@@ -262,7 +361,7 @@ class ComponentController extends Controller
             ->where('style_group_id', $styleGroupId)
             ->get()
             ->toArray();
-    }
+    }*/
 
     /**
      * Create a new style group property for the component's style group.
