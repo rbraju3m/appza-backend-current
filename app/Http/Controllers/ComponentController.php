@@ -310,7 +310,11 @@ class ComponentController extends Controller
 
             // Step 7: Finalize return data structure
             $groupArray = $group->toArray();
-            $groupArray['properties'] = $existing->values()->toArray(); // Final properties list
+//            $groupArray['properties'] = $existing->values()->toArray(); // Final properties list
+            $groupArray['properties'] = array_map(function ($item) {
+                return (array) $item;
+            }, $existing->values()->toArray());
+
             $groupArray['style_group_id'] = $groupId;
 
             $properties[] = $groupArray;
