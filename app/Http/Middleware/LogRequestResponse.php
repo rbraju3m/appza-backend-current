@@ -26,20 +26,7 @@ class LogRequestResponse
 
             if ($isRequestLog) {
 
-                /*RequestLog::create([
-                    'method' => $request->method(),
-                    'url' => $request->fullUrl(),
-                    'headers' => $this->getFilteredHeaders($request),
-                    'request_data' => $requestData,
-                    'response_status' => $response->getStatusCode(),
-                    'response_data' => $responseData,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                    'user_id' => Auth::id() ?? null,
-                    'execution_time' => $executionTime,
-                ]);*/
-
-                LogRequestToDatabase::dispatch([
+                RequestLog::create([
                     'method' => $request->method(),
                     'url' => $request->fullUrl(),
                     'headers' => $this->getFilteredHeaders($request),
@@ -51,8 +38,20 @@ class LogRequestResponse
                     'user_id' => Auth::id() ?? null,
                     'execution_time' => $executionTime,
                 ]);
+
+                /*LogRequestToDatabase::dispatch([
+                    'method' => $request->method(),
+                    'url' => $request->fullUrl(),
+                    'headers' => $this->getFilteredHeaders($request),
+                    'request_data' => $requestData,
+                    'response_status' => $response->getStatusCode(),
+                    'response_data' => $responseData,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'user_id' => Auth::id() ?? null,
+                    'execution_time' => $executionTime,
+                ]);*/
             }
-//            Log::info('data :' . json_encode($responseData, JSON_UNESCAPED_UNICODE));
             return $response;
         } catch (\Exception $e) {
             Log::error('Failed to log request: ' . $e->getMessage());
