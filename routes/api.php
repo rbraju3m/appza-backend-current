@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::prefix('/appza/v1')
+    ->middleware([\App\Http\Middleware\LogRequestResponse::class])
     #->middleware('auth:sanctum')
     ->group(function () {
         // lead api

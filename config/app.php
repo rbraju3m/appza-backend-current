@@ -25,6 +25,7 @@ return [
     'is_fluent_check' => env('IS_FLUENT_CHECK', true),
     'is_image_update' => env('IS_IMAGE_UPDATE', false),
     'is_hash_authorization' => env('IS_HASH_AUTHORIZATION', true),
+    'is_request_log' => env('IS_REQUEST_LOG', true),
 
     /*
     |--------------------------------------------------------------------------
