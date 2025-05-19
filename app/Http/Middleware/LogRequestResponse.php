@@ -26,7 +26,12 @@ class LogRequestResponse
 
         // Log to database (use try-catch to prevent logging errors from breaking the application)
         try {
-            /*RequestLog::create([
+            $isRequestLog = config('app.is_request_log', false);
+
+            if ($isRequestLog) {
+//                $body = $request->except(['password', 'password_confirmation']); // filter sensitive
+
+                RequestLog::create([
                 'method' => $request->method(),
                 'url' => $request->fullUrl(),
                 'headers' => $this->getFilteredHeaders($request),
@@ -37,13 +42,9 @@ class LogRequestResponse
                 'user_agent' => $request->userAgent(),
                 'user_id' => Auth::id() ?? null,
                 'execution_time' => $executionTime,
-            ]);*/
-            $isRequestLog = config('app.is_request_log', false);
+            ]);
 
-            if ($isRequestLog) {
-//                $body = $request->except(['password', 'password_confirmation']); // filter sensitive
-
-                LogRequestToDatabase::dispatch([
+                /*LogRequestToDatabase::dispatch([
                     'method' => $request->method(),
                     'url' => $request->fullUrl(),
                     'headers' => $this->getFilteredHeaders($request),
@@ -54,7 +55,7 @@ class LogRequestResponse
                     'user_agent' => $request->userAgent(),
                     'user_id' => Auth::id() ?? null,
                     'execution_time' => $executionTime,
-                ]);
+                ]);*/
             }
 //            Log::info('data :' . json_encode($responseData, JSON_UNESCAPED_UNICODE));
             return $response;
