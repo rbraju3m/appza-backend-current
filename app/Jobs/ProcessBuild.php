@@ -33,6 +33,12 @@ class ProcessBuild implements ShouldQueue
      */
     public function handle(): void
     {
+        $order = BuildOrder::find($this->buildOrderId);
+//        dump($this->buildOrder->status->value);
+        if ( $order->status->value !== 'pending') {
+            Log::info('Ignoring Build order #' . $this->buildOrderId . 'Found In ' . $order->status->value . ' status');
+            return;
+        }
         Log::info('Processing Build order #' . $this->buildOrderId);
     }
 }
