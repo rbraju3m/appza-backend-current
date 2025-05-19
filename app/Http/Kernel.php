@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Support\Facades\Schedule;
 
 class Kernel extends HttpKernel
 {
@@ -40,4 +41,9 @@ class Kernel extends HttpKernel
         'setlocale' => \App\Http\Middleware\SetLocale::class,
 
     ];
+
+    protected function schedule(Schedule $schedule)
+    {
+        $schedule->command('logs:clean-requests --days=30')->daily();
+    }
 }
