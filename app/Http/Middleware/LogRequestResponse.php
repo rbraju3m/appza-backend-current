@@ -15,13 +15,9 @@ class LogRequestResponse
     public function handle(Request $request, Closure $next)
     {
         $startTime = microtime(true);
-        // Get request data
         $requestData = $this->getRequestData($request);
-        // Process the request
         $response = $next($request);
-        // Calculate execution time
         $executionTime = (microtime(true) - $startTime) * 1000; // in milliseconds
-        // Get response data
         $responseData = $this->getResponseData($response);
 
         // Log to database (use try-catch to prevent logging errors from breaking the application)
@@ -29,22 +25,8 @@ class LogRequestResponse
             $isRequestLog = config('app.is_request_log', false);
 
             if ($isRequestLog) {
-//                $body = $request->except(['password', 'password_confirmation']); // filter sensitive
 
-                RequestLog::create([
-                'method' => $request->method(),
-                'url' => $request->fullUrl(),
-                'headers' => $this->getFilteredHeaders($request),
-                'request_data' => $requestData,
-                'response_status' => $response->getStatusCode(),
-                'response_data' => $responseData,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'user_id' => Auth::id() ?? null,
-                'execution_time' => $executionTime,
-            ]);
-
-                /*LogRequestToDatabase::dispatch([
+                /*RequestLog::create([
                     'method' => $request->method(),
                     'url' => $request->fullUrl(),
                     'headers' => $this->getFilteredHeaders($request),
@@ -56,6 +38,19 @@ class LogRequestResponse
                     'user_id' => Auth::id() ?? null,
                     'execution_time' => $executionTime,
                 ]);*/
+
+                LogRequestToDatabase::dispatch([
+                    'method' => $request->method(),
+                    'url' => $request->fullUrl(),
+                    'headers' => $this->getFilteredHeaders($request),
+                    'request_data' => $requestData,
+                    'response_status' => $response->getStatusCode(),
+                    'response_data' => $responseData,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'user_id' => Auth::id() ?? null,
+                    'execution_time' => $executionTime,
+                ]);
             }
 //            Log::info('data :' . json_encode($responseData, JSON_UNESCAPED_UNICODE));
             return $response;
