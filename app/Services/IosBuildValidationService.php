@@ -117,7 +117,7 @@ class IosBuildValidationService {
                 'type' => 'bundleIds',
                 'attributes' => [
                     'identifier' => $identifier,
-                    'name' => $name,
+                    'name' => $name??'appza_app',
                     'platform' => 'IOS'
                 ]
             ]
