@@ -4,254 +4,263 @@ namespace App\Services;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-
-use http\Exception;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Firebase\JWT\JWT;
 
-class IosBuildValidationService {
-    function iosBuildProcessValidation($findSiteUrl)
-    {
-        $token = $this->generateJwt($findSiteUrl);
-        $bundle = $this->bundleExists($findSiteUrl,$token);
-        if ($bundle=='Unauthorized'){
-            return $bundle;
-        }
-
-        if ($bundle!='Unauthorized' && $bundle == false){
-            $this->createBundle($token,$findSiteUrl->package_name,$findSiteUrl->app_name);
-            return true;
-        }
-        return true;
-    }
-
-    function iosBuildProcessValidation2($findSiteUrl)
+class IosBuildValidationService
+{
+    public function iosBuildProcessValidation($findSiteUrl)
     {
         $token = $this->generateJwt($findSiteUrl);
 
-        $appName = $this->checkAppExists($token,$findSiteUrl->package_name);
-
-        if ($appName){
-            $cert = $this->getDistributionCertificate($token);
-            if ($cert != null){
-                $this->apiRequest('DELETE', "certificates/$cert", $token);
-            }
-            $profileName = "match AppStore ".$findSiteUrl->package_name;
-            $profile = $this->checkProfileExists($token,$profileName);
-            if ($profile != null){
-                $this->apiRequest('DELETE', "profiles/$profile", $token);
-                return ['status' => true, 'app_name' => $appName];
-            }
-            return ['status' => true, 'app_name' => $appName];
-        }else{
-            return ['status' => false, 'app_name' => null];
+        if ($token['success'] === false) {
+            return $token;
         }
+
+        $bundle = $this->bundleExists($findSiteUrl, $token['token']);
+
+        if ($bundle === 'Unauthorized') {
+            return [
+                'success' => false,
+                'status' => Response::HTTP_UNAUTHORIZED,
+                'message' => 'Unauthorized: Invalid token or credentials.',
+            ];
+        }
+
+        if (!$bundle) {
+            $bundleCreation = $this->createBundle($token['token'], $findSiteUrl->package_name, $findSiteUrl->app_name);
+
+            if ($bundleCreation['success'] === false) {
+                return $bundleCreation;
+            }
+
+            return [
+                'success' => true,
+                'status' => Response::HTTP_OK,
+                'message' => 'IOS Resource information is valid.',
+                'data' => $bundleCreation['data']
+            ];
+        }
+
+        return [
+            'success' => true,
+            'status' => Response::HTTP_OK,
+            'message' => 'IOS Resource information is valid.',
+            'data' => $bundle,
+        ];
     }
 
-    function generateJwt($findSiteUrl) {
-        $p8file = public_path() . '/upload/build-apk/p8file/' . $findSiteUrl->ios_p8_file_content;
-        if (!file_exists($p8file)) {
-            $response = new JsonResponse([
+    public function iosBuildProcessValidation2($findSiteUrl)
+    {
+        $token = $this->generateJwt($findSiteUrl);
+
+        if ($token['success'] === false) {
+            return $token;
+        }
+
+        $appName = $this->checkAppExists($token['token'], $findSiteUrl->package_name);
+
+        if ($appName) {
+            if ($cert = $this->getDistributionCertificate($token['token'])) {
+                $this->apiRequest('DELETE', "certificates/$cert", $token['token']);
+            }
+
+            $profileName = "match AppStore " . $findSiteUrl->package_name;
+            if ($profile = $this->checkProfileExists($token['token'], $profileName)) {
+                $this->apiRequest('DELETE', "profiles/$profile", $token['token']);
+            }
+
+            return [
+                'success' => true,
+                'status' => Response::HTTP_OK,
+                'message' => 'Your ios app name has been taken from your app store.',
+                'app_name' => $appName
+            ];
+        }
+
+        return [
+            'success' => false,
+            'status' => Response::HTTP_NOT_FOUND,
+            'message' => "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.",
+            'app_name' => null
+        ];
+    }
+
+    private function generateJwt($findSiteUrl)
+    {
+        $filePath = public_path('/upload/build-apk/p8file/' . $findSiteUrl->ios_p8_file_content);
+
+        if (!file_exists($filePath)) {
+            return [
+                'success' => false,
                 'status' => Response::HTTP_NOT_FOUND,
                 'message' => 'The .p8 file was not found',
-            ], Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
-        }
-        // Read the private key with file_get_contents
-        $privateKey = file_get_contents($p8file);
-        // Ensure the private key was actually loaded
-        if (!$privateKey) {
-            $response = new JsonResponse([
-                'status' => Response::HTTP_NOT_FOUND,
-                'message' => 'Failed to read the private key from the .p8 file.',
-            ], Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+            ];
         }
 
-        $key_id = $findSiteUrl->ios_key_id;
+        $privateKey = file_get_contents($filePath);
+        if (!$privateKey) {
+            return [
+                'success' => false,
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Failed to read the private key from the .p8 file.',
+            ];
+        }
+
         $payload = [
             'iss' => $findSiteUrl->ios_issuer_id,
             'iat' => time(),
-            'exp' => time() + (20 * 60), // Token valid for 20 minutes
-            'aud' => 'appstoreconnect-v1'
+            'exp' => time() + (20 * 60),
+            'aud' => 'appstoreconnect-v1',
         ];
 
         try {
-            // This ensures ES256 algorithm is used while encoding the JWT
-            return JWT::encode($payload, $privateKey, 'ES256', $key_id);
-        } catch (Exception $e) {
-            $response = new JsonResponse([
-                'status' => Response::HTTP_NOT_FOUND,
-                'message' => 'Error generating JWT: '.$e->getMessage(),
-            ], Response::HTTP_OK);
-            $response->headers->set('Content-Type', 'application/json');
-            return $response;
+            $jwt = JWT::encode($payload, $privateKey, 'ES256', $findSiteUrl->ios_key_id);
+            return [
+                'success' => true,
+                'status' => Response::HTTP_OK,
+                'message' => 'Token generated successfully',
+                'token' => $jwt
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
+                'message' => 'Error generating JWT: ' . $e->getMessage(),
+            ];
         }
     }
 
-    function bundleExists($findSiteUrl,$token)
+    private function bundleExists($findSiteUrl, $token)
     {
-        $bundleIds = $this->apiRequest('get','bundleIds?limit=200',$token,null);
-        if ($bundleIds instanceof \Symfony\Component\HttpFoundation\JsonResponse) {
-            $responseData = json_decode($bundleIds->getContent(), true);
-            if (isset($responseData['status']) && $responseData['status'] == 401) {
-                return "Unauthorized";
-            }
+        $response = $this->apiRequest('GET', 'bundleIds?limit=200', $token);
+
+        if (isset($response['status']) && $response['status'] === 401) {
+            return 'Unauthorized';
         }
-        if ($bundleIds) {
-            foreach ($bundleIds['data'] as $bundle_id) {
-                if ($bundle_id['attributes']['identifier'] === $findSiteUrl->package_name) {
-                    return $bundle_id['attributes']['identifier'];
+
+        if (isset($response['data'])) {
+            foreach ($response['data'] as $bundle) {
+                if ($bundle['attributes']['identifier'] === $findSiteUrl->package_name) {
+                    return $bundle['attributes']['identifier'];
                 }
             }
-            return false;
         }
+
+        return false;
     }
 
-    function createBundle($token, $identifier, $name) {
-        $data = [
+    private function createBundle($token, $identifier, $name)
+    {
+        $payload = [
             'data' => [
                 'type' => 'bundleIds',
                 'attributes' => [
                     'identifier' => $identifier,
-                    'name' => $name??'appza-app',
-                    'platform' => 'IOS'
+                    'name' => $name ?? 'appza-app',
+                    'platform' => 'IOS',
                 ]
             ]
         ];
 
-        $response = $this->apiRequest('POST', 'bundleIds', $token, $data);
+        $response = $this->apiRequest('POST', 'bundleIds', $token, $payload);
 
         if (isset($response['data']['attributes']['identifier'])) {
-            return $response['data']['attributes']['identifier'];
+            return [
+                'success' => true,
+                'status' => Response::HTTP_OK,
+                'message' => 'Bundle created',
+                'data' => $response['data']['attributes']['identifier'],
+            ];
         }
-        return null;
+
+        return [
+            'success' => false,
+            'status' => $response['status'] ?? 400,
+            'message' => $response['message'] ?? 'Failed to create bundle',
+            'errors' => $response['errors'] ?? [],
+        ];
     }
 
-    function checkAppExists($token, $bundleId) {
-        $apps = $this->apiRequest('get','apps?limit=200',$token,null);
+    private function checkAppExists($token, $bundleId)
+    {
+        $apps = $this->apiRequest('GET', 'apps?limit=200', $token);
 
-        if ($apps && isset($apps['data'])) {
+        if (isset($apps['data'])) {
             foreach ($apps['data'] as $app) {
                 if ($app['attributes']['bundleId'] === $bundleId) {
                     return $app['attributes']['name'];
                 }
             }
         }
-//        dump($apps);
 
-        /*if ($appName){
-            if ($apps && isset($apps['data'])) {
-                foreach ($apps['data'] as $app) {
-                    if ($app['attributes']['bundleId'] === $bundleId) {
-                        return $app['attributes']['name'];
-                    }
-                }
-            }
-        }else{
-            if ($apps && isset($apps['data'])) {
-                foreach ($apps['data'] as $app) {
-                    if ($app['attributes']['bundleId'] === $bundleId) {
-                        return $app['attributes']['name'];
-                    }
-                }
-            }
-        }*/
-//        return false;
+        return false;
     }
 
-    function getDistributionCertificate($token) {
+    private function getDistributionCertificate($token)
+    {
         $certificates = $this->apiRequest('GET', 'certificates?limit=200', $token);
 
-        if ($certificates && isset($certificates['data'])) {
-            $distributionCerts = array_filter(
-                array_map(function($cert) {
-                    return [
-                        'ID' => $cert['id'],
-                        'Name' => $cert['attributes']['name'],
-                        'Type' => $cert['attributes']['certificateType'],
-                        'expirationDate' => $cert['attributes']['expirationDate'],
-                        'Platforms' => isset($cert['attributes']['platforms']) ? $cert['attributes']['platforms'] : 'N/A'
-                    ];
-                }, $certificates['data']),
-                function($cert) {
-                    // previous check that work okay
-//                    return $cert['Type'] === 'DISTRIBUTION';
+        if (isset($certificates['data'])) {
+            $valid = array_filter($certificates['data'], function ($cert) {
+                return $cert['attributes']['certificateType'] === 'DISTRIBUTION' &&
+                    $cert['attributes']['expirationDate'] > Carbon::now()->toISOString();
+            });
 
-                    // next implement for saiful req for more validation
-                    $current_time = Carbon::now()->format('Y-m-d\TH:i:s.000+00:00');
-                    return $cert['Type'] === 'DISTRIBUTION' && ($cert['expirationDate'] ?? '') > $current_time;
-                }
-            );
-
-            // Count the number of distribution certificates
-            $distributionCount = count($distributionCerts);
-            // Check if there are more than 2 distribution certificates
-            /*if ($distributionCount >= 2) {
-                return $distributionCerts[0]['ID'];
-            } else {
-                return null;
-            }*/
-
-            if ($distributionCount >= 2) {
-                $randomKey = array_rand($distributionCerts); // Get a random key from the array
-                return $distributionCerts[$randomKey]['ID']; // Return the ID of the randomly selected item
-            } else {
-                return null;
+            if (count($valid) >= 2) {
+                $random = array_rand($valid);
+                return $valid[$random]['id'];
             }
         }
+
         return null;
     }
 
-    function checkProfileExists($token, $profileId) {
+    private function checkProfileExists($token, $profileName)
+    {
         $profiles = $this->apiRequest('GET', 'profiles?limit=200', $token);
 
-        if ($profiles && isset($profiles['data'])) {
+        if (isset($profiles['data'])) {
             foreach ($profiles['data'] as $profile) {
-                if ($profile['attributes']['name'] === $profileId) {
+                if ($profile['attributes']['name'] === $profileName) {
                     return $profile['id'];
                 }
             }
         }
+
         return null;
     }
 
-    function apiRequest($method, $endpoint, $token, $data = null) {
-        $client = new Client();
-        $url = "https://api.appstoreconnect.apple.com/v1/$endpoint";
-        $headers = [
-            'Authorization' => "Bearer $token",
-            'Content-Type' => 'application/json'
-        ];
-
+    private function apiRequest($method, $endpoint, $token, $data = null)
+    {
         try {
+            $client = new Client();
+            $url = "https://api.appstoreconnect.apple.com/v1/$endpoint";
+
             $response = $client->request($method, $url, [
-                'headers' => $headers,
-                'json' => $data
+                'headers' => [
+                    'Authorization' => "Bearer $token",
+                    'Content-Type' => 'application/json'
+                ],
+                'json' => $data,
+                'http_errors' => true,
             ]);
 
             return json_decode($response->getBody(), true);
+
         } catch (ClientException $e) {
-            $responseBody = $e->getResponse()->getBody()->getContents();
-            $response = new JsonResponse([
-                'status' => Response::HTTP_UNAUTHORIZED,
-                'message' => 'API ERROR 1: ' . $e->getMessage(),
-                'details' => json_decode($responseBody, true)
-            ], Response::HTTP_UNAUTHORIZED);
-            $response->headers->set('Content-Type', 'application/json');
-
-            return $response;
-        } catch (Exception $e) {
-            $response = new JsonResponse([
+            $body = json_decode($e->getResponse()->getBody(), true);
+            return [
+                'status' => $e->getResponse()->getStatusCode(),
+                'message' => $body['errors'][0]['detail'] ?? $e->getMessage(),
+                'errors' => $body['errors'] ?? []
+            ];
+        } catch (\Exception $e) {
+            return [
                 'status' => Response::HTTP_INTERNAL_SERVER_ERROR,
-                'message' => 'API ERROR: ' . $e->getMessage(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-            $response->headers->set('Content-Type', 'application/json');
-
-            return $response;
+                'message' => 'Internal API error: ' . $e->getMessage()
+            ];
         }
     }
 }
+

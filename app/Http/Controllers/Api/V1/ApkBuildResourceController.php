@@ -194,56 +194,34 @@ class ApkBuildResourceController extends Controller
             ]
         ];
         // Log the response
-        Log::info("=============================================================================================================");
-        Log::info('Build resource response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
+//        Log::info("=============================================================================================================");
+//        Log::info('Build resource response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
         // Return it
         return response()->json($payload, $status);
-
-        /*return $jsonResponse(Response::HTTP_OK, 'App selection for build requests is confirmed.',[
-            'data' => [
-                'package_name' => $findSiteUrl->package_name,
-                'bundle_name' => $findSiteUrl->package_name,
-            ]
-        ]);*/
     }
 
-    public function iosResourceAndVerify(IosBuildRequest $request) {
-        $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
-            return new JsonResponse(array_merge([
-                'status' => $statusCode,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message' => $message,
-            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
-        };
+    public function iosResourceAndVerify(IosBuildRequest $request)
+    {
+        $input = $request->validated();
+        $jsonResponse = fn($status, $message, $data = []) => response()->json(array_merge([
+            'status' => $status,
+            'url' => $request->fullUrl(),
+            'method' => $request->getMethod(),
+            'message' => $message,
+        ], $data), $status);
 
-        if (!$this->authorization) {
-            return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
-        }
-
-        if ($this->pluginName == 'lazy_task') {
-            return $jsonResponse(Response::HTTP_OK, 'Build process off for lazy task');
-        }
-
-        $input = $request->all();
-
-        $findSiteUrl = BuildDomain::where('site_url', $input["site_url"])
-            ->where('license_key', $input['license_key'])
-            ->first();
+        $findSiteUrl = BuildDomain::where('site_url', $input['site_url'])
+            ->where('license_key', $input['license_key'])->first();
 
         if (!$findSiteUrl) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key wrong');
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key is incorrect');
         }
 
-        $targetLocationP8File = public_path() . '/upload/build-apk/p8file/';
+        $p8Dir = public_path('/upload/build-apk/p8file/');
+        File::ensureDirectoryExists($p8Dir, 0777, true);
 
-        if (!File::exists($targetLocationP8File)) {
-            File::makeDirectory($targetLocationP8File, 0777, true, true);
-        }
-
-        $p8FileName = bin2hex(random_bytes(5)) . '_' . $input['ios_issuer_id'] . '.p8';
-        $fileFullPath = $targetLocationP8File . $p8FileName;
-        File::put($fileFullPath, $input['ios_p8_file_content']);
+        $p8FileName = 'key_' . uniqid() . '.p8';
+        File::put($p8Dir . $p8FileName, $input['ios_p8_file_content']);
 
         $findSiteUrl->update([
             'ios_issuer_id' => $input['ios_issuer_id'],
@@ -252,118 +230,60 @@ class ApkBuildResourceController extends Controller
             'ios_p8_file_content' => $p8FileName,
         ]);
 
-        if ($findSiteUrl->ios_p8_file_content) {
-            $iosResponse = $this->iosBuildValidationService->iosBuildProcessValidation($findSiteUrl);
+        $service = app(IosBuildValidationService::class);
+        $result = $service->iosBuildProcessValidation($findSiteUrl);
 
-            if ($iosResponse === 'Unauthorized') {
-                return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Your given information is not right, Please try with proper information.');
-            }
-
-            // for response
-            $status = Response::HTTP_OK;
-            $payload = [
-                'status' => $status,
-                'url' => $request->fullUrl(),
-                'method' => $request->method(),
-                'message' => 'IOS Resource information is valid.',
-                'data' => [
-                    'package_name' => $findSiteUrl->package_name,
-                    'bundle_name' => $findSiteUrl->package_name,
-                ]
-            ];
-            // Log the response
-            Log::info("=============================================================================================================");
-            Log::info('Build ios-keys-verify response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
-            // Return it
-            return response()->json($payload, $status);
-
-            /*return $jsonResponse(Response::HTTP_OK, 'IOS Resource information is valid.', [
-                'data' => [
-                    'package_name' => $findSiteUrl->package_name,
-                    'bundle_name' => $findSiteUrl->package_name,
-                ]
-            ]);*/
+        if ($result['success'] === false) {
+            Log::warning('IOS validation failed', $result);
+            return $jsonResponse($result['status'], $result['message']);
         }
 
-        return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'An unknown error occurred while processing IOS resources.');
+        return $jsonResponse($result['status'], $result['message'], [
+            'data' => [
+                'package_name' => $findSiteUrl->package_name,
+                'bundle_name' => $result['data'] ?? $findSiteUrl->package_name
+            ]
+        ]);
     }
 
-
-    public function iosCheckAppName(AppNameRequest $request) {
-        $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
-            return new JsonResponse(array_merge([
-                'status' => $statusCode,
-                'url' => $request->getUri(),
-                'method' => $request->getMethod(),
-                'message' => $message,
-            ], $additionalData), $statusCode, ['Content-Type' => 'application/json']);
-        };
-
+    public function iosCheckAppName(AppNameRequest $request)
+    {
         $input = $request->validated();
+        $jsonResponse = fn($status, $message, $data = []) => response()->json(array_merge([
+            'status' => $status,
+            'url' => $request->fullUrl(),
+            'method' => $request->getMethod(),
+            'message' => $message,
+        ], $data), $status);
 
-        $findSiteUrl = BuildDomain::where('site_url', $input["site_url"])
-            ->where('license_key', $input['license_key'])
-            ->first();
+        $findSiteUrl = BuildDomain::where('site_url', $input['site_url'])
+            ->where('license_key', $input['license_key'])->first();
 
         if (!$findSiteUrl) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key wrong');
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain or license key is incorrect');
         }
 
-        $iosAppName = $this->iosBuildValidationService->iosBuildProcessValidation2($findSiteUrl);
+        $service = app(IosBuildValidationService::class);
+        $result = $service->iosBuildProcessValidation2($findSiteUrl);
 
-        if ($iosAppName['status'] && !empty($iosAppName['app_name'])) {
-            $findSiteUrl->update(['ios_app_name' => $iosAppName['app_name']]);
-            /*return $jsonResponse(Response::HTTP_OK, 'Your ios app name has been taken from your app store.', [
-                'data' => [
-                    'package_name' => $findSiteUrl->package_name,
-                    'bundle_name' => $findSiteUrl->package_name,
-                    'ios_app_name' => $iosAppName['app_name'],
-                ]
-            ]);*/
-            // for response
-            $status = Response::HTTP_OK;
-            $payload = [
-                'status' => $status,
-                'url' => $request->fullUrl(),
-                'method' => $request->method(),
-                'message' => 'Your ios app name has been taken from your app store.',
-                'data' => [
-                    'package_name' => $findSiteUrl->package_name,
-                    'bundle_name' => $findSiteUrl->package_name,
-                    'ios_app_name' => $iosAppName['app_name'],
-                ]
-            ];
-            // Log the response
-            Log::info("=============================================================================================================");
-            Log::info('Build app name response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
-            // Return it
-            return response()->json($payload, $status);
-        } else {
-            /*return $jsonResponse(Response::HTTP_NOT_FOUND, "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.", [
+        if ($result['success'] === false) {
+            return $jsonResponse($result['status'], $result['message'], [
                 'data' => [
                     'package_name' => $findSiteUrl->package_name,
                     'bundle_name' => $findSiteUrl->package_name,
                     'ios_app_name' => null,
                 ]
-            ]);*/
-
-            // for response
-            $status = Response::HTTP_NOT_FOUND;
-            $payload = [
-                'status' => $status,
-                'url' => $request->fullUrl(),
-                'method' => $request->method(),
-                'message' => "We didn't found any app for {$findSiteUrl->package_name} Bundle ID. Please create an app & try again.",
-                'data' => [
-                    'package_name' => $findSiteUrl->package_name,
-                    'bundle_name' => $findSiteUrl->package_name,
-                    'ios_app_name' => null,
-                ]
-            ];
-            // Log the response
-            Log::info('Build app name response:', ['status' => $status, 'response' => $payload,'payload' => $request->validated()]);
-            // Return it
-            return response()->json($payload, $status);
+            ]);
         }
+
+        $findSiteUrl->update(['ios_app_name' => $result['app_name']]);
+
+        return $jsonResponse(Response::HTTP_OK, $result['message'], [
+            'data' => [
+                'package_name' => $findSiteUrl->package_name,
+                'bundle_name' => $findSiteUrl->package_name,
+                'ios_app_name' => $result['app_name'],
+            ]
+        ]);
     }
 }
