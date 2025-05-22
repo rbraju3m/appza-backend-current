@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LayoutTypeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PluginController;
+use App\Http\Controllers\RequestLogController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\StyleGroupController;
 use App\Http\Controllers\ThemeController;
@@ -182,5 +183,11 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('list',[BuildOrderController::class,'index'])->name('build_order_list');
     });
     /* build-order route end */
+
+    /* request log start */
+    Route::prefix('request-log')->group(function () {
+        Route::get('list',[RequestLogController::class,'index'])->name('request_log_list');
+    });
+    /* request log route end */
 });
 

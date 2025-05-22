@@ -122,6 +122,17 @@
             </div>
         @endif
 
+        @if(auth()->user()->user_type === 'DEVELOPER')
+            <div class="nav-group {{ Request::is('appza/request-log/*') ? 'show' : ''}}">
+                <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.RequestLog')}}</div>
+                <ul class="nav-sidebar">
+                    <li class="nav-item ">
+                        <a href="{{route('request_log_list')}}" class="nav-link {{ Request::is('appza/request-log/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.RequestLogList')}}</span></a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
 
             {{--<div class="nav-group {{ Request::is(app()->getLocale().'/appfiy/apk/*') ? 'show' : ''}}">
                 <div class="nav-group-label" style="font-size: 15px !important;">{{__('appfiy::messages.ApkBuildHistory')}}</div>

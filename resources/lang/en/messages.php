@@ -313,6 +313,15 @@ return [
     'ComponentGroupUpdate' => 'Component group update',
     'componentGroupUpdateSuccess' => 'Update successfully',
     'status' => 'Status',
+    'Method' => 'Method',
+    'RequestUrl' => 'Request Url',
+    'RequestHeader' => 'Header',
+    'FromIp' => 'Ip',
+    'RequestLog' => 'Request Log',
+    'RequestLogList' => 'List',
+    'RequestData' => 'Request Data',
+    'ResponseData' => 'Response Data',
+    'Date' => 'Date',
     /*
     |--------------------------------------------------------------------------
     | Component Group language End
