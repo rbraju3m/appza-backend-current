@@ -34,11 +34,16 @@ class SupportsPlugin extends Model
         });
     }
 
-    public static function getPluginPrefix($slug): ?string
+    /*public static function getPluginPrefix($slug): ?string
     {
         $plugin = self::select('prefix')->where('slug', $slug)->first();
 
         return $plugin ? $plugin->prefix : null;
+    }*/
+
+    public static function getPluginPrefix($slug)
+    {
+        return self::where('slug', $slug)->value('prefix');
     }
 
 }
