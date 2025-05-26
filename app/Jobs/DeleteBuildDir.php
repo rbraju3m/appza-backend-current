@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class DeleteBuildDir implements ShouldQueue
 {
     use Queueable;
+    public $queue = 'deletes';
 
     /**
      * Create a new job instance.

@@ -103,7 +103,7 @@ class BuildOrderController extends Controller
         }
 
         // Dispatch the job to delete the build directory
-        dispatch(new DeleteBuildDir($buildOrder->id));
+        dispatch(new DeleteBuildDir($buildOrder->id))->onQueue('deletes');
 
         return response()->json([
             'message' => 'Build directory delete processing .....',

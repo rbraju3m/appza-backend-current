@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 class ProcessBuild implements ShouldQueue
 {
     use Queueable;
+    public $queue = 'builds';
 
     /**
      * Create a new job instance.

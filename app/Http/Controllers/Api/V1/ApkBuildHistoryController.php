@@ -251,7 +251,7 @@ class ApkBuildHistoryController extends Controller
         try {
             $order = BuildOrder::create($data);
             if ($isBuilderON) {
-                dispatch(new ProcessBuild($order->id));
+                dispatch(new ProcessBuild($order->id))->onQueue('builds');
                 /*dispatch(new ProcessBuild($order->id))
                     ->onQueue('builds')
                     ->delay(now()->addSeconds(10)); // Small delay to prevent race conditions*/
