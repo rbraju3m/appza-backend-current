@@ -418,40 +418,30 @@
                                                                                             }
                                                                                         @endphp
 
-                                                                                        @if($pro['input_type'] == 'number')
-                                                                                            {{ html()->text('value[]', $pro['value'])
-                                                                                                ->class('form-control inline_update')
-                                                                                                ->attribute('component_properties_id', $pro['id'])
-                                                                                            }}
-                                                                                        @endif
-                                                                                        @if($pro['input_type'] == 'double')
-                                                                                            {{ html()->text('value[]', $pro['value'])
-                                                                                                ->class('form-control inline_update')
-                                                                                                ->attribute('component_properties_id', $pro['id'])
-                                                                                            }}
-                                                                                        @endif
 
-                                                                                        @if($pro['input_type'] == 'color')
-                                                                                            {{ html()->input('color', 'value[]', $pro['value'])
-                                                                                                ->class('form-control inline_update')
-                                                                                                ->attribute('component_properties_id', $pro['id'])
-                                                                                            }}
-                                                                                        @endif
+                                                                                        @if(isset($pro['input_type'], $pro['id'], $pro['value']))
+                                                                                            @switch($pro['input_type'])
+                                                                                                @case('number')
+                                                                                                @case('double')
+                                                                                                    {{ html()->text('value[]', $pro['value'])
+                                                                                                        ->class('form-control inline_update')
+                                                                                                        ->attribute('component_properties_id', $pro['id']) }}
+                                                                                                    @break
 
-                                                                                        @if($pro['input_type'] == 'select')
-                                                                                            {{ html()->select('value[]', $dropdownValue, $pro['value'])
-                                                                                                ->class('form-control inline_update form-select js-example-basic-single')
-                                                                                                ->style('width:100% !important')
-                                                                                                ->attribute('component_properties_id', $pro['id'])
-                                                                                                }}
-                                                                                        @endif
+                                                                                                @case('color')
+                                                                                                    {{ html()->input('color', 'value[]', $pro['value'])
+                                                                                                        ->class('form-control inline_update')
+                                                                                                        ->attribute('component_properties_id', $pro['id']) }}
+                                                                                                    @break
 
-                                                                                        @if($pro['input_type'] == 'boolean')
-                                                                                            {{ html()->select('value[]', $dropdownValue, $pro['value'])
-                                                                                                ->class('form-control inline_update form-select js-example-basic-single')
-                                                                                                ->style('width:100% !important')
-                                                                                                ->attribute('component_properties_id', $pro['id'])
-                                                                                            }}
+                                                                                                @case('select')
+                                                                                                @case('boolean')
+                                                                                                    {{ html()->select('value[]', $dropdownValue, $pro['value'])
+                                                                                                        ->class('form-control inline_update form-select js-example-basic-single')
+                                                                                                        ->style('width:100% !important')
+                                                                                                        ->attribute('component_properties_id', $pro['id']) }}
+                                                                                                    @break
+                                                                                            @endswitch
                                                                                         @endif
                                                                                     </td>
                                                                                 </tr>
