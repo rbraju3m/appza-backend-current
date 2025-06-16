@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\BuildDomain;
+use App\Models\Fluent;
 use App\Models\Lead;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Client\ConnectionException;
@@ -58,11 +59,15 @@ class LicenseController extends Controller
             }
         }
 
+        // Setup API parameters
+        $getFluentInfo = Fluent::where('product_slug', $this->pluginName)->where('is_active',true)->first();
+        if (!$getFluentInfo) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent information not set in the configuration.');
+        }
+        $fluentApiUrl = $getFluentInfo->api_url;
+        $fluentItemId = $getFluentInfo->item_id;
+
         if (!config('app.is_fluent_check')){
-            // External variable Call
-            $fluentItemId = $this->pluginName === 'appza'
-                ? config('app.fluent_item_id_for_appza')
-                : config('app.fluent_item_id_for_lazytask');
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
             return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
                 "success" => true,
@@ -82,18 +87,10 @@ class LicenseController extends Controller
             /* END manually added for fluent issue & after fluent is okay it will be remove*/
         }
 
-        // Setup API parameters
-        $fluentApiUrl = config('app.fluent_api_url');
         // Check if it's null
         if (is_null($fluentApiUrl)) {
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');
         }
-
-        // External variable Call
-        $fluentItemId = $this->pluginName === 'appza'
-            ? config('app.fluent_item_id_for_appza')
-            : config('app.fluent_item_id_for_lazytask');
-
 
         // Check if it's null
         if (is_null($fluentItemId)) {
@@ -161,10 +158,20 @@ class LicenseController extends Controller
             }
         }
 
+        $getBuildDomain = BuildDomain::where([['site_url', $request->get('site_url')],['is_app_license_check',1]])->first();
+        if (empty($getBuildDomain)) {
+            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Active domain not found.');
+        }
+
+        // Setup API parameters
+        $getFluentInfo = Fluent::where('product_slug', $getBuildDomain->plugin_name)->where('is_active',true)->first();
+        if (!$getFluentInfo) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent information not set in the configuration.');
+        }
+        $fluentApiUrl = $getFluentInfo->api_url;
+        $fluentItemId = $getFluentInfo->item_id;
+
         if (!config('app.is_fluent_check')){
-            $fluentItemId = $this->pluginName === 'appza'
-                ? config('app.fluent_item_id_for_appza')
-                : config('app.fluent_item_id_for_lazytask');
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
             return $jsonResponse(Response::HTTP_OK, 'Your License key is valid.', ['data' => [
                 "success" => true,
@@ -184,23 +191,10 @@ class LicenseController extends Controller
             /* END manually added for fluent issue & after fluent is okay it will be remove*/
         }
 
-        // Setup API parameters
-        $fluentApiUrl = config('app.fluent_api_url');
         // Check if it's null
         if (is_null($fluentApiUrl)) {
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');
         }
-
-        $getBuildDomain = BuildDomain::where([['site_url', $request->get('site_url')],['is_app_license_check',1]])->first();
-
-        if (empty($getBuildDomain)) {
-            return $jsonResponse(Response::HTTP_NOT_FOUND, 'Active domain not found.');
-        }
-
-        // External variable Call
-        $fluentItemId = $getBuildDomain->plugin_name === 'appza'
-            ? config('app.fluent_item_id_for_appza')
-            : config('app.fluent_item_id_for_lazytask');
 
         // Check if it's null
         if (is_null($fluentItemId)) {
@@ -284,10 +278,12 @@ class LicenseController extends Controller
         }
         $data = $request->only('site_url', 'license_key', 'email');
 
-        // External variable Call
-        $fluentItemId = $this->pluginName === 'appza'
-            ? config('app.fluent_item_id_for_appza')
-            : config('app.fluent_item_id_for_lazytask');
+        $getFluentInfo = Fluent::where('product_slug', $this->pluginName)->where('is_active',true)->first();
+        if (!$getFluentInfo) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent information not set in the configuration.');
+        }
+        $fluentApiUrl = $getFluentInfo->api_url;
+        $fluentItemId = $getFluentInfo->item_id;
 
         if (!config('app.is_fluent_check')) {
             /* START manually added for fluent issue & after fluent is okay it will be remove*/
@@ -340,8 +336,6 @@ class LicenseController extends Controller
             'fluent_cart_action' => 'activate_license',
         ];
 
-        // External Fluent API Call
-        $fluentApiUrl = config('app.fluent_api_url');
         // Check if it's null
         if (is_null($fluentApiUrl)) {
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent api url is null or not set in the configuration.');

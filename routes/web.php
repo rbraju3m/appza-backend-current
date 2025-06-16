@@ -59,6 +59,7 @@ Route::post('/build-orders/{id}/delete-dir', [BuildOrderController::class, 'dele
     ->name('build-orders.delete-dir');
 
 Route::prefix('/appza')->middleware(['auth'])->group(function() {
+    // for download test
     Route::get('download/apk', [\App\Http\Controllers\Api\V1\ApkBuildHistoryController::class, 'downloadApk'])->name('download_apk');
     /* layout type route start */
     Route::prefix('layout-type')->group(function () {

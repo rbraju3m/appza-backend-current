@@ -7,6 +7,7 @@ use App\Http\Requests\AppNameRequest;
 use App\Http\Requests\IosBuildRequest;
 use App\Models\AppVersion;
 use App\Models\BuildDomain;
+use App\Models\Fluent;
 use App\Models\Lead;
 use App\Services\IosBuildValidationService;
 use Illuminate\Http\Request;
@@ -72,7 +73,11 @@ class ApkBuildResourceController extends Controller
         ];
 
         // Send API Request
-        $fluentApiUrl = config('app.fluent_api_url');
+        $getFluentInfo = Fluent::where('product_slug', $findSiteUrl->plugin_name)->where('is_active',true)->first();
+        if (!$getFluentInfo) {
+            return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent information not set in the configuration.');
+        }
+        $fluentApiUrl = $getFluentInfo->api_url;
 
         try {
             $response = Http::get($fluentApiUrl, $params);

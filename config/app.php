@@ -14,9 +14,6 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'fluent_api_url' => env('FLUENT_API_URL', ''),
-    'fluent_item_id_for_appza' => env('FLUENT_ITEM_ID_FOR_APPZA', ''),
-    'fluent_item_id_for_lazytask' => env('FLUENT_ITEM_ID_FOR_LAZYTASK', ''),
     'image_public_path' => env('IMAGE_PUBLIC_PATH', ''),
     'company_name' => env('COMPANY_NAME', 'LazyCoder'),
     'is_show_scanner' => env('IS_SHOW_SCANNER', true),
