@@ -496,7 +496,7 @@ class ThemeController extends Controller
                             $componentGeneral = $this->buildPageComponentStructure($pagesComponent, $newStyle, $pluginSlug);
 
                             // after adjust sohel vi ths loop remove
-                            foreach (['items', 'dev_data'] as $key) {
+                            /*foreach (['items', 'dev_data'] as $key) {
                                 if (empty($pagesComponent[$key])) {
                                     continue;
                                 }
@@ -517,6 +517,36 @@ class ThemeController extends Controller
                                 }
 
                                 $componentGeneral[$key] = $decoded;
+                            }*/
+                            foreach (['items', 'dev_data'] as $key) {
+                                if (empty($pagesComponent[$key])) {
+                                    continue;
+                                }
+
+                                $decoded = $pagesComponent[$key];
+
+                                // Decode once or twice if needed (double-encoded check)
+                                if (is_string($decoded)) {
+                                    $first = json_decode($decoded, true);
+
+                                    if (is_string($first)) {
+                                        $second = json_decode($first, true);
+                                        $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                                    } elseif (is_array($first)) {
+                                        $decoded = $first;
+                                    } else {
+                                        $decoded = null;
+                                    }
+                                }
+
+                                // Merge dev_data keys directly into top level
+                                if ($key === 'dev_data' && is_array($decoded)) {
+                                    foreach ($decoded as $devKey => $devValue) {
+                                        $componentGeneral[$devKey] = $devValue;
+                                    }
+                                } else {
+                                    $componentGeneral[$key] = $decoded;
+                                }
                             }
 
                             $final[] = $componentGeneral;
