@@ -271,7 +271,7 @@
                                         <div class="col-sm-10">
                                             {{html()
                                                 ->textarea('items')
-                                                ->value(json_encode(json_decode($data->items, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                                                ->value($data->items?json_encode(json_decode($data->items, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.EnterItemsJson'))
                                                 ->attribute('rows',5)
@@ -288,7 +288,7 @@
                                         <div class="col-sm-10">
                                             {{html()
                                                 ->textarea('dev_data')
-                                                ->value(json_encode(json_decode($data->dev_data, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                                                ->value($data->dev_data?json_encode(json_decode($data->dev_data, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.EnterDevData'))
                                                 ->attribute('rows',5)
