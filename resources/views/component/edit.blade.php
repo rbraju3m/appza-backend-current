@@ -182,6 +182,7 @@
                                             {{ html()->select('layout_type_id', $layoutTypes, $data['layout_type_id'])
                                                 ->class('form-control form-select js-example-basic-single')
                                                 ->placeholder(__('messages.chooseLayoutType'))
+                                                ->attribute('id','layout_type')
                                             }}
                                             <br><span class="textRed">{!! $errors->first('layout_type_id') !!}</span>
                                         </div>
@@ -269,6 +270,7 @@
                                         </div>
 
                                         <div class="col-sm-10">
+                                            <span style="color: red" id="items_message"></span>
                                             {{html()
                                                 ->textarea('items')
                                                 ->value($data->items?json_encode(json_decode($data->items, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
@@ -885,6 +887,15 @@
             let id = $(this).attr('value')
             let route = $('#theme_component_update').attr('data-href');
             */
+        });
+
+        $(document).delegate('#layout_type', 'change', function () {
+            let value = $(this).val();
+            if (value==8){
+                let span = document.getElementById('items_message')
+                span.textContent = "If you populate the items JSON, it will replace the banner items data."
+            }
+
         });
     </script>
 
