@@ -10,6 +10,7 @@ use App\Models\SupportsPlugin;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\JsonResponse;
 
@@ -101,6 +102,8 @@ class PageComponentController extends Controller
                     'appfiy_component_type.icon as component_group_icon',
                     'appfiy_component.deleted_at',
                     'appfiy_component.plugin_slug',
+                    'appfiy_component.items',
+                    'appfiy_component.dev_data',
                 ])
                 ->join('appfiy_layout_type', 'appfiy_layout_type.id', '=', 'appfiy_component.layout_type_id')
                 ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -178,6 +181,30 @@ class PageComponentController extends Controller
 
                 $componentGeneral['styles'] = $newStyle;
                 $componentGeneral['customize_styles'] = $newStyle;
+
+                // after adjust sohel vi ths loop remove
+                foreach (['items', 'dev_data'] as $key) {
+                    if (empty($pageComponent[$key])) {
+                        continue;
+                    }
+
+                    $decoded = $pageComponent[$key];
+
+                    if (is_string($decoded)) {
+                        $first = json_decode($decoded, true);
+
+                        if (is_string($first)) {
+                            $second = json_decode($first, true);
+                            $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                        } elseif (is_array($first)) {
+                            $decoded = $first;
+                        } else {
+                            $decoded = null; // invalid json
+                        }
+                    }
+
+                    $componentGeneral[$key] = $decoded;
+                }
 
                 $final[$pageComponent['component_group_slug']]['name'] = $pageComponent['component_group'];
                 $final[$pageComponent['component_group_slug']]['icon'] = $pageComponent['component_group_icon'];

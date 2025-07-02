@@ -265,6 +265,41 @@
 
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.Items')}}</label>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            {{html()
+                                                ->textarea('items')
+                                                ->value(json_encode(json_decode($data->items, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.EnterItemsJson'))
+                                                ->attribute('rows',5)
+                                            }}
+                                            <br><span class="textRed">{!! $errors->first('items') !!}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.DevData')}}</label>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            {{html()
+                                                ->textarea('dev_data')
+                                                ->value(json_encode(json_decode($data->dev_data, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.EnterDevData'))
+                                                ->attribute('rows',5)
+                                            }}
+                                            <br><span class="textRed">{!! $errors->first('dev_data') !!}</span>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
                                             <label for=""
                                                    class="form-label">{{__('messages.styleGroup')}}</label>
                                             <span class="textRed">*</span>

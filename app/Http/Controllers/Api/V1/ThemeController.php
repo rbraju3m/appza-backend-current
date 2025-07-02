@@ -465,6 +465,8 @@ class ThemeController extends Controller
                             'appfiy_component.is_multiple',
                             'appfiy_component.plugin_slug',
                             'appfiy_component_type.name as group_name',
+                            'appfiy_component.items',
+                            'appfiy_component.dev_data',
                         ])
                         ->join('appfiy_component', 'appfiy_component.id', '=', 'appfiy_theme_component.component_id')
                         ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -492,6 +494,30 @@ class ThemeController extends Controller
 
                             // Build component structure
                             $componentGeneral = $this->buildPageComponentStructure($pagesComponent, $newStyle, $pluginSlug);
+
+                            // after adjust sohel vi ths loop remove
+                            foreach (['items', 'dev_data'] as $key) {
+                                if (empty($pagesComponent[$key])) {
+                                    continue;
+                                }
+
+                                $decoded = $pagesComponent[$key];
+
+                                if (is_string($decoded)) {
+                                    $first = json_decode($decoded, true);
+
+                                    if (is_string($first)) {
+                                        $second = json_decode($first, true);
+                                        $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                                    } elseif (is_array($first)) {
+                                        $decoded = $first;
+                                    } else {
+                                        $decoded = null; // invalid json
+                                    }
+                                }
+
+                                $componentGeneral[$key] = $decoded;
+                            }
 
                             $final[] = $componentGeneral;
                         }

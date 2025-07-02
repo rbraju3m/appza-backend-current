@@ -15,7 +15,12 @@ class Component extends Model
     public $timestamps = true;
     protected $guarded = ['id'];
     protected $dates = ['deleted_at','created_at','updated_at'];
-    protected $fillable = ['parent_id', 'name', 'slug', 'label', 'layout_type_id', 'icon_code', 'event', 'scope', 'class_type','app_icon','web_icon','image','product_type','selected_design','details_page','transparent','image_url','is_active','component_type_id','is_upcoming','is_multiple','plugin_slug'];
+    protected $fillable = ['parent_id', 'name', 'slug', 'label', 'layout_type_id', 'icon_code', 'event', 'scope', 'class_type','app_icon','web_icon','image','product_type','selected_design','details_page','transparent','image_url','is_active','component_type_id','is_upcoming','is_multiple','plugin_slug','items','dev_data'];
+
+    protected $casts = [
+        'items' => 'array',
+        'dev_data' => 'array',
+    ];
 
     public function sluggable(): array
     {

@@ -454,6 +454,8 @@ class ComponentController extends Controller
             'layout_type_id' => 'required',
             'style_group' => 'required',
             'plugin_slug' => 'required',
+            'items' => 'nullable|json',
+            'dev_data' => 'nullable|json',
         ], [
             'name.required' => __('messages.enterComponentName'),
             'name.unique' => __('messages.componentNameMustbeUnique'),
@@ -462,6 +464,8 @@ class ComponentController extends Controller
             'layout_type_id.required' => __('messages.chooseLayoutType'),
             'style_group.required' => __('messages.chooseStyleGroup'),
             'plugin_slug.required' => __('messages.choosePlugin'),
+            'items.json' => __('messages.ItemJsonNotValid'),
+            'dev_data.json' => __('messages.DevDataJsonNotValid'),
         ]);
 
         $input = $request->all();
