@@ -17,7 +17,12 @@ class LeadResource extends JsonResource
     public function toArray(Request $request): array
     {
         // Determine the hash key based on plugin
-        $hashKey = $this->plugin_name == 'appza' ? 'appza_hash' : 'lazy_task_hash';
+
+        $hashKey = match ($this->plugin_name) {
+            'appza'        => 'appza_hash',
+            'fcom_mobile'  => 'fcom_mobile_hash',
+            default        => 'lazy_task_hash',
+        };
 
         $setups = Setup::where('is_active', 1)->get()->toArray();
 //        dump($setups);

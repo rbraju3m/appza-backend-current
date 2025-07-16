@@ -19,7 +19,7 @@ Route::prefix('/appza/v1')
         Route::prefix('lead')->group(function () {
             Route::post('store/{target_plugin}', [LeadController::class, 'store'])
                 ->name('create_lead')
-                ->whereIn('target_plugin', ['appza', 'lazy_task']);
+                ->whereIn('target_plugin', ['appza', 'lazy_task','fcom_mobile']);
         });
 
         // theme api
