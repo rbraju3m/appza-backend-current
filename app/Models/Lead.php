@@ -40,7 +40,16 @@ class Lead extends Model
     public static function checkAuthorization(Request $request): array
     {
         // Determine hash from request headers
-        $hashCode = $request->header('lazy-task-hash') ?: $request->header('appza-hash');
+        /*$hashCode = $request->header('lazy-task-hash')
+            ?? $request->header('appza-hash')
+            ?? $request->header('Fcom-mobile-hash');*/
+
+        $hashCode = collect([
+            $request->header('lazy-task-hash'),
+            $request->header('appza-hash'),
+            $request->header('Fcom-mobile-hash'),
+        ])->filter()->first();
+
 
         // Default unauthorized response
         $defaultResponse = [
