@@ -456,6 +456,8 @@ class ComponentController extends Controller
             'plugin_slug' => 'required',
             'items' => 'nullable|json',
             'dev_data' => 'nullable|json',
+            'pagination' => 'nullable|json',
+            'filters' => 'nullable|json',
         ], [
             'name.required' => __('messages.enterComponentName'),
             'name.unique' => __('messages.componentNameMustbeUnique'),
@@ -466,6 +468,8 @@ class ComponentController extends Controller
             'plugin_slug.required' => __('messages.choosePlugin'),
             'items.json' => __('messages.ItemJsonNotValid'),
             'dev_data.json' => __('messages.DevDataJsonNotValid'),
+            'pagination.json' => __('messages.FiltersJsonNotValid'),
+            'filters.json' => __('messages.PaginationJsonNotValid'),
         ]);
 
         $input = $request->all();

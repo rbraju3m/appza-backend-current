@@ -104,6 +104,8 @@ class PageComponentController extends Controller
                     'appfiy_component.plugin_slug',
                     'appfiy_component.items',
                     'appfiy_component.dev_data',
+                    'appfiy_component.filters',
+                    'appfiy_component.pagination',
                 ])
                 ->join('appfiy_layout_type', 'appfiy_layout_type.id', '=', 'appfiy_component.layout_type_id')
                 ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -173,8 +175,9 @@ class PageComponentController extends Controller
                 $componentGeneral['properties'] = $this->addComponentProperties($pageComponent, $pageSlug, $pageComponent['plugin_slug']);
 
                 $componentGeneral['customize_properties'] = $componentGeneral['properties'];
+
                 // after adjust sohel vi ths loop remove
-                foreach (['items', 'dev_data'] as $key) {
+                foreach (['items', 'dev_data','filters','pagination'] as $key) {
                     if (empty($pageComponent[$key])) {
                         continue;
                     }
@@ -199,9 +202,11 @@ class PageComponentController extends Controller
                     if ($key === 'dev_data' && is_array($decoded)) {
                         foreach ($decoded as $devKey => $devValue) {
                             $componentGeneral['customize_properties'][$devKey] = $devValue;
+                            $componentGeneral['properties'][$devKey] = $devValue;
 
                         }
                     } else {
+                        $componentGeneral['properties'][$key] = $decoded;
                         $componentGeneral['customize_properties'][$key] = $decoded;
                     }
                 }

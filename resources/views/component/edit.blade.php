@@ -299,6 +299,40 @@
                                         </div>
                                     </div>
 
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.Filters')}}</label>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            {{html()
+                                                ->textarea('filters')
+                                                ->value($data->filters?json_encode(json_decode($data->filters, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.EnterFiltersJson'))
+                                                ->attribute('rows',5)
+                                            }}
+                                            <br><span class="textRed">{!! $errors->first('filters') !!}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.pagination')}}</label>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            {{html()
+                                                ->textarea('pagination')
+                                                ->value($data->pagination?json_encode(json_decode($data->pagination, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.EnterPaginationData'))
+                                                ->attribute('rows',5)
+                                            }}
+                                            <br><span class="textRed">{!! $errors->first('pagination') !!}</span>
+                                        </div>
+                                    </div>
+
 
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">

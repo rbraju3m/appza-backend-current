@@ -467,6 +467,8 @@ class ThemeController extends Controller
                             'appfiy_component_type.name as group_name',
                             'appfiy_component.items',
                             'appfiy_component.dev_data',
+                            'appfiy_component.filters',
+                            'appfiy_component.pagination',
                         ])
                         ->join('appfiy_component', 'appfiy_component.id', '=', 'appfiy_theme_component.component_id')
                         ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -496,7 +498,7 @@ class ThemeController extends Controller
                             $componentGeneral = $this->buildPageComponentStructure($pagesComponent, $newStyle, $pluginSlug);
 
                             // after adjust sohel vi ths loop remove
-                            foreach (['items', 'dev_data'] as $key) {
+                            foreach (['items', 'dev_data','filters','pagination'] as $key) {
                                 if (empty($pagesComponent[$key])) {
                                     continue;
                                 }
@@ -520,10 +522,12 @@ class ThemeController extends Controller
                                 // Merge dev_data keys directly into top level
                                 if ($key === 'dev_data' && is_array($decoded)) {
                                     foreach ($decoded as $devKey => $devValue) {
+                                        $componentGeneral['properties'][$devKey] = $devValue;
                                         $componentGeneral['customize_properties'][$devKey] = $devValue;
 
                                     }
                                 } else {
+                                    $componentGeneral['properties'][$key] = $decoded;
                                     $componentGeneral['customize_properties'][$key] = $decoded;
                                 }
                             }
