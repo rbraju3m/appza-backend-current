@@ -114,6 +114,7 @@ return [
     'appIcon' => 'App Icon',
     'webIcon' => 'Web Icon',
     'isMultiple' => 'Is Multiple',
+    'showNoDataView' => 'Show No Data View',
     'IsActive' => 'Is Active',
     'IsUpcoming' => 'Is Upcoming',
     'componentNameMustbeUnique' => 'Component name must be unique',

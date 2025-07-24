@@ -593,8 +593,7 @@
 
                                     <div class="form-group row mg-top">
                                         <div class="col-sm-2">
-                                            <label for=""
-                                                   class="form-label">{{__('messages.isMultiple')}}</label>
+                                            <label for="" class="form-label">{{__('messages.isMultiple')}}</label>
                                         </div>
 
                                         <div class="col-sm-4">
@@ -628,6 +627,47 @@
                                                         <label class="form-check-label" for="is_multiple2">No</label>
                                                     </div>
                                                     <span class="textRed">{!! $errors->first('is_multiple') !!}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.showNoDataView')}}</label>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            <div class="from-group">
+                                                <?php
+                                                $showNoDataViewTrue = '';
+                                                $showNoDataViewFalse = '';
+                                                if (isset($data->show_no_data_view)) {
+                                                    if ($data->show_no_data_view == 1) {
+                                                        $showNoDataViewTrue = 'checked="checked"';
+                                                    } else {
+                                                        $showNoDataViewFalse = 'checked="checked"';
+                                                    }
+                                                } else {
+                                                    $showNoDataViewFalse = 'checked="checked"';
+                                                }
+                                                ?>
+                                                <div class="input-group mb-3">
+                                                    <div class="form-check form-check-inline">
+                                                        <input style="margin-top: 0px"
+                                                               class="form-check-input isChecked ayatFormEdit"
+                                                               type="radio" name="show_no_data_view" id="showNoDataViewTrue"
+                                                               value="1" {{$showNoDataViewTrue}}>
+                                                        <label class="form-check-label" for="showNoDataViewTrue">True</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input style="margin-top: 0px"
+                                                               class="form-check-input isChecked ayatFormEdit"
+                                                               type="radio" name="show_no_data_view" id="showNoDataViewFalse"
+                                                               value="0" {{$showNoDataViewFalse}}>
+                                                        <label class="form-check-label" for="showNoDataViewFalse">False</label>
+                                                    </div>
+                                                    <span class="textRed">{!! $errors->first('show_no_data_view') !!}</span>
                                                 </div>
                                             </div>
                                         </div>

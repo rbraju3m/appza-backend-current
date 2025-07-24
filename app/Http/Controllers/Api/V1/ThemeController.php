@@ -469,6 +469,7 @@ class ThemeController extends Controller
                             'appfiy_component.dev_data',
                             'appfiy_component.filters',
                             'appfiy_component.pagination',
+                            'appfiy_component.show_no_data_view'
                         ])
                         ->join('appfiy_component', 'appfiy_component.id', '=', 'appfiy_theme_component.component_id')
                         ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -497,38 +498,40 @@ class ThemeController extends Controller
                             // Build component structure
                             $componentGeneral = $this->buildPageComponentStructure($pagesComponent, $newStyle, $pluginSlug);
 
-                            // after adjust sohel vi ths loop remove
-                            foreach (['items', 'dev_data','filters','pagination'] as $key) {
-                                if (empty($pagesComponent[$key])) {
-                                    continue;
-                                }
+                            if ($pagesComponent['layout_type'] == 'ListViewVertical') {
+                                // after adjust sohel vi ths loop remove
+                                foreach (['items', 'dev_data', 'filters', 'pagination'] as $key) {
+                                    if (empty($pagesComponent[$key])) {
+                                        continue;
+                                    }
 
-                                $decoded = $pagesComponent[$key];
+                                    $decoded = $pagesComponent[$key];
 
-                                // Decode once or twice if needed (double-encoded check)
-                                if (is_string($decoded)) {
-                                    $first = json_decode($decoded, true);
+                                    // Decode once or twice if needed (double-encoded check)
+                                    if (is_string($decoded)) {
+                                        $first = json_decode($decoded, true);
 
-                                    if (is_string($first)) {
-                                        $second = json_decode($first, true);
-                                        $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
-                                    } elseif (is_array($first)) {
-                                        $decoded = $first;
+                                        if (is_string($first)) {
+                                            $second = json_decode($first, true);
+                                            $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                                        } elseif (is_array($first)) {
+                                            $decoded = $first;
+                                        } else {
+                                            $decoded = null;
+                                        }
+                                    }
+
+                                    // Merge dev_data keys directly into top level
+                                    if ($key === 'dev_data' && is_array($decoded)) {
+                                        foreach ($decoded as $devKey => $devValue) {
+                                            $componentGeneral['properties'][$devKey] = $devValue;
+                                            $componentGeneral['customize_properties'][$devKey] = $devValue;
+
+                                        }
                                     } else {
-                                        $decoded = null;
+                                        $componentGeneral['properties'][$key] = $decoded;
+                                        $componentGeneral['customize_properties'][$key] = $decoded;
                                     }
-                                }
-
-                                // Merge dev_data keys directly into top level
-                                if ($key === 'dev_data' && is_array($decoded)) {
-                                    foreach ($decoded as $devKey => $devValue) {
-                                        $componentGeneral['properties'][$devKey] = $devValue;
-                                        $componentGeneral['customize_properties'][$devKey] = $devValue;
-
-                                    }
-                                } else {
-                                    $componentGeneral['properties'][$key] = $decoded;
-                                    $componentGeneral['customize_properties'][$key] = $decoded;
                                 }
                             }
 
@@ -661,6 +664,10 @@ class ThemeController extends Controller
                 ]
             ];
             $componentProperties['items'] = $staticProterties;
+        }
+
+        if ($pagesComponent['layout_type'] == 'ListViewVertical' || $pagesComponent['layout_type'] == 'ListViewHorizontal' || $pagesComponent['layout_type'] == 'ListViewGrid') {
+            $componentProperties['show_no_data_view'] = $pagesComponent['show_no_data_view'];
         }
 
         return $componentProperties;

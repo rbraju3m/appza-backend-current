@@ -106,6 +106,7 @@ class PageComponentController extends Controller
                     'appfiy_component.dev_data',
                     'appfiy_component.filters',
                     'appfiy_component.pagination',
+                    'appfiy_component.show_no_data_view'
                 ])
                 ->join('appfiy_layout_type', 'appfiy_layout_type.id', '=', 'appfiy_component.layout_type_id')
                 ->join('appfiy_component_type', 'appfiy_component_type.id', '=', 'appfiy_component.component_type_id')
@@ -176,38 +177,40 @@ class PageComponentController extends Controller
 
                 $componentGeneral['customize_properties'] = $componentGeneral['properties'];
 
-                // after adjust sohel vi ths loop remove
-                foreach (['items', 'dev_data','filters','pagination'] as $key) {
-                    if (empty($pageComponent[$key])) {
-                        continue;
-                    }
+                if ($pageComponent['layout_type'] == 'ListViewVertical') {
+                    // after adjust sohel vi ths loop remove
+                    foreach (['items', 'dev_data', 'filters', 'pagination'] as $key) {
+                        if (empty($pageComponent[$key])) {
+                            continue;
+                        }
 
-                    $decoded = $pageComponent[$key];
+                        $decoded = $pageComponent[$key];
 
-                    // Decode once or twice if needed (double-encoded check)
-                    if (is_string($decoded)) {
-                        $first = json_decode($decoded, true);
+                        // Decode once or twice if needed (double-encoded check)
+                        if (is_string($decoded)) {
+                            $first = json_decode($decoded, true);
 
-                        if (is_string($first)) {
-                            $second = json_decode($first, true);
-                            $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
-                        } elseif (is_array($first)) {
-                            $decoded = $first;
+                            if (is_string($first)) {
+                                $second = json_decode($first, true);
+                                $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                            } elseif (is_array($first)) {
+                                $decoded = $first;
+                            } else {
+                                $decoded = null;
+                            }
+                        }
+
+                        // Merge dev_data keys directly into top level
+                        if ($key === 'dev_data' && is_array($decoded)) {
+                            foreach ($decoded as $devKey => $devValue) {
+                                $componentGeneral['customize_properties'][$devKey] = $devValue;
+                                $componentGeneral['properties'][$devKey] = $devValue;
+
+                            }
                         } else {
-                            $decoded = null;
+                            $componentGeneral['properties'][$key] = $decoded;
+                            $componentGeneral['customize_properties'][$key] = $decoded;
                         }
-                    }
-
-                    // Merge dev_data keys directly into top level
-                    if ($key === 'dev_data' && is_array($decoded)) {
-                        foreach ($decoded as $devKey => $devValue) {
-                            $componentGeneral['customize_properties'][$devKey] = $devValue;
-                            $componentGeneral['properties'][$devKey] = $devValue;
-
-                        }
-                    } else {
-                        $componentGeneral['properties'][$key] = $decoded;
-                        $componentGeneral['customize_properties'][$key] = $decoded;
                     }
                 }
 
@@ -268,6 +271,10 @@ class PageComponentController extends Controller
 
         if ($pageComponent['product_type'] === 'CategoryProduct') {
             $properties['categories'] = [];
+        }
+
+        if ($pageComponent['layout_type'] == 'ListViewVertical' || $pageComponent['layout_type'] == 'ListViewHorizontal' || $pageComponent['layout_type'] == 'ListViewGrid') {
+            $properties['show_no_data_view'] = $pageComponent['show_no_data_view'];
         }
 
         return $properties;
