@@ -667,7 +667,7 @@ class ThemeController extends Controller
         }
 
         if ($pagesComponent['layout_type'] == 'ListViewVertical' || $pagesComponent['layout_type'] == 'ListViewHorizontal' || $pagesComponent['layout_type'] == 'ListViewGrid') {
-            $componentProperties['show_no_data_view'] = $pagesComponent['show_no_data_view'];
+            $componentProperties['show_no_data_view'] = $pagesComponent['show_no_data_view']== 1 ? true : false ;
         }
 
         return $componentProperties;

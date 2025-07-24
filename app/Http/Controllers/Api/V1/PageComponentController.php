@@ -274,7 +274,7 @@ class PageComponentController extends Controller
         }
 
         if ($pageComponent['layout_type'] == 'ListViewVertical' || $pageComponent['layout_type'] == 'ListViewHorizontal' || $pageComponent['layout_type'] == 'ListViewGrid') {
-            $properties['show_no_data_view'] = $pageComponent['show_no_data_view'];
+            $properties['show_no_data_view'] = $pageComponent['show_no_data_view']== 1 ? true : false;
         }
 
         return $properties;
