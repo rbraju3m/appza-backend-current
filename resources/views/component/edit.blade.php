@@ -273,7 +273,7 @@
                                             <span style="color: red" id="items_message"></span>
                                             {{html()
                                                 ->textarea('items')
-                                                ->value($data->items?json_encode(json_decode($data->items, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->value($data->items?json_encode(json_decode($data->items, false), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.EnterItemsJson'))
                                                 ->attribute('rows',5)
@@ -290,7 +290,7 @@
                                         <div class="col-sm-10">
                                             {{html()
                                                 ->textarea('dev_data')
-                                                ->value($data->dev_data?json_encode(json_decode($data->dev_data, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->value($data->dev_data?json_encode(json_decode($data->dev_data, false), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.EnterDevData'))
                                                 ->attribute('rows',5)
@@ -307,7 +307,7 @@
                                         <div class="col-sm-10">
                                             {{html()
                                                 ->textarea('filters')
-                                                ->value($data->filters?json_encode(json_decode($data->filters, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->value($data->filters ? json_encode(json_decode($data->filters, false),JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES): null )
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.EnterFiltersJson'))
                                                 ->attribute('rows',5)
@@ -322,13 +322,13 @@
                                         </div>
 
                                         <div class="col-sm-10">
-                                            {{html()
+                                            {{ html()
                                                 ->textarea('pagination')
-                                                ->value($data->pagination?json_encode(json_decode($data->pagination, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->value($data->pagination ? json_encode(json_decode($data->pagination, false),JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES): null )
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.EnterPaginationData'))
                                                 ->attribute('rows',5)
-                                            }}
+                                                }}
                                             <br><span class="textRed">{!! $errors->first('pagination') !!}</span>
                                         </div>
                                     </div>

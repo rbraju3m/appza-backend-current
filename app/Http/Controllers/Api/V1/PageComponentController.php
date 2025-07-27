@@ -184,7 +184,7 @@ class PageComponentController extends Controller
                             continue;
                         }
 
-                        $decoded = $pageComponent[$key];
+                        /*$decoded = $pageComponent[$key];
 
                         // Decode once or twice if needed (double-encoded check)
                         if (is_string($decoded)) {
@@ -206,6 +206,30 @@ class PageComponentController extends Controller
                                 $componentGeneral['customize_properties'][$devKey] = $devValue;
                                 $componentGeneral['properties'][$devKey] = $devValue;
 
+                            }
+                        } else {
+                            $componentGeneral['properties'][$key] = $decoded;
+                            $componentGeneral['customize_properties'][$key] = $decoded;
+                        }*/
+                        $decoded = $pageComponent[$key];
+
+                        if (is_string($decoded)) {
+                            $first = json_decode($decoded, false); // 🧠 decode as object
+
+                            if (is_string($first)) {
+                                $second = json_decode($first, false);
+                                $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                            } elseif (is_object($first) || is_array($first)) {
+                                $decoded = $first;
+                            } else {
+                                $decoded = null;
+                            }
+                        }
+
+                        if ($key === 'dev_data' && is_object($decoded)) {
+                            foreach ((array) $decoded as $devKey => $devValue) {
+                                $componentGeneral['properties'][$devKey] = $devValue;
+                                $componentGeneral['customize_properties'][$devKey] = $devValue;
                             }
                         } else {
                             $componentGeneral['properties'][$key] = $decoded;
