@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use stdClass;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\JsonResponse;
 
@@ -178,43 +179,17 @@ class PageComponentController extends Controller
                 $componentGeneral['customize_properties'] = $componentGeneral['properties'];
 
                 if ($pageComponent['layout_type'] == 'ListViewVertical') {
-                    // after adjust sohel vi ths loop remove
+
+                    /*IF EMPTY OBJECT NOT REPLACE TO ARRAY & SAME OBJECT SEND API FROM DB BY REQ BY SAIFUL START*/
                     foreach (['items', 'dev_data', 'filters', 'pagination'] as $key) {
                         if (empty($pageComponent[$key])) {
                             continue;
                         }
 
-                        /*$decoded = $pageComponent[$key];
-
-                        // Decode once or twice if needed (double-encoded check)
-                        if (is_string($decoded)) {
-                            $first = json_decode($decoded, true);
-
-                            if (is_string($first)) {
-                                $second = json_decode($first, true);
-                                $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
-                            } elseif (is_array($first)) {
-                                $decoded = $first;
-                            } else {
-                                $decoded = null;
-                            }
-                        }
-
-                        // Merge dev_data keys directly into top level
-                        if ($key === 'dev_data' && is_array($decoded)) {
-                            foreach ($decoded as $devKey => $devValue) {
-                                $componentGeneral['customize_properties'][$devKey] = $devValue;
-                                $componentGeneral['properties'][$devKey] = $devValue;
-
-                            }
-                        } else {
-                            $componentGeneral['properties'][$key] = $decoded;
-                            $componentGeneral['customize_properties'][$key] = $decoded;
-                        }*/
                         $decoded = $pageComponent[$key];
 
                         if (is_string($decoded)) {
-                            $first = json_decode($decoded, false); // 🧠 decode as object
+                            $first = json_decode($decoded, false); // decode as object
 
                             if (is_string($first)) {
                                 $second = json_decode($first, false);
@@ -226,6 +201,9 @@ class PageComponentController extends Controller
                             }
                         }
 
+                        // 🧼 Clean: convert empty objects to null recursively
+                        $decoded = replaceEmptyObjectsWithNull($decoded);
+
                         if ($key === 'dev_data' && is_object($decoded)) {
                             foreach ((array) $decoded as $devKey => $devValue) {
                                 $componentGeneral['properties'][$devKey] = $devValue;
@@ -236,6 +214,71 @@ class PageComponentController extends Controller
                             $componentGeneral['customize_properties'][$key] = $decoded;
                         }
                     }
+                    /*IF EMPTY OBJECT NOT REPLACE TO ARRAY & SAME OBJECT SEND API FROM DB BY REQ BY SAIFUL END*/
+
+
+                    /*IF EMPTY OBJECT REPLACE TO NULL BY REQ BY SOHEL VI START*/
+                    /*$replaceEmptyObjectsWithNull = function (mixed $data) use (&$replaceEmptyObjectsWithNull): mixed {
+                        if ($data instanceof stdClass) {
+                            $vars = get_object_vars($data);
+
+                            if (empty($vars)) {
+                                return null;
+                            }
+
+                            foreach ($vars as $key => $value) {
+                                $data->$key = $replaceEmptyObjectsWithNull($value);
+                            }
+
+                            return $data;
+                        }
+
+                        if (is_array($data)) {
+                            foreach ($data as $key => $value) {
+                                $data[$key] = $replaceEmptyObjectsWithNull($value);
+                            }
+
+                            return $data;
+                        }
+
+                        return $data;
+                    };
+                    // Your loop starts here
+                    foreach (['items', 'dev_data', 'filters', 'pagination'] as $key) {
+                        if (empty($pageComponent[$key])) {
+                            continue;
+                        }
+
+                        $decoded = $pageComponent[$key];
+
+                        if (is_string($decoded)) {
+                            $first = json_decode($decoded, false); // decode as object
+
+                            if (is_string($first)) {
+                                $second = json_decode($first, false);
+                                $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                            } elseif (is_object($first) || is_array($first)) {
+                                $decoded = $first;
+                            } else {
+                                $decoded = null;
+                            }
+                        }
+
+                        // 🔁 Apply the transformer
+                        $decoded = $replaceEmptyObjectsWithNull($decoded);
+
+                        if ($key === 'dev_data' && is_object($decoded)) {
+                            foreach ((array) $decoded as $devKey => $devValue) {
+                                $componentGeneral['properties'][$devKey] = $devValue;
+                                $componentGeneral['customize_properties'][$devKey] = $devValue;
+                            }
+                        } else {
+                            $componentGeneral['properties'][$key] = $decoded;
+                            $componentGeneral['customize_properties'][$key] = $decoded;
+                        }
+                    }*/
+                    /*IF EMPTY OBJECT REPLACE TO NULL BY REQ BY SOHEL VI END*/
+
                 }
 
                 if ($pageComponent['layout_type'] === 'BannerSliderHorizontal') {
@@ -266,6 +309,40 @@ class PageComponentController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * Recursively replace empty stdClass objects with null.
+     *
+     * @param mixed $data
+     * @return mixed
+     */
+    function replaceEmptyObjectsWithNull(mixed $data): mixed
+    {
+        if ($data instanceof stdClass) {
+            $vars = get_object_vars($data);
+
+            if (empty($vars)) {
+                return null;
+            }
+
+            foreach ($vars as $key => $value) {
+                $data->$key = replaceEmptyObjectsWithNull($value);
+            }
+
+            return $data;
+        }
+
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = replaceEmptyObjectsWithNull($value);
+            }
+
+            return $data;
+        }
+
+        return $data;
+    }
+
 
     private function addComponentProperties($pageComponent, $pageSlug, $pluginSlug)
     {

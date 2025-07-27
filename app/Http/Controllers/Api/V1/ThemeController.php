@@ -499,7 +499,7 @@ class ThemeController extends Controller
                             $componentGeneral = $this->buildPageComponentStructure($pagesComponent, $newStyle, $pluginSlug);
 
                             if ($pagesComponent['layout_type'] == 'ListViewVertical') {
-                                // after adjust sohel vi ths loop remove
+                                /*IF EMPTY OBJECT NOT REPLACE TO ARRAY & SAME OBJECT SEND API FROM DB BY REQ BY SAIFUL START*/
                                 foreach (['items', 'dev_data', 'filters', 'pagination'] as $key) {
                                     if (empty($pagesComponent[$key])) {
                                         continue;
@@ -530,6 +530,71 @@ class ThemeController extends Controller
                                         $componentGeneral['customize_properties'][$key] = $decoded;
                                     }
                                 }
+                                /*IF EMPTY OBJECT NOT REPLACE TO ARRAY & SAME OBJECT SEND API FROM DB BY REQ BY SAIFUL END*/
+
+
+                                /*IF EMPTY OBJECT REPLACE TO NULL BY REQ BY SOHEL VI START*/
+                                /*$replaceEmptyObjectsWithNull = function (mixed $data) use (&$replaceEmptyObjectsWithNull): mixed {
+                                    if ($data instanceof stdClass) {
+                                        $vars = get_object_vars($data);
+
+                                        if (empty($vars)) {
+                                            return null;
+                                        }
+
+                                        foreach ($vars as $key => $value) {
+                                            $data->$key = $replaceEmptyObjectsWithNull($value);
+                                        }
+
+                                        return $data;
+                                    }
+
+                                    if (is_array($data)) {
+                                        foreach ($data as $key => $value) {
+                                            $data[$key] = $replaceEmptyObjectsWithNull($value);
+                                        }
+
+                                        return $data;
+                                    }
+
+                                    return $data;
+                                };
+                                // Your loop starts here
+                                foreach (['items', 'dev_data', 'filters', 'pagination'] as $key) {
+                                    if (empty($pagesComponent[$key])) {
+                                        continue;
+                                    }
+
+                                    $decoded = $pagesComponent[$key];
+
+                                    if (is_string($decoded)) {
+                                        $first = json_decode($decoded, false); // decode as object
+
+                                        if (is_string($first)) {
+                                            $second = json_decode($first, false);
+                                            $decoded = json_last_error() === JSON_ERROR_NONE ? $second : $first;
+                                        } elseif (is_object($first) || is_array($first)) {
+                                            $decoded = $first;
+                                        } else {
+                                            $decoded = null;
+                                        }
+                                    }
+
+                                    // 🔁 Apply the transformer
+                                    $decoded = $replaceEmptyObjectsWithNull($decoded);
+
+                                    if ($key === 'dev_data' && is_object($decoded)) {
+                                        foreach ((array) $decoded as $devKey => $devValue) {
+                                            $componentGeneral['properties'][$devKey] = $devValue;
+                                            $componentGeneral['customize_properties'][$devKey] = $devValue;
+                                        }
+                                    } else {
+                                        $componentGeneral['properties'][$key] = $decoded;
+                                        $componentGeneral['customize_properties'][$key] = $decoded;
+                                    }
+                                }*/
+                                /*IF EMPTY OBJECT REPLACE TO NULL BY REQ BY SOHEL VI END*/
+
                             }
 
 
