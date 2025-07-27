@@ -939,23 +939,27 @@
             let route = $('#component_properties_inline_update').attr('data-href');
             // console.log(value,component_properties_id,route)
 
-            $.ajax({
-                url: route,
-                method: "get",
-                dataType: "json",
-                data: {component_properties_id: component_properties_id, value: value},
-                beforeSend: function (xhr) {
+            if(value && component_properties_id && route) {
+                $.ajax({
+                    url: route,
+                    method: "get",
+                    dataType: "json",
+                    data: {component_properties_id: component_properties_id, value: value},
+                    beforeSend: function (xhr) {
 
-                }
-            }).done(function (response) {
-                console.log(response)
-                /*if(response.status=='ok') {
-                    isChecked == 1 ? $('.checked_id_' + id).prop('checked', true) : $('.checked_id_' + id).prop('checked', false)
-                }*/
-            }).fail(function (jqXHR, textStatus) {
+                    }
+                }).done(function (response) {
+                    console.log(response)
+                    /*if(response.status=='ok') {
+                        isChecked == 1 ? $('.checked_id_' + id).prop('checked', true) : $('.checked_id_' + id).prop('checked', false)
+                    }*/
+                }).fail(function (jqXHR, textStatus) {
 
-            });
-            return false;
+                });
+                return false;
+            }else {
+                alert('Field value missing.')
+            }
             /*let isChecked = 0
             if($(this).is(':checked')){isChecked = 1}
             let id = $(this).attr('value')
