@@ -201,9 +201,6 @@ class PageComponentController extends Controller
                             }
                         }
 
-                        // 🧼 Clean: convert empty objects to null recursively
-//                        $decoded = replaceEmptyObjectsWithNull($decoded);
-
                         if ($key === 'dev_data' && is_object($decoded)) {
                             foreach ((array) $decoded as $devKey => $devValue) {
                                 $componentGeneral['properties'][$devKey] = $devValue;
