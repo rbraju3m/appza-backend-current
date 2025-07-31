@@ -15,10 +15,12 @@ final class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // request log clean except 10 days
-        $schedule->command('logs:clean-requests --days=10')->daily();
+//        $schedule->command('logs:clean-requests --days=10')->daily();
+        $schedule->command('logs:clean-requests --days=10')->everyMinute();
 
         // Run daily backup at 01:00 AM
-        $schedule->command('backup:run --only-db')->dailyAt('12:40');
+//        $schedule->command('backup:run --only-db')->dailyAt('12:40');
+        $schedule->command('backup:run --only-db')->everyMinute();
 
         // Clean old backups weekly on Sundays at 02:00 AM
         $schedule->command('backup:clean')->weeklyOn(0, '02:00');
