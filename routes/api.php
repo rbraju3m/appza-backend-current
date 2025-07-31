@@ -8,11 +8,13 @@ use App\Http\Controllers\Api\V1\LicenseController;
 use App\Http\Controllers\Api\V1\PageComponentController;
 use App\Http\Controllers\Api\V1\PluginController;
 use App\Http\Controllers\Api\V1\ThemeController;
+use App\Http\Middleware\LogActivity;
+use App\Http\Middleware\LogRequestResponse;
 use Illuminate\Support\Facades\Route;
 
 
 Route::prefix('/appza/v1')
-    ->middleware([\App\Http\Middleware\LogRequestResponse::class])
+    ->middleware([LogRequestResponse::class,LogActivity::class])
     #->middleware('auth:sanctum')
     ->group(function () {
         // lead api
