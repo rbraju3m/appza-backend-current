@@ -19,6 +19,8 @@ class Component extends Model
     protected $casts = [
         'items' => 'array',
         'dev_data' => 'array',
+        'filters' => 'array',
+        'pagination' => 'array',
     ];
 
     public function sluggable(): array
