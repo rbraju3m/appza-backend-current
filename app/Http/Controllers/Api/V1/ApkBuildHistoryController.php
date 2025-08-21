@@ -40,6 +40,19 @@ class ApkBuildHistoryController extends Controller
         $this->iosBuildValidationService = $iosBuildValidationService;
     }
 
+    protected function normalizeUrl($url)
+    {
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . ltrim($url, '/');
+        }
+
+        $parsed = parse_url($url);
+        $scheme = $parsed['scheme'] ?? 'https';
+        $host = strtolower($parsed['host'] ?? '');
+
+        return $host ? "{$scheme}://{$host}" : null;
+    }
+
     public function apkBuild(FinalBuildRequest $request)
     {
         $jsonResponse = function ($statusCode, $message, $additionalData = []) use ($request) {
@@ -65,8 +78,8 @@ class ApkBuildHistoryController extends Controller
         }
 
         $input = $request->validated();
-
-        $findSiteUrl = BuildDomain::where('site_url', $input["site_url"])
+        $siteUrl = $this->normalizeUrl($input['site_url']);
+        $findSiteUrl = BuildDomain::where('site_url', $siteUrl)
             ->where('license_key', $input['license_key'])
             #->where('package_name', $input['package_name'])
             ->first();
@@ -474,7 +487,7 @@ class ApkBuildHistoryController extends Controller
             return $jsonResponse(Response::HTTP_UNAUTHORIZED, 'Unauthorized');
         }
 
-        $siteUrl = $request->query('site_url');
+        $siteUrl = $this->normalizeUrl($request->query('site_url'));
         $licenseKey = $request->query('license_key');
 
         if (!$siteUrl) {

@@ -25,6 +25,21 @@ class LeadController extends Controller
         $this->pluginName = $data['plugin_name'] ?? '';
     }
 
+    protected function normalizeUrl($url)
+    {
+        // Add scheme if missing
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . ltrim($url, '/');
+        }
+
+        $parsed = parse_url($url);
+
+        $scheme = $parsed['scheme'] ?? 'https';
+        $host = strtolower($parsed['host'] ?? '');
+
+        return $host ? $scheme . '://' . $host : null;
+    }
+
     public function store(Request $request, $plugin)
     {
         // Perform validation
@@ -46,6 +61,7 @@ class LeadController extends Controller
         $input = $request->only('first_name', 'last_name', 'email', 'domain', 'note');
         $input['plugin_name'] = $plugin;
         $input['appza_hash'] = Hash::make($input['email'] . $input['domain']);
+        $input['domain'] = $this->normalizeUrl($input['domain']);
 
         // Create Lead record
         $data = Lead::create($input);

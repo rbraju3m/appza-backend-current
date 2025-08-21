@@ -7,7 +7,8 @@ use App\Http\Requests\AppNameRequest;
 use App\Http\Requests\IosBuildRequest;
 use App\Models\AppVersion;
 use App\Models\BuildDomain;
-use App\Models\Fluent;
+use App\Models\FluentInfo;
+use App\Models\FluentLicenseInfo;
 use App\Models\Lead;
 use App\Services\IosBuildValidationService;
 use Illuminate\Http\Request;
@@ -34,6 +35,38 @@ class ApkBuildResourceController extends Controller
         $this->iosBuildValidationService = $iosBuildValidationService;
     }
 
+    protected function normalizeUrl($url)
+    {
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . ltrim($url, '/');
+        }
+
+        $parsed = parse_url($url);
+        $scheme = $parsed['scheme'] ?? 'https';
+        $host = strtolower($parsed['host'] ?? '');
+
+        return $host ? "{$scheme}://{$host}" : null;
+    }
+
+    protected function getFluentErrorMessage($code, $default = 'License validation failed.')
+    {
+        $messages = [
+            'missing' => "License doesn't exist.",
+            'invalid_item_id' => 'Item ID is invalid.',
+            'missing_url' => 'Site URL was not provided.',
+            'license_not_activable' => "Cannot activate a bundle's parent license.",
+            'disabled' => 'License has been revoked.',
+            'no_activations_left' => 'No activations left.',
+            'expired' => 'License has expired.',
+            'site_inactive' => 'Site is inactive for this license.',
+            'invalid' => 'License key is invalid.',
+            'key_mismatch' => 'License key does not match this product.',
+        ];
+
+        return $messages[$code] ?? $default;
+    }
+
+
     public function buildResource(ApkBuildRequest $request){
 
         $input = $request->validated();
@@ -55,7 +88,8 @@ class ApkBuildResourceController extends Controller
             return $jsonResponse(Response::HTTP_LOCKED, 'Build process off for lazy task.');
         }
 
-        $findSiteUrl = BuildDomain::where('site_url',$input["site_url"])->where('license_key',$input['license_key'])->first();
+        $siteUrl = $this->normalizeUrl($input["site_url"]);
+        $findSiteUrl = BuildDomain::where('site_url',$siteUrl)->where('license_key',$input['license_key'])->first();
 
         if (!$findSiteUrl){
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Domain Not found.');
@@ -65,21 +99,29 @@ class ApkBuildResourceController extends Controller
             return $jsonResponse(Response::HTTP_NOT_FOUND, 'Item id not found.');
         }
 
+        $activationHash = FluentLicenseInfo::where('license_key', $input['license_key'])->where('site_url', $siteUrl)->value('activation_hash');
+
+        if (is_null($activationHash)) {
+            return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, 'License record not found for this site.');
+        }
+
         $params = [
-            'url' => $input['site_url'],
-            'license' => $input['license_key'],
-            'fluent_cart_action' => 'check_license',
+            'fluent-cart' => 'check_license',
+            'license_key' => $input['license_key'],
+            'activation_hash' => $activationHash,
             'item_id' => $findSiteUrl->fluent_item_id,
+            'site_url' => $siteUrl,
         ];
 
         // Send API Request
-        $getFluentInfo = Fluent::where('product_slug', $findSiteUrl->plugin_name)->where('is_active',true)->first();
+        $getFluentInfo = FluentInfo::where('product_slug', $findSiteUrl->plugin_name)->where('is_active',true)->first();
         if (!$getFluentInfo) {
             return $jsonResponse(Response::HTTP_UNPROCESSABLE_ENTITY, 'The fluent information not set in the configuration.');
         }
+
         $fluentApiUrl = $getFluentInfo->api_url;
 
-        try {
+        /*try {
             $response = Http::get($fluentApiUrl, $params);
         } catch (\Exception $e) {
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to the license server.');
@@ -91,16 +133,6 @@ class ApkBuildResourceController extends Controller
             return $jsonResponse(Response::HTTP_INTERNAL_SERVER_ERROR, 'Invalid response from license server.');
         }
 
-        if (!config('app.is_fluent_check')) {
-            /* START manually added for fluent issue & after fluent is okay it will be remove*/
-            if (!$data['success']) {
-                $data['success'] = true;
-                $data['status'] = true;
-                $data['item_id'] = null;
-            }
-            /* END manually added for fluent issue & after fluent is okay it will be remove*/
-        }
-
         // Handle license errors
         if (!$data['success'] ?? false) {
             $messages = [
@@ -110,6 +142,15 @@ class ApkBuildResourceController extends Controller
                 'invalid_item_id' => 'Item id is invalid.',
             ];
             $message = $messages[$data['error']] ?? 'License not valid.';
+            return $jsonResponse(Response::HTTP_NOT_FOUND, $message);
+        }*/
+
+        $response = Http::timeout(10)->get($fluentApiUrl, $params);
+        $data = $response->json();
+
+        if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'valid') {
+            $error = $data['error_type'] ?? $data['error'] ?? null;
+            $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is not valid.');
             return $jsonResponse(Response::HTTP_NOT_FOUND, $message);
         }
 
@@ -176,7 +217,7 @@ class ApkBuildResourceController extends Controller
             'plugin_name' => $this->pluginName,
             'version_id' => $findAppVersion->id,
             'build_domain_id' => $findSiteUrl->id,
-            'fluent_id' => $data['item_id'],
+            'fluent_id' => $findSiteUrl->fluent_item_id,
             'app_name' => $request->input('app_name'),
             'app_logo' => $appLogo,
             'app_splash_screen_image' => $splash_screen_image,
@@ -215,7 +256,9 @@ class ApkBuildResourceController extends Controller
             'message' => $message,
         ], $data), $status);
 
-        $findSiteUrl = BuildDomain::where('site_url', $input['site_url'])
+        $siteUrl = $this->normalizeUrl($input['site_url']);
+
+        $findSiteUrl = BuildDomain::where('site_url', $siteUrl)
             ->where('license_key', $input['license_key'])->first();
 
         if (!$findSiteUrl) {
@@ -261,7 +304,9 @@ class ApkBuildResourceController extends Controller
             'message' => $message,
         ], $data), $status);
 
-        $findSiteUrl = BuildDomain::where('site_url', $input['site_url'])
+        $siteUrl = $this->normalizeUrl($input['site_url']);
+
+        $findSiteUrl = BuildDomain::where('site_url', $siteUrl)
             ->where('license_key', $input['license_key'])->first();
 
         if (!$findSiteUrl) {

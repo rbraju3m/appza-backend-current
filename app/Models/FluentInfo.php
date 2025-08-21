@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Fluent extends Model
+class FluentInfo extends Model
 {
 
     protected $table = 'appza_fluent_informations';
