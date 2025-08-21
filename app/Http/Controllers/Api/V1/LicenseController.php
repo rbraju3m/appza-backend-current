@@ -177,7 +177,7 @@ class LicenseController extends Controller
 
             DB::commit();
 
-            return $this->jsonResponse($request, Response::HTTP_OK, 'License activated successfully.', ['data' => $res]);
+            return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key has been activated successfully.', ['data' => $res]);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -284,7 +284,7 @@ class LicenseController extends Controller
                 return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
             }
 
-            return $this->jsonResponse($request, Response::HTTP_OK, 'License is valid.', ['data' => $data]);
+            return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
 
         } catch (Exception $e) {
             Log::error('License check error', ['error' => $e->getMessage()]);
@@ -355,7 +355,7 @@ class LicenseController extends Controller
                 return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
             }
 
-            return $this->jsonResponse($request, Response::HTTP_OK, 'License is valid.', ['data' => $data]);
+            return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
 
         } catch (Exception $e) {
             Log::error('App license check failed', ['error' => $e->getMessage()]);
