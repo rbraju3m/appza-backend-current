@@ -51,16 +51,21 @@ class ApkBuildResourceController extends Controller
     protected function getFluentErrorMessage($code, $default = 'License validation failed.')
     {
         $messages = [
-            'missing' => "License doesn't exist.",
-            'invalid_item_id' => 'Item ID is invalid.',
-            'missing_url' => 'Site URL was not provided.',
-            'license_not_activable' => "Cannot activate a bundle's parent license.",
-            'disabled' => 'License has been revoked.',
-            'no_activations_left' => 'No activations left.',
-            'expired' => 'License has expired.',
-            'site_inactive' => 'Site is inactive for this license.',
-            'invalid' => 'License key is invalid.',
-            'key_mismatch' => 'License key does not match this product.',
+            'validation_error' => "Please provide the license key, URL, and item ID.",
+            'key_mismatch' => "This license key doesn't match the product. Please check your key.",
+            'license_error' => "Invalid license key for this product. Please verify your key.",
+            'license_not_found' => "License key not found. Please make sure it is correct.",
+            'license_expired' => "Your license key has expired. Please renew or buy a new one.",
+            'activation_error' => "Unable to activate. Your license may be expired.",
+            'activation_limit_exceeded' => "Activation limit reached. Please upgrade or get a new license.",
+            'site_not_found' => "This website is not registered under your license.",
+            'deactivation_error' => "Unable to deactivate the license. Please try again later.",
+            'product_not_found' => "Product not found. Please check the product ID.",
+            'license_settings_not_found' => "License settings not configured for this product.",
+            'license_not_enabled' => "Licensing hasn’t been enabled for this product.",
+            'invalid_package_data' => "The package data is invalid. Please check the details.",
+            'expired_license' => "Your license key is invalid or expired.",
+            'downloadable_file_not_found' => "No downloadable file available for this product."
         ];
 
         return $messages[$code] ?? $default;
