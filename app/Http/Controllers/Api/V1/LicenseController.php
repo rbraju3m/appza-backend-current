@@ -154,7 +154,8 @@ class LicenseController extends Controller
                     'email' => $data['email'] ?? $this->email,
                     'plugin_name' => $this->pluginName,
                     'fluent_item_id' => $fluentInfo->item_id,
-                    'is_app_license_check' => 1
+                    'is_app_license_check' => 1,
+                    'is_deactivated' => 0
                 ]
             );
 
@@ -296,6 +297,65 @@ class LicenseController extends Controller
             return $this->jsonResponse($request, Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to license server.');
         }
     }
+
+    public function deactivate(Request $request)
+    {
+        if (!$this->authorization) {
+            return $this->jsonResponse($request, Response::HTTP_UNAUTHORIZED, 'Unauthorized');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'site_url' => 'required',
+            'license_key' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->jsonResponse($request, Response::HTTP_BAD_REQUEST, 'Validation Error', ['errors' => $validator->errors()]);
+        }
+
+        $siteUrl = $this->normalizeUrl($request->get('site_url'));
+        $key = $request->get('license_key');
+
+        $fluentInfo = FluentInfo::where('product_slug', $this->pluginName)->where('is_active', true)->first();
+        if (!$fluentInfo || !is_numeric($fluentInfo->item_id)) {
+            return $this->jsonResponse($request, Response::HTTP_UNPROCESSABLE_ENTITY, 'Fluent plugin configuration error.');
+        }
+
+        $activationHash = FluentLicenseInfo::where('license_key', $key)->where('site_url', $siteUrl)->value('activation_hash');
+
+        if (is_null($activationHash)) {
+            return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, 'License record not found for this site.');
+        }
+
+        $params = [
+            'fluent-cart' => 'deactivate_license',
+            'license_key' => $key,
+            'activation_hash' => $activationHash,
+            'item_id' => $fluentInfo->item_id,
+            'site_url' => $siteUrl,
+        ];
+
+        try {
+            $response = Http::timeout(10)->get($fluentInfo->api_url, $params);
+            $data = $response->json();
+
+            if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'deactivated') {
+                $error = $data['error_type'] ?? $data['error'] ?? null;
+                $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is not deactivated.');
+                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
+            }
+
+            $findBuildDomain = BuildDomain::where('site_url', $siteUrl)->where('license_key',$key)->first();
+            $findBuildDomain->update(['is_deactivated' => true]);
+
+            return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key is deactivate.', ['data' => $data]);
+
+        } catch (Exception $e) {
+            Log::error('License check error', ['error' => $e->getMessage()]);
+            return $this->jsonResponse($request, Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to license server.');
+        }
+    }
+
 
     public function appLicenseCheck(Request $request)
     {

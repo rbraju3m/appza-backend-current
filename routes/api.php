@@ -46,6 +46,7 @@ Route::prefix('/appza/v1')
         Route::prefix('license')->group(function () {
             Route::get('check', [LicenseController::class,'check'])->name('license_check');
             Route::post('activate', [LicenseController::class,'activate'])->name('license_activate');
+            Route::post('deactivate', [LicenseController::class,'deactivate'])->name('license_deactivate');
             Route::post('version/check', [LicenseController::class,'versionCheck'])->name('license_version_check');
         });
 

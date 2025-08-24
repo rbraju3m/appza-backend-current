@@ -35,7 +35,8 @@ class BuildDomain extends Model
         'fluent_item_id',
         'ios_app_name',
         'is_app_license_check',
-        'build_plugin_slug'
+        'build_plugin_slug',
+        'is_deactivated'
     ];
 
     public static function boot() {
