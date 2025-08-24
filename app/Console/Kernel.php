@@ -12,30 +12,8 @@ final class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
+
     /*protected function schedule(Schedule $schedule): void
-    {
-        // request log clean except 10 days
-        $schedule->command('logs:clean-requests --days=10')->daily();
-//        $schedule->command('logs:clean-requests --days=10')->everyMinute();
-
-        // Run daily backup at 01:00 AM
-        $schedule->command('backup:run --only-db')->dailyAt('12:40');
-//        $schedule->command('backup:run --only-db')->everyMinute();
-
-        // Clean old backups weekly on Sundays at 02:00 AM
-        $schedule->command('backup:clean')->weeklyOn(0, '02:00');
-
-        // Monitor backup health daily at 03:00 AM
-        $schedule->command('backup:monitor')->dailyAt('03:00');
-
-        // Optional: Clear cache every night
-        // $schedule->command('cache:clear')->dailyAt('03:30');
-
-        // Optional: Run queued jobs every minute (if using queues)
-        // $schedule->command('queue:work --stop-when-empty')->everyMinute();
-    }*/
-
-    protected function schedule(Schedule $schedule): void
     {
         // Clean activity logs older than 10 days (custom command)
         $schedule->command('logs:clean-requests --days=10')->daily();
@@ -54,7 +32,21 @@ final class Kernel extends ConsoleKernel
         $schedule->call(function () {
             \Log::info('✔️ Laravel scheduler is running at ' . now());
         })->everyMinute();
+    }*/
+
+    protected function schedule(Schedule $schedule): void
+    {
+        // Temporarily disable all real scheduled commands
+        // $schedule->command('logs:clean-requests --days=10')->daily();
+        // $schedule->command('backup:run --only-db')->dailyAt('01:00');
+        // $schedule->command('backup:clean')->dailyAt('01:10');
+        // $schedule->command('backup:monitor')->dailyAt('01:20');
+
+        $schedule->call(function () {
+            \Log::info('🟢 Laravel scheduler test ran at ' . now());
+        })->everyMinute();
     }
+
 
     /**
      * Register the commands for the application.
