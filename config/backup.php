@@ -9,6 +9,12 @@ return [
          */
 //        'name' => env('APP_NAME', 'laravel-backup'),
         'name' => "appza-database",
+        // manuall input
+        'db_backup' => [
+            'database_dump_binary_path' => '/usr/bin',
+            'database_dump_compressor_path' => '', // Leave blank if not using gzip or compressor
+        ],
+
 
         'source' => [
             'files' => [
