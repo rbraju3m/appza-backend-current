@@ -41,13 +41,4 @@ class Kernel extends HttpKernel
         'setlocale' => \App\Http\Middleware\SetLocale::class,
 
     ];
-
-    protected function schedule(Schedule $schedule)
-    {
-        $schedule->call(function () {
-            \Log::info('🟢 Http/kernel Laravel scheduler test triggered at ' . now()->toDateTimeString());
-        })->withoutOverlapping()->everyMinute(); // Add withoutOverlapping to be safe
-
-//        $schedule->command('logs:clean-requests --days=30')->daily();
-    }
 }
