@@ -6,6 +6,7 @@ use App\Models\BuildDomain;
 use App\Models\FluentInfo;
 use App\Models\FluentLicenseInfo;
 use App\Models\Lead;
+use App\Models\PopupMessage;
 use Exception;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Client\ConnectionException;
@@ -419,6 +420,16 @@ class LicenseController extends Controller
 
                 return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
             }
+            // Fetch popup messages and format them for response
+            $popupMessages = PopupMessage::where('is_active', true)->get()->map(function ($message) {
+                return [
+                    'type' => $message->message_type,
+                    'message' => $message->message,
+                ];
+            })->toArray();
+
+            // Add popup messages to data
+            $data['popup_message'] = $popupMessages;
 
             return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
 
