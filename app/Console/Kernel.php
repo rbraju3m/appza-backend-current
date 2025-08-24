@@ -50,6 +50,10 @@ final class Kernel extends ConsoleKernel
 //        $schedule->command('backup:monitor')->dailyAt('01:20');
 
         // Optional: you can add queue or cache commands later
+
+        $schedule->call(function () {
+            \Log::info('✔️ Laravel scheduler is running at ' . now());
+        })->everyMinute();
     }
 
     /**
