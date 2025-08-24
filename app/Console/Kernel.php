@@ -43,8 +43,9 @@ final class Kernel extends ConsoleKernel
         // $schedule->command('backup:monitor')->dailyAt('01:20');
 
         $schedule->call(function () {
-            \Log::info('🟢 Laravel scheduler test ran at ' . now());
-        })->everyMinute();
+            \Log::info('🟢 Laravel scheduler test triggered at ' . now()->toDateTimeString());
+        })->withoutOverlapping()->everyMinute(); // Add withoutOverlapping to be safe
+
     }
 
 
