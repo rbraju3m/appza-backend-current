@@ -12,7 +12,7 @@ final class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule): void
+    /*protected function schedule(Schedule $schedule): void
     {
         // request log clean except 10 days
         $schedule->command('logs:clean-requests --days=10')->daily();
@@ -33,6 +33,23 @@ final class Kernel extends ConsoleKernel
 
         // Optional: Run queued jobs every minute (if using queues)
         // $schedule->command('queue:work --stop-when-empty')->everyMinute();
+    }*/
+
+    protected function schedule(Schedule $schedule): void
+    {
+        // Clean activity logs older than 10 days (custom command)
+        $schedule->command('logs:clean-requests --days=10')->daily();
+
+        // Daily DB backup at 01:00 AM
+        $schedule->command('backup:run --only-db')->dailyAt('01:00');
+
+        // Keep only backups from the last 5 days - clean at 01:10 AM
+        $schedule->command('backup:clean')->dailyAt('01:10');
+
+        // Monitor backup health daily at 01:20 AM
+//        $schedule->command('backup:monitor')->dailyAt('01:20');
+
+        // Optional: you can add queue or cache commands later
     }
 
     /**

@@ -41,9 +41,4 @@ class Kernel extends HttpKernel
         'setlocale' => \App\Http\Middleware\SetLocale::class,
 
     ];
-
-    protected function schedule(Schedule $schedule)
-    {
-        $schedule->command('logs:clean-requests --days=30')->daily();
-    }
 }
