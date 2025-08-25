@@ -29,6 +29,7 @@ final class Kernel extends ConsoleKernel
 
         // Optional: you can add queue or cache commands later
 
+        // for test
         $schedule->call(function () {
             \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
         })->everyMinute();
