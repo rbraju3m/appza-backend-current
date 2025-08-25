@@ -13,7 +13,7 @@ final class Kernel extends ConsoleKernel
      * Define the application's command schedule.
      */
 
-    /*protected function schedule(Schedule $schedule): void
+    protected function schedule(Schedule $schedule): void
     {
         // Clean activity logs older than 10 days (custom command)
         $schedule->command('logs:clean-requests --days=10')->daily();
@@ -30,18 +30,9 @@ final class Kernel extends ConsoleKernel
         // Optional: you can add queue or cache commands later
 
         $schedule->call(function () {
-            \Log::info('✔️ Laravel scheduler is running at ' . now());
-        })->everyMinute();
-    }*/
-
-    protected function schedule(Schedule $schedule): void
-    {
-        $schedule->call(function () {
             \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
         })->everyMinute();
     }
-
-
 
     /**
      * Register the commands for the application.
