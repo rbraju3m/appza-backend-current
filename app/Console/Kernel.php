@@ -36,17 +36,11 @@ final class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
-        // Temporarily disable all real scheduled commands
-        // $schedule->command('logs:clean-requests --days=10')->daily();
-        // $schedule->command('backup:run --only-db')->dailyAt('01:00');
-        // $schedule->command('backup:clean')->dailyAt('01:10');
-        // $schedule->command('backup:monitor')->dailyAt('01:20');
-
         $schedule->call(function () {
-            \Log::info('✅ App\Console\Kernel scheduler ran at ' . now()->toDateTimeString());
+            \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
         })->everyMinute();
-
     }
+
 
 
     /**
