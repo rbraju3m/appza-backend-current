@@ -31,9 +31,9 @@ final class Kernel extends ConsoleKernel
         // $schedule->command('backup:monitor')->dailyAt('01:20');
 
         // for test
-        /*$schedule->call(function () {
+        $schedule->call(function () {
             \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
-        })->everyMinute();*/
+        })->everyMinute();
     }
 
     /**
