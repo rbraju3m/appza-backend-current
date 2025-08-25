@@ -17,4 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         Integration::handles($exceptions);
-    })->create();
+    })
+    ->withConsoleKernel(App\Console\Kernel::class)
+    ->create();
+
