@@ -24,15 +24,16 @@ final class Kernel extends ConsoleKernel
         // Keep only backups from the last 5 days - clean at 01:10 AM
         $schedule->command('backup:clean')->dailyAt('01:10');
 
-        // Monitor backup health daily at 01:20 AM
-//        $schedule->command('backup:monitor')->dailyAt('01:20');
+        // Clean spatie activity logs older than 30 days (default)
+        $schedule->command('activitylog:clean --days=10')->daily();
 
-        // Optional: you can add queue or cache commands later
+        // Monitor backup health daily at 01:20 AM
+        // $schedule->command('backup:monitor')->dailyAt('01:20');
 
         // for test
-        $schedule->call(function () {
+        /*$schedule->call(function () {
             \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
-        })->everyMinute();
+        })->everyMinute();*/
     }
 
     /**
