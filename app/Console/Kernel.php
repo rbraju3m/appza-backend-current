@@ -40,6 +40,7 @@ final class Kernel extends ConsoleKernel
         //for test
         // Test backup command every 5 minutes instead of 01:00 AM
         $schedule->command('backup:run --only-db')
+//            ->dailyAt('01:00')
             ->everyFiveMinutes()
             ->onSuccess(function () {
                 \Log::info('✅ Backup completed successfully at ' . now());
@@ -50,6 +51,7 @@ final class Kernel extends ConsoleKernel
 
         // Test clean command every 5 minutes
         $schedule->command('backup:clean')
+//            ->dailyAt('01:10')
             ->everyFiveMinutes()
             ->onSuccess(function () {
                 \Log::info('✅ Backup clean successfully at ' . now());
@@ -61,6 +63,7 @@ final class Kernel extends ConsoleKernel
         // Test activity log clean every 5 minutes
         $schedule->command('activitylog:clean --days=10')
             ->everyFiveMinutes()
+//            ->dailyAt('01:20')
             ->onSuccess(function () {
                 \Log::info('✅ activitylog clean successfully at ' . now());
             })
@@ -71,6 +74,7 @@ final class Kernel extends ConsoleKernel
         // Test custom command every 5 minutes
         $schedule->command('logs:clean-requests --days=10')
             ->everyFiveMinutes()
+//            ->dailyAt('01:30')
             ->onSuccess(function () {
                 \Log::info('✅ Manual log clean successfully at ' . now());
             })
@@ -87,8 +91,6 @@ final class Kernel extends ConsoleKernel
         $schedule->call(function () {
             \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
         })->everyMinute();
-
-
     }
 
     /**
