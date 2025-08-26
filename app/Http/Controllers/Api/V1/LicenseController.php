@@ -365,9 +365,18 @@ class LicenseController extends Controller
             'site_url' => 'required',
         ]);
 
+        // Fetch popup messages and format them for response
+        $popupMessages = PopupMessage::where('is_active', true)->get()->map(function ($message) {
+            return [
+                'type' => $message->message_type,
+                'message' => $message->message,
+            ];
+        })->toArray();
+
         if ($validator->fails()) {
             return $this->jsonResponse($request, Response::HTTP_BAD_REQUEST, 'Validation Error', [
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
+                'popup_message' => $popupMessages
             ]);
         }
 
@@ -380,7 +389,12 @@ class LicenseController extends Controller
         ])->first();
 
         if (!$getBuildDomain) {
-            return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, 'Active domain not found.');
+            return $this->jsonResponse(
+                $request,
+                Response::HTTP_NOT_FOUND,
+                'Active domain not found.',
+                ['popup_message' => $popupMessages]
+            );
         }
 
         // Get Fluent plugin info for the plugin attached to domain
@@ -389,7 +403,7 @@ class LicenseController extends Controller
             ->first();
 
         if (!$fluentInfo || !is_numeric($fluentInfo->item_id) || !$fluentInfo->api_url) {
-            return $this->jsonResponse($request, Response::HTTP_UNPROCESSABLE_ENTITY, 'Invalid Fluent plugin configuration.');
+            return $this->jsonResponse($request, Response::HTTP_UNPROCESSABLE_ENTITY, 'Invalid Fluent plugin configuration.',['popup_message' => $popupMessages]);
         }
 
         // Get activation hash
@@ -398,7 +412,7 @@ class LicenseController extends Controller
             ->value('activation_hash');
 
         if (is_null($activationHash)) {
-            return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, 'License data not found. Please activate first.');
+            return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, 'License data not found. Please activate first.',['popup_message' => $popupMessages]);
         }
 
         // Prepare external request
@@ -418,24 +432,20 @@ class LicenseController extends Controller
                 $error = $data['error_type'] ?? $data['error'] ?? null;
                 $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is invalid.');
 
-                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
+                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message,['popup_message' => $popupMessages]);
             }
-            // Fetch popup messages and format them for response
-            $popupMessages = PopupMessage::where('is_active', true)->get()->map(function ($message) {
-                return [
-                    'type' => $message->message_type,
-                    'message' => $message->message,
-                ];
-            })->toArray();
 
             // Add popup messages to data
-            $data['popup_message'] = $popupMessages;
-
-            return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
+            return $this->jsonResponse(
+                $request,
+                Response::HTTP_OK,
+                'Your License key is valid.',
+                ['data' => $data, 'popup_message' => $popupMessages]
+            );
 
         } catch (Exception $e) {
             Log::error('App license check failed', ['error' => $e->getMessage()]);
-            return $this->jsonResponse($request, Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to license server.');
+            return $this->jsonResponse($request, Response::HTTP_INTERNAL_SERVER_ERROR, 'Failed to connect to license server.',['popup_message' => $popupMessages]);
         }
     }
 }
