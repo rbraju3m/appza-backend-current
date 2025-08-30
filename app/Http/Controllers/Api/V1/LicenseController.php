@@ -137,7 +137,7 @@ class LicenseController extends Controller
                 $error = $res['error_type'] ?? $res['error'] ?? null;
                 $errorMessage = $this->getFluentErrorMessage($error, $res['message'] ?? 'License activation failed.');
 
-                return $this->jsonResponse($request, Response::HTTP_UNPROCESSABLE_ENTITY, $errorMessage);
+                return $this->jsonResponse($request, Response::HTTP_UNPROCESSABLE_ENTITY, $errorMessage,['error_type' => $error]);
             }
 
         } catch (Exception $e) {
@@ -285,10 +285,12 @@ class LicenseController extends Controller
             $response = Http::timeout(10)->get($fluentInfo->api_url, $params);
             $data = $response->json();
 
+            dump($data);
+
             if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'valid') {
                 $error = $data['error_type'] ?? $data['error'] ?? null;
                 $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is not valid.');
-                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
+                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message,['error_type' => $error]);
             }
 
             return $this->jsonResponse($request, Response::HTTP_OK, 'Your License key is valid.', ['data' => $data]);
@@ -343,7 +345,7 @@ class LicenseController extends Controller
             if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'deactivated') {
                 $error = $data['error_type'] ?? $data['error'] ?? null;
                 $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is not deactivated.');
-                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message);
+                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message,['error_type' => $error]);
             }
 
             $findBuildDomain = BuildDomain::where('site_url', $siteUrl)->where('license_key',$key)->first();
@@ -432,7 +434,10 @@ class LicenseController extends Controller
                 $error = $data['error_type'] ?? $data['error'] ?? null;
                 $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is invalid.');
 
-                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message,['popup_message' => $popupMessages]);
+                return $this->jsonResponse($request, Response::HTTP_NOT_FOUND, $message,[
+                    'popup_message' => $popupMessages,
+                    'error_type' => $error
+                ]);
             }
 
             // Add popup messages to data

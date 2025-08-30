@@ -15,7 +15,7 @@ final class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
-        // Clean custom logs at 01:00 AM (before backup)
+        // Clean custom logs at 01:00 AM
         $schedule->command('logs:clean-requests --days=10')
             ->dailyAt('01:00')
             ->onSuccess(function () {
@@ -45,7 +45,7 @@ final class Kernel extends ConsoleKernel
                 \Log::error('❌ Backup clean failed at ' . now());
             });
 
-        // Clean activity logs at 01:30 AM (after backup)
+        // Clean activity logs at 01:30 AM
         $schedule->command('activitylog:clean --days=10 --force')
             ->dailyAt('01:30')
             ->onSuccess(function () {
