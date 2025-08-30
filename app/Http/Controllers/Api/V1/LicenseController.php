@@ -284,9 +284,7 @@ class LicenseController extends Controller
         try {
             $response = Http::timeout(10)->get($fluentInfo->api_url, $params);
             $data = $response->json();
-
-            dump($data);
-
+            
             if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'valid') {
                 $error = $data['error_type'] ?? $data['error'] ?? null;
                 $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is not valid.');
