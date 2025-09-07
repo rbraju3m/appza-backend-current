@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\ApkBuildHistoryController;
 use App\Http\Controllers\Api\V1\ApkBuildResourceController;
+use App\Http\Controllers\Api\V1\FreeTrialController;
 use App\Http\Controllers\Api\V1\GlobalConfigController;
 use App\Http\Controllers\Api\V1\LeadController;
 use App\Http\Controllers\Api\V1\LicenseController;
@@ -19,9 +20,9 @@ Route::prefix('/appza/v1')
     ->group(function () {
         // lead api
         Route::prefix('lead')->group(function () {
-            Route::post('store/{target_plugin}', [LeadController::class, 'store'])
+            Route::post('store/{product}', [LeadController::class, 'store'])
                 ->name('create_lead')
-                ->whereIn('target_plugin', ['appza', 'lazy_task','fcom_mobile']);
+                ->whereIn('product', ['appza', 'lazy_task','fcom_mobile']);
         });
 
         // theme api
@@ -40,6 +41,13 @@ Route::prefix('/appza/v1')
         Route::prefix('global-config')->group(function () {
             Route::get('', [GlobalConfigController::class,'index'])
                 ->name('global_config');
+        });
+
+        // free trial request api
+        Route::prefix('free')->group(function () {
+            Route::post('trial/{product}', [FreeTrialController::class, 'store'])
+                ->name('create_free_trial')
+                ->whereIn('product', ['appza', 'lazy_task','fcom_mobile']);
         });
 
         // license api
