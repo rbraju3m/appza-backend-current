@@ -45,8 +45,8 @@ class LicenseController extends Controller
     {
         return response()->json(array_merge([
             'status' => $statusCode,
-            'url' => $request->getUri(),
-            'method' => $request->getMethod(),
+//            'url' => $request->getUri(),
+//            'method' => $request->getMethod(),
             'message' => $message,
         ], $additionalData), $statusCode);
     }
@@ -184,6 +184,8 @@ class LicenseController extends Controller
                     'expiration_date' => $res['expiration_date'] ?? null,
                 ]
             );
+
+            FreeTrial::where('site_url', $normalizedSiteUrl)->where('product_slug',$this->pluginName)->where('is_active', true)->update(['is_fluent_license_check' => true]);
 
             DB::commit();
 
@@ -496,7 +498,7 @@ class LicenseController extends Controller
         }
     }
 
-    public function appLicenseCheck(Request $request)
+    public function appLicenseCheck2(Request $request)
     {
         // Validate required parameters
         $validator = Validator::make($request->all(), [
@@ -541,159 +543,415 @@ class LicenseController extends Controller
 
         $siteUrl = $this->normalizeUrl($request->get('site_url'));
 
-        // Check Free Trial with better query optimization
         $freeTrial = FreeTrial::where('site_url', $siteUrl)
             ->where('product_slug', $product)
-            ->where('grace_period_date', '>=', now()->format('Y-m-d'))
-            #->where('expiration_date', '>=', now()->format('Y-m-d'))
             ->where('is_active', true)
-            ->select([
-                'status', 'activation_limit', 'activation_hash', 'activations_count',
-                'license_key', 'expiration_date', 'product_id', 'variation_id',
-                'variation_title', 'product_title','grace_period_date'
-            ])
+            ->select('is_fluent_license_check')
             ->first();
 
-        if ($freeTrial) {
+        if (!$freeTrial) {
             return $this->jsonResponse(
                 $request,
-                Response::HTTP_OK,
-                'Your free trial license is valid.',
+                Response::HTTP_BAD_REQUEST,
+                'Please install plugin.',
                 [
-                    'data' => $freeTrial,
-                    'license_type' => 'free_trial',
+                    'data' => [],
+                    'license_type' => 'invalid',
                     'popup_message' => $popupMessages
                 ]
             );
         }
 
-        // Check Fluent License with transaction and better error handling
-        return DB::transaction(function () use ($request, $siteUrl, $product, $popupMessages) {
-            $getBuildDomain = BuildDomain::where('site_url', $siteUrl)
-                ->where('is_app_license_check', true)
-                ->where('plugin_name', $product)
-                ->lockForUpdate() // Prevent race conditions
-                ->first();
-
-            if (!$getBuildDomain) {
-                return $this->jsonResponse(
-                    $request,
-                    Response::HTTP_NOT_FOUND,
-                    'Active domain not found for this product.',
-                    ['popup_message' => $popupMessages]
-                );
-            }
-
-            $fluentInfo = FluentInfo::where('product_slug', $getBuildDomain->plugin_name)
+        if ($freeTrial->is_fluent_license_check === 0) {
+            // Check Free Trial with better query optimization
+            $freeTrial = FreeTrial::where('site_url', $siteUrl)
+                ->where('product_slug', $product)
+                ->where('grace_period_date', '>=', now()->format('Y-m-d'))
+                #->where('expiration_date', '>=', now()->format('Y-m-d'))
                 ->where('is_active', true)
+                ->select([
+                    'status', 'activation_limit', 'activation_hash', 'activations_count',
+                    'license_key', 'expiration_date', 'product_id', 'variation_id',
+                    'variation_title', 'product_title','grace_period_date'
+                ])
                 ->first();
 
-            if (!$fluentInfo) {
+            if ($freeTrial) {
                 return $this->jsonResponse(
                     $request,
-                    Response::HTTP_UNPROCESSABLE_ENTITY,
-                    'Fluent plugin not configured for this product.',
-                    ['popup_message' => $popupMessages]
+                    Response::HTTP_OK,
+                    'Your free trial license is valid.',
+                    [
+                        'data' => $freeTrial,
+                        'license_type' => 'free_trial',
+                        'popup_message' => $popupMessages
+                    ]
                 );
-            }
+            }else{
+                $freeTrial = FreeTrial::where('site_url', $siteUrl)
+                    ->where('product_slug', $product)
+                    #->where('grace_period_date', '>=', now()->format('Y-m-d'))
+                    #->where('expiration_date', '>=', now()->format('Y-m-d'))
+                    ->where('is_active', true)
+                    ->select([
+                        'status', 'activation_limit', 'activation_hash', 'activations_count',
+                        'license_key', 'expiration_date', 'product_id', 'variation_id',
+                        'variation_title', 'product_title','grace_period_date'
+                    ])
+                    ->first();
 
-            if (!is_numeric($fluentInfo->item_id) || !filter_var($fluentInfo->api_url, FILTER_VALIDATE_URL)) {
-                return $this->jsonResponse(
-                    $request,
-                    Response::HTTP_UNPROCESSABLE_ENTITY,
-                    'Invalid Fluent plugin configuration.',
-                    ['popup_message' => $popupMessages]
-                );
-            }
-
-            $activationHash = FluentLicenseInfo::where('license_key', $getBuildDomain->license_key)
-                ->where('site_url', $siteUrl)
-                ->value('activation_hash');
-
-            if (!$activationHash) {
+                $freeTrial['status'] = "Expired";
                 return $this->jsonResponse(
                     $request,
                     Response::HTTP_NOT_FOUND,
-                    'License data not found. Please activate first.',
-                    ['popup_message' => $popupMessages]
+                    'Your free trial has been over, Please purchase our paid license from Here. If already purchased give the license to Plugin.',
+                    [
+                        'data' => $freeTrial,
+                        'license_type' => 'free_trial',
+                        'popup_message' => $popupMessages
+                    ]
                 );
             }
+        }
 
-            // External API call with better timeout and retry handling
-            try {
-                $response = Http::timeout(15)
-                    ->retry(2, 100)
-                    ->withHeaders([
-                        'User-Agent' => 'AppLicenseCheck/1.0',
-                        'Accept' => 'application/json',
-                    ])
-                    ->get($fluentInfo->api_url, [
-                        'fluent-cart' => 'check_license',
-                        'license_key' => $getBuildDomain->license_key,
-                        'activation_hash' => $activationHash,
-                        'item_id' => (int) $fluentInfo->item_id,
-                        'site_url' => $siteUrl,
-                    ]);
+        if ($freeTrial->is_fluent_license_check === 1) {
+            // Check Fluent License with transaction and better error handling
+            return DB::transaction(function () use ($request, $siteUrl, $product, $popupMessages) {
 
-                if (!$response->successful()) {
-                    throw new Exception('API responded with status: ' . $response->status());
-                }
+                $getBuildDomain = BuildDomain::where('site_url', $siteUrl)
+                    ->where('is_app_license_check', true)
+                    ->where('plugin_name', $product)
+                    ->lockForUpdate() // Prevent race conditions
+                    ->first();
 
-                $data = $response->json();
+                if (!$getBuildDomain) {
+                    $freeTrial = FreeTrial::where('site_url', $siteUrl)
+                        ->where('product_slug', $product)
+                        #->where('grace_period_date', '>=', now()->format('Y-m-d'))
+                        #->where('expiration_date', '>=', now()->format('Y-m-d'))
+                        ->where('is_active', true)
+                        ->select([
+                            'status', 'activation_limit', 'activation_hash', 'activations_count',
+                            'license_key', 'expiration_date', 'product_id', 'variation_id',
+                            'variation_title', 'product_title','grace_period_date'
+                        ])
+                        ->first();
 
-                if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'valid') {
-                    $error = $data['error_type'] ?? $data['error'] ?? 'unknown_error';
-                    $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is invalid.');
-
+                    $freeTrial['status'] = "Expired";
                     return $this->jsonResponse(
                         $request,
-                        Response::HTTP_FORBIDDEN,
-                        $message,
+                        Response::HTTP_NOT_FOUND,
+                        'Your free trial has been over, Please purchase our paid license from Here. If already purchased give the license to Plugin.',
                         [
-                            'popup_message' => $popupMessages,
-                            'error_type' => $error
+                            'data' => $freeTrial,
+                            'license_type' => 'free_trial',
+                            'popup_message' => $popupMessages
                         ]
                     );
                 }
 
+                $fluentInfo = FluentInfo::where('product_slug', $getBuildDomain->plugin_name)
+                    ->where('is_active', true)
+                    ->first();
+
+                if (!$fluentInfo) {
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_UNPROCESSABLE_ENTITY,
+                        'Fluent plugin not configured for this product.',
+                        ['popup_message' => $popupMessages]
+                    );
+                }
+
+                if (!is_numeric($fluentInfo->item_id) || !filter_var($fluentInfo->api_url, FILTER_VALIDATE_URL)) {
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_UNPROCESSABLE_ENTITY,
+                        'Invalid Fluent plugin configuration.',
+                        ['popup_message' => $popupMessages]
+                    );
+                }
+
+                $activationHash = FluentLicenseInfo::where('license_key', $getBuildDomain->license_key)
+                    ->where('site_url', $siteUrl)
+                    ->value('activation_hash');
+
+                if (!$activationHash) {
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_NOT_FOUND,
+                        'License data not found. Please activate first.',
+                        ['popup_message' => $popupMessages]
+                    );
+                }
+
+                // External API call with better timeout and retry handling
+                try {
+                    $response = Http::timeout(15)
+                        ->retry(2, 100)
+                        ->withHeaders([
+                            'User-Agent' => 'AppLicenseCheck/1.0',
+                            'Accept' => 'application/json',
+                        ])
+                        ->get($fluentInfo->api_url, [
+                            'fluent-cart' => 'check_license',
+                            'license_key' => $getBuildDomain->license_key,
+                            'activation_hash' => $activationHash,
+                            'item_id' => (int) $fluentInfo->item_id,
+                            'site_url' => $siteUrl,
+                        ]);
+
+                    if (!$response->successful()) {
+                        throw new Exception('API responded with status: ' . $response->status());
+                    }
+
+                    $data = $response->json();
+
+                    if (!is_array($data) || !($data['success'] ?? false) || ($data['status'] ?? 'invalid') !== 'valid') {
+                        $error = $data['error_type'] ?? $data['error'] ?? 'unknown_error';
+                        $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is invalid.');
+
+                        return $this->jsonResponse(
+                            $request,
+                            Response::HTTP_FORBIDDEN,
+                            $message,
+                            [
+                                'popup_message' => $popupMessages,
+                                'error_type' => $error
+                            ]
+                        );
+                    }
+
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_OK,
+                        'Your premium license key is valid.',
+                        [
+                            'data' => $data,
+                            'license_type' => 'premium',
+                            'popup_message' => $popupMessages
+                        ]
+                    );
+
+                } catch (ConnectException $e) {
+                    Log::warning('License server connection failed', [
+                        'error' => $e->getMessage(),
+                        'api_url' => $fluentInfo->api_url
+                    ]);
+
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_SERVICE_UNAVAILABLE,
+                        'License server is temporarily unavailable.',
+                        ['popup_message' => $popupMessages]
+                    );
+
+                } catch (Exception $e) {
+                    Log::error('App license check failed', [
+                        'error' => $e->getMessage(),
+                        'site_url' => $siteUrl,
+                        'product' => $product
+                    ]);
+
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_INTERNAL_SERVER_ERROR,
+                        'Failed to validate license. Please try again later.',
+                        ['popup_message' => $popupMessages]
+                    );
+                }
+            });
+        }
+    }
+
+    public function appLicenseCheck(Request $request)
+    {
+        // Caching popup messages is a good practice, keep it.
+        $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
+            return PopupMessage::where('is_active', true)
+                ->get(['message_type as type', 'message'])
+                ->toArray();
+        });
+
+        // Validate parameters
+        $validator = Validator::make($request->all(), [
+            'site_url' => 'required|url',
+            'product' => 'required|string|in:appza,lazy_task,fcom_mobile',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->jsonResponse(
+                $request,
+                Response::HTTP_BAD_REQUEST,
+                'Validation Error',
+                ['errors' => $validator->errors(), 'popup_message' => $popupMessages]
+            );
+        }
+
+        $siteUrl = $this->normalizeUrl($request->get('site_url'));
+        $product = $request->get('product');
+
+        // Fetch the license data in a single, efficient query
+        $licenseData = FreeTrial::where('site_url', $siteUrl)
+            ->where('product_slug', $product)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$licenseData) {
+            // No active license found for the given site and product.
+            // This is a more accurate status than 400 Bad Request.
+            return $this->jsonResponse(
+                $request,
+                Response::HTTP_NOT_FOUND,
+                'Plugin not installed or no license found.',
+                ['license_type' => 'invalid','data' => [], 'popup_message' => $popupMessages]
+            );
+        }
+
+        // Handle free trial license check
+        if ($licenseData->is_fluent_license_check === 0) {
+            $isValidFreeTrial = ($licenseData->grace_period_date >= now()->format('Y-m-d'));
+            $data = [
+              'status' => $licenseData->status,
+              'site_url' => $licenseData->site_url,
+              'name' => $licenseData->name,
+              'email' => $licenseData->email,
+              'product_id' => $licenseData->product_id,
+              'variation_id' => $licenseData->variation_id,
+              'license_key' => $licenseData->license_key,
+              'product_title' => $licenseData->product_title,
+              'variation_title' => $licenseData->variation_title,
+              'activation_limit' => $licenseData->activation_limit,
+              'activations_count' => $licenseData->activations_count,
+              'expiration_date' => $licenseData->expiration_date,
+              'grace_period_date' => $licenseData->grace_period_date,
+            ];
+            if ($isValidFreeTrial) {
                 return $this->jsonResponse(
                     $request,
                     Response::HTTP_OK,
-                    'Your premium license key is valid.',
-                    [
-                        'data' => $data,
-                        'license_type' => 'premium',
-                        'popup_message' => $popupMessages
-                    ]
+                    'Your free trial license is valid.',
+                    ['license_type' => 'free_trial', 'data' => $data, 'popup_message' => $popupMessages]
                 );
-
-            } catch (ConnectException $e) {
-                Log::warning('License server connection failed', [
-                    'error' => $e->getMessage(),
-                    'api_url' => $fluentInfo->api_url
-                ]);
-
+            } else {
+                $data['status'] = 'expired'; // Only for response, not database.
                 return $this->jsonResponse(
                     $request,
-                    Response::HTTP_SERVICE_UNAVAILABLE,
-                    'License server is temporarily unavailable.',
-                    ['popup_message' => $popupMessages]
-                );
-
-            } catch (Exception $e) {
-                Log::error('App license check failed', [
-                    'error' => $e->getMessage(),
-                    'site_url' => $siteUrl,
-                    'product' => $product
-                ]);
-
-                return $this->jsonResponse(
-                    $request,
-                    Response::HTTP_INTERNAL_SERVER_ERROR,
-                    'Failed to validate license. Please try again later.',
-                    ['popup_message' => $popupMessages]
+                    Response::HTTP_OK,
+                    'Your free trial has expired. Please purchase a paid license.',
+                    ['license_type' => 'free_trial', 'data' => $data, 'popup_message' => $popupMessages]
                 );
             }
-        });
+        }
+
+        // Handle premium/fluent license check
+        if ($licenseData->is_fluent_license_check === 1) {
+            return DB::transaction(function () use ($request, $siteUrl, $product, $popupMessages) {
+                $buildDomain = BuildDomain::where('site_url', $siteUrl)
+                    ->where('is_app_license_check', true)
+                    ->where('plugin_name', $product)
+                    ->lockForUpdate()
+                    ->first();
+
+                // Handle the case where the free trial exists but the premium license domain is not configured.
+                if (!$buildDomain) {
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_FORBIDDEN,
+                        'Premium license not configured for this domain. Please activate the paid license in your plugin settings.',
+                        ['license_type' => 'invalid', 'data' => [], 'popup_message' => $popupMessages]
+                    );
+                }
+
+                // A single, cleaner query for fluent info.
+                $fluentInfo = FluentInfo::where('product_slug', $buildDomain->plugin_name)
+                    ->where('is_active', true)
+                    ->first();
+
+                if (!$fluentInfo || !is_numeric($fluentInfo->item_id) || !filter_var($fluentInfo->api_url, FILTER_VALIDATE_URL)) {
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_UNPROCESSABLE_ENTITY,
+                        'Invalid Fluent plugin configuration. Please contact support.',
+                        ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
+                    );
+                }
+
+                $activationHash = FluentLicenseInfo::where('license_key', $buildDomain->license_key)
+                    ->where('site_url', $siteUrl)
+                    ->value('activation_hash');
+
+                if (!$activationHash) {
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_FORBIDDEN,
+                        'License data not found. Please activate your license first.',
+                        ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
+                    );
+                }
+
+                try {
+                    $response = Http::timeout(15)
+                        ->retry(2, 100)
+                        ->get($fluentInfo->api_url, [
+                            'fluent-cart' => 'check_license',
+                            'license_key' => $buildDomain->license_key,
+                            'activation_hash' => $activationHash,
+                            'item_id' => (int) $fluentInfo->item_id,
+                            'site_url' => $siteUrl,
+                        ]);
+
+                    if (!$response->successful()) {
+                        Log::warning('Fluent API call failed', ['status' => $response->status(), 'response' => $response->body()]);
+
+                        return $this->jsonResponse(
+                            $request,
+                            Response::HTTP_FORBIDDEN,
+                            "API responded with an error.",
+                            ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages, 'error_type' => $response->status()]
+                        );
+                    }
+
+                    $data = $response->json();
+
+                    if (!isset($data['success']) || $data['success'] !== true) {
+                        $error = $data['error_type'] ?? $data['error'] ?? 'unknown_error';
+                        $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is invalid.');
+
+                        return $this->jsonResponse(
+                            $request,
+                            Response::HTTP_FORBIDDEN,
+                            $message,
+//                            ['popup_message' => $popupMessages, 'error_type' => $error]
+                            ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages,'error_type' => $error]
+                        );
+                    }
+
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_OK,
+                        'Your premium license key is valid.',
+                        ['license_type' => 'premium', 'data' => $data, 'popup_message' => $popupMessages]
+                    );
+
+                } catch (ConnectException $e) {
+                    Log::warning('License server connection failed', ['error' => $e->getMessage(), 'api_url' => $fluentInfo->api_url]);
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_SERVICE_UNAVAILABLE,
+                        'License server is temporarily unavailable. Please try again later.',
+                        ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
+                    );
+                } catch (Exception $e) {
+                    Log::error('App license check failed', ['error' => $e->getMessage(), 'site_url' => $siteUrl, 'product' => $product]);
+                    return $this->jsonResponse(
+                        $request,
+                        Response::HTTP_INTERNAL_SERVER_ERROR,
+                        'An unexpected error occurred while validating the license.',
+                        ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
+                    );
+                }
+            });
+        }
     }
 }

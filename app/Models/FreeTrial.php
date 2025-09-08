@@ -24,7 +24,8 @@ class FreeTrial extends Model
         'activation_limit',
         'activations_count',
         'expiration_date',
-        'grace_period_date'
+        'grace_period_date',
+        'is_fluent_license_check'
     ];
 
     public static function boot() {
