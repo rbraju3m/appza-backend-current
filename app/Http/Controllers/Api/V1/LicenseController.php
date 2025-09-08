@@ -422,7 +422,7 @@ class LicenseController extends Controller
               'activation_limit' => $licenseData->activation_limit,
               'activations_count' => $licenseData->activations_count,
               'expiration_date' => $licenseData->expiration_date,
-              'grace_period_date' => $licenseData->grace_period_date,
+//              'grace_period_date' => $licenseData->grace_period_date,
             ];
             if ($isValidFreeTrial) {
                 return $this->jsonResponse(
