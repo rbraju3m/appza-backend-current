@@ -524,10 +524,15 @@ class LicenseController extends Controller
                         );
                     }
 
+                    $message = "Your premium license key is valid.";
+                    if ($data['status'] == 'expired'){
+                        $message = "Your Premium License is expire , please renew again.";
+                    }
+
                     return $this->jsonResponse(
                         $request,
                         Response::HTTP_OK,
-                        'Your premium license key is valid.',
+                        $message,
                         ['license_type' => 'premium', 'data' => $data, 'popup_message' => $popupMessages]
                     );
 
