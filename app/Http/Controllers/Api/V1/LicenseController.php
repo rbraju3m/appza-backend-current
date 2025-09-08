@@ -544,8 +544,8 @@ class LicenseController extends Controller
         // Check Free Trial with better query optimization
         $freeTrial = FreeTrial::where('site_url', $siteUrl)
             ->where('product_slug', $product)
-            #->where('grace_period_date', '>=', now()->format('Y-m-d'))
-            ->where('expiration_date', '>=', now()->format('Y-m-d'))
+            ->where('grace_period_date', '>=', now()->format('Y-m-d'))
+            #->where('expiration_date', '>=', now()->format('Y-m-d'))
             ->where('is_active', true)
             ->select([
                 'status', 'activation_limit', 'activation_hash', 'activations_count',
