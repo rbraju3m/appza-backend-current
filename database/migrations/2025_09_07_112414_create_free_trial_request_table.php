@@ -38,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('free_trial_request');
+        Schema::dropIfExists('appza_free_trial_request');
     }
 };
