@@ -319,7 +319,6 @@ class LicenseController extends Controller
 
         if ($validator->fails()) {
             return $this->jsonResponse(
-                $request,
                 Response::HTTP_BAD_REQUEST,
                 'Validation Error',
                 ['errors' => $validator->errors(), 'popup_message' => $popupMessages]
@@ -339,7 +338,6 @@ class LicenseController extends Controller
             // No active license found for the given site and product.
             // This is a more accurate status than 400 Bad Request.
             return $this->jsonResponse(
-                $request,
                 Response::HTTP_NOT_FOUND,
                 'Plugin not installed or no license found.',
                 ['license_type' => 'invalid','data' => [], 'popup_message' => $popupMessages]
@@ -366,7 +364,6 @@ class LicenseController extends Controller
             ];
             if ($isValidFreeTrial) {
                 return $this->jsonResponse(
-                    $request,
                     Response::HTTP_OK,
                     'Your free trial license is valid.',
                     ['license_type' => 'free_trial', 'data' => $data, 'popup_message' => $popupMessages]
@@ -374,7 +371,6 @@ class LicenseController extends Controller
             } else {
                 $data['status'] = 'expired'; // Only for response, not database.
                 return $this->jsonResponse(
-                    $request,
                     Response::HTTP_OK,
                     'Your free trial has expired. Please purchase a paid license.',
                     ['license_type' => 'free_trial', 'data' => $data, 'popup_message' => $popupMessages]
@@ -394,7 +390,6 @@ class LicenseController extends Controller
                 // Handle the case where the free trial exists but the premium license domain is not configured.
                 if (!$buildDomain) {
                     return $this->jsonResponse(
-                        $request,
                         Response::HTTP_FORBIDDEN,
                         'Premium license not configured for this domain. Please activate the paid license in your plugin settings.',
                         ['license_type' => 'invalid', 'data' => [], 'popup_message' => $popupMessages]
@@ -408,7 +403,6 @@ class LicenseController extends Controller
 
                 if (!$fluentInfo || !is_numeric($fluentInfo->item_id) || !filter_var($fluentInfo->api_url, FILTER_VALIDATE_URL)) {
                     return $this->jsonResponse(
-                        $request,
                         Response::HTTP_UNPROCESSABLE_ENTITY,
                         'Invalid Fluent plugin configuration. Please contact support.',
                         ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
@@ -421,7 +415,6 @@ class LicenseController extends Controller
 
                 if (!$activationHash) {
                     return $this->jsonResponse(
-                        $request,
                         Response::HTTP_FORBIDDEN,
                         'License data not found. Please activate your license first.',
                         ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
@@ -443,7 +436,6 @@ class LicenseController extends Controller
                         Log::warning('Fluent API call failed', ['status' => $response->status(), 'response' => $response->body()]);
 
                         return $this->jsonResponse(
-                            $request,
                             Response::HTTP_FORBIDDEN,
                             "API responded with an error.",
                             ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages, 'error_type' => $response->status()]
@@ -457,7 +449,6 @@ class LicenseController extends Controller
                         $message = $this->getFluentErrorMessage($error, $data['message'] ?? 'License is invalid.');
 
                         return $this->jsonResponse(
-                            $request,
                             Response::HTTP_FORBIDDEN,
                             $message,
                             ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages,'error_type' => $error]
@@ -470,7 +461,6 @@ class LicenseController extends Controller
                     }
 
                     return $this->jsonResponse(
-                        $request,
                         Response::HTTP_OK,
                         $message,
                         ['license_type' => 'premium', 'data' => $data, 'popup_message' => $popupMessages]
@@ -479,7 +469,6 @@ class LicenseController extends Controller
                 } catch (ConnectException $e) {
                     Log::warning('License server connection failed', ['error' => $e->getMessage(), 'api_url' => $fluentInfo->api_url]);
                     return $this->jsonResponse(
-                        $request,
                         Response::HTTP_SERVICE_UNAVAILABLE,
                         'License server is temporarily unavailable. Please try again later.',
                         ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
@@ -487,7 +476,6 @@ class LicenseController extends Controller
                 } catch (Exception $e) {
                     Log::error('App license check failed', ['error' => $e->getMessage(), 'site_url' => $siteUrl, 'product' => $product]);
                     return $this->jsonResponse(
-                        $request,
                         Response::HTTP_INTERNAL_SERVER_ERROR,
                         'An unexpected error occurred while validating the license.',
                         ['license_type' => 'invalid', 'data' => [],'popup_message' => $popupMessages]
