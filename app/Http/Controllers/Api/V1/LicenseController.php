@@ -161,6 +161,7 @@ class LicenseController extends Controller
             );
 
             BuildDomain::where('site_url', $normalizedSiteUrl)
+                ->where('plugin_name', $this->pluginName)
                 ->where('id', '!=', $buildDomain->id)
                 ->update(['is_app_license_check' => 0]);
 
