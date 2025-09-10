@@ -150,11 +150,10 @@ class LicenseController extends Controller
             DB::beginTransaction();
 
             $buildDomain = BuildDomain::updateOrCreate(
-                ['site_url' => $normalizedSiteUrl, 'license_key' => $data['license_key']],
+                ['site_url' => $normalizedSiteUrl, 'license_key' => $data['license_key'],'plugin_name'=> $this->pluginName],
                 [
                     'package_name' => 'com.' . $this->getSubdomainAndDomain($normalizedSiteUrl) . '.live',
                     'email' => $data['email'] ?? $this->email,
-                    'plugin_name' => $this->pluginName,
                     'fluent_item_id' => $fluentInfo->item_id,
                     'is_app_license_check' => 1,
                     'is_deactivated' => 0
