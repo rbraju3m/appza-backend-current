@@ -157,8 +157,9 @@ class PluginController extends Controller
             $pluginData['version'] = $validated['installed_version'];
             $pluginData['download_url'] = null;
         }
+        return \response($pluginData);
 
-        return $this->jsonResponse(Response::HTTP_OK, 'success', ['data' => $pluginData]);
+//        return $this->jsonResponse(Response::HTTP_OK, 'success', ['data' => $pluginData]);
     }
 
     public function pluginVersionCheck1(Request $request)
