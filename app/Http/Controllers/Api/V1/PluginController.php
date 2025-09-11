@@ -11,6 +11,8 @@ use App\Models\SupportsPlugin;
 use App\Models\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Exception;
@@ -122,39 +124,27 @@ class PluginController extends Controller
         return response()->json($response, $status, ['Content-Type' => 'application/json'], JSON_UNESCAPED_SLASHES);
     }
 
-
-
-    public function pluginVersionCheck1(Request $request)
-    {
-        $data = $request->only(['current_version','plugin_slug']);
-        $findProductName = ProductAddon::join('appza_fluent_informations','appza_fluent_informations.id','=','appza_product_addons.product_id')
-            ->where('appza_product_addons.addon_slug',$data['plugin_slug'])
-            ->select('appza_fluent_informations.product_slug')->first();
-
-        if ($findProductName['product_slug'] != $this->pluginName) {
-            return $this->jsonResponse(Response::HTTP_BAD_REQUEST, 'Product Addon not found');
-        }
-
-        if (!$this->authorization) {
-            $findPluginJson = ProductAddon::where('addon_slug',$data['plugin_slug'])->first();
-            $customJson = json_decode($findPluginJson->addon_json_info, true);
-            $customJson['version'] = $data['current_version'];
-            return $this->jsonResponse( Response::HTTP_OK, 'success',
-                ['data' => $customJson]);
-        }
-
-        $findPluginJson = ProductAddon::where('addon_slug',$data['plugin_slug'])->first();
-        return $this->jsonResponse( Response::HTTP_OK, 'success', ['data' => json_decode($findPluginJson->addon_json_info, true)]);
-    }
-
-
     public function pluginVersionCheck(Request $request)
     {
-        $validated = $request->validate([
-            'installed_version' => 'required|string',
-            'plugin_slug'     => 'required|string',
+        // Create validator
+        $validator = Validator::make($request->all(), [
+            'installed_version' => 'required',
+            'plugin_slug'       => 'required',
         ]);
 
+        // Check for validation errors
+        if ($validator->fails()) {
+            return $this->jsonResponse(
+                Response::HTTP_BAD_REQUEST,
+                'Validation Error',
+                ['errors' => $validator->errors()]
+            );
+        }
+
+        // Get validated data as array
+        $validated = $validator->validated();
+
+        // Find the plugin
         $findPluginJson = ProductAddon::where('addon_slug', $validated['plugin_slug'])->first();
 
         if (!$findPluginJson) {
@@ -171,6 +161,47 @@ class PluginController extends Controller
         return $this->jsonResponse(Response::HTTP_OK, 'success', ['data' => $pluginData]);
     }
 
+    public function pluginVersionCheck1(Request $request)
+    {
+        $validated = $request->validate([
+            'installed_version' => 'required|string',
+            'plugin_slug'       => 'required|string',
+        ]);
+
+        $findPluginJson = ProductAddon::where('addon_slug', $validated['plugin_slug'])->first();
+
+        if (!$findPluginJson) {
+            return $this->jsonResponse(Response::HTTP_NOT_FOUND, 'Plugin not found');
+        }
+
+        $pluginData = json_decode($findPluginJson->addon_json_info, true);
+
+        if (!$this->authorization) {
+            // Unauthorized → do not expose download URL
+            $pluginData['version'] = $validated['installed_version'];
+            $pluginData['download_url'] = null;
+        } else {
+            // Authorized → generate temporary signed URL for download
+            if (!empty($pluginData['download_url'])) {
+                try {
+                    // Extract the path inside your R2 bucket
+                    // Example: addon/fcom-mobile.zip
+                    $filePath = parse_url($pluginData['download_url'], PHP_URL_PATH);
+                    $filePath = ltrim($filePath, '/'); // remove leading slash
+
+                    $pluginData['download_url'] = Storage::disk('r2')->temporaryUrl(
+                        $filePath,
+                        now()->addMinutes(10) // expires in 5 minutes
+                    );
+                } catch (\Exception $e) {
+                    // fallback: keep original if signing fails
+                    $pluginData['download_url'] = $pluginData['download_url'];
+                }
+            }
+        }
+
+        return $this->jsonResponse(Response::HTTP_OK, 'success', ['data' => $pluginData]);
+    }
 
     protected function jsonResponse(int $statusCode, string $message, array $additionalData = []): JsonResponse
     {
