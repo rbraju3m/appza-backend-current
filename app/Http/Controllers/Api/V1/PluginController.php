@@ -157,17 +157,28 @@ class PluginController extends Controller
             $pluginData['version'] = $validated['installed_version'];
             $pluginData['download_url'] = null;
         }
-        return \response($pluginData);
-
-//        return $this->jsonResponse(Response::HTTP_OK, 'success', ['data' => $pluginData]);
+        return response()->json($pluginData);
     }
 
     public function pluginVersionCheck1(Request $request)
     {
-        $validated = $request->validate([
-            'installed_version' => 'required|string',
-            'plugin_slug'       => 'required|string',
+        // Create validator
+        $validator = Validator::make($request->all(), [
+            'installed_version' => 'required',
+            'plugin_slug'       => 'required',
         ]);
+
+        // Check for validation errors
+        if ($validator->fails()) {
+            return $this->jsonResponse(
+                Response::HTTP_BAD_REQUEST,
+                'Validation Error',
+                ['errors' => $validator->errors()]
+            );
+        }
+
+        // Get validated data as array
+        $validated = $validator->validated();
 
         $findPluginJson = ProductAddon::where('addon_slug', $validated['plugin_slug'])->first();
 
@@ -185,8 +196,6 @@ class PluginController extends Controller
             // Authorized → generate temporary signed URL for download
             if (!empty($pluginData['download_url'])) {
                 try {
-                    // Extract the path inside your R2 bucket
-                    // Example: addon/fcom-mobile.zip
                     $filePath = parse_url($pluginData['download_url'], PHP_URL_PATH);
                     $filePath = ltrim($filePath, '/'); // remove leading slash
 
@@ -195,13 +204,11 @@ class PluginController extends Controller
                         now()->addMinutes(10) // expires in 5 minutes
                     );
                 } catch (\Exception $e) {
-                    // fallback: keep original if signing fails
                     $pluginData['download_url'] = $pluginData['download_url'];
                 }
             }
         }
-
-        return $this->jsonResponse(Response::HTTP_OK, 'success', ['data' => $pluginData]);
+        return response()->json($pluginData);
     }
 
     protected function jsonResponse(int $statusCode, string $message, array $additionalData = []): JsonResponse
