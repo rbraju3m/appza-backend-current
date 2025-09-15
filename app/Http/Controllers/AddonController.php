@@ -96,7 +96,7 @@ class AddonController extends Controller
 
             DB::commit();
 
-            return redirect()->route('addon_version_list')->with('success', 'Addon created successfully.');
+            return redirect()->route('addon_version_list')->with('message', 'Addon created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error creating addon: ' . $e->getMessage(), [
@@ -104,7 +104,7 @@ class AddonController extends Controller
             ]);
 
             return redirect()->route('addon_version_list')
-                ->with('error', 'Failed to create addon. Please try again.');
+                ->with('validate', 'Failed to create addon. Please try again.');
         }
     }
 
@@ -184,7 +184,7 @@ class AddonController extends Controller
 
             return redirect()
                 ->route('addon_version_added', $addonId)
-                ->with('success', 'New version created successfully.');
+                ->with('message', 'New version upload successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error creating addon version: ' . $e->getMessage(), [
@@ -192,7 +192,7 @@ class AddonController extends Controller
             ]);
 
             return redirect()->route('addon_version_added', $addonId)
-                ->with('error', 'Failed to add new version. Please try again.');
+                ->with('validate', 'Failed to add new version. Please try again.');
         }
     }
 }
