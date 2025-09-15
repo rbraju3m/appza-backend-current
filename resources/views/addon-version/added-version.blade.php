@@ -34,12 +34,6 @@
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.version')}}</th>
-                                    {{--                                    <th>{{__('messages.prefix')}}</th>--}}
-                                    {{--                                    <th>{{__('messages.Disable')}}</th>--}}
-                                    {{--                                    <th>{{__('messages.image')}}</th>--}}
-                                    <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
-                                        <i class="fas fa-cog"></i>
-                                    </th>
                                 </tr>
                                 </thead>
 
@@ -58,15 +52,6 @@
                                             <td>{{$addon->addon_name}}</td>
                                             <td>{{$addon->addon_slug}}</td>
                                             <td>{{$addon->version}}</td>
-                                            <td>
-                                                <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                    {{--                                                        <a title="Added Version" class="btn btn-outline-danger btn-sm" href="{{route('addon_version_added',[$addon->id,$addon->addon_id])}}"><i class="fas fa-font"></i></a>--}}
-                                                    {{--@if((auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN' || auth()->user()->user_type === 'PLUGIN') && $addon->is_edited==1 )
-                                                        <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('addon_version_edit',$addon->id)}}"><i class="fas fa-edit"></i></a>
-                                                    @endif--}}
-                                                    {{--                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$page->id)}}"><i class="fas fa-trash"></i></a>--}}
-                                                </div>
-                                            </td>
                                         </tr>
                                         @php $i++; @endphp
                                     @endforeach
