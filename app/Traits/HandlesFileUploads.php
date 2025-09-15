@@ -18,20 +18,18 @@ trait HandlesFileUploads
      * @param string|null $disk
      * @return string|null
      */
-    public function handleFileUpload(Request $request, $model, $attribute, $directory, ?string $disk = 'r2'): ?string
+
+    public function handleFileUpload(Request $request, object $model, string $attribute, string $directory = 'uploads', ?string $disk = 'r2'): ?string
     {
-        if ($request->file($attribute)) {
-            // Delete old file if it exists
-            if (!empty($model->$attribute)) {
+        if ($request->hasFile($attribute)) {
+            if ($model && !empty($model->$attribute)) {
                 Storage::disk($disk)->delete($model->$attribute);
             }
 
-            // Store the new file
             return $request->file($attribute)->store($directory, $disk);
         }
 
-        // If no upload, return the existing file path
-        return $model->$attribute;
+        return $model ? $model->$attribute : null;
     }
 
     public function handleFileUploadWithOriginalName(Request $request, $model, $attribute, $directory = 'addons', ?string $disk = 'r2'): ?string
