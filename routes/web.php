@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddonController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BuildOrderController;
@@ -167,6 +168,19 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::put('sort/update',[PluginController::class, 'pluginSortUpdate'])->name('plugin_sort_update');
     });
     /* plugin route end */
+
+    /* addon-version route start */
+    Route::prefix('addon-version')->group(function () {
+        Route::get('list',[AddonController::class,'index'])->name('addon_version_list');
+        Route::get('create',[AddonController::class,'create'])->name('addon_version_add');
+        Route::POST('store',[AddonController::class,'store'])->name('addon_version_store');
+
+        Route::get('added/{addon_id}', [AddonController::class,'addedVersion'])->name('addon_version_added');
+        Route::post('added/store/{addon_id}', [AddonController::class,'addedVersionStore'])->name('added_version_store');
+
+    });
+    /* addon-version route start */
+
 
     /* build-order start */
     Route::prefix('setup')->group(function () {

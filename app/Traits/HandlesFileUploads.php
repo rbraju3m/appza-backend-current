@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 trait HandlesFileUploads
 {
@@ -32,4 +33,26 @@ trait HandlesFileUploads
         // If no upload, return the existing file path
         return $model->$attribute;
     }
+
+    public function handleFileUploadWithOriginalName(Request $request, $model, $attribute, $directory = 'addons', ?string $disk = 'r2'): ?string
+    {
+        if ($request->hasFile($attribute)) {
+            $file = $request->file($attribute);
+
+            // Delete old file if it exists
+            if (!empty($model->$attribute)) {
+                Storage::disk($disk)->delete($model->$attribute);
+            }
+
+            $originalName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+            $extension    = $file->getClientOriginalExtension();
+            $filename     = $originalName . '.' . $extension;
+
+            return $file->storeAs($directory, $filename, $disk); // stored path
+        }
+
+        // No upload, keep old file
+        return $model->$attribute;
+    }
+
 }

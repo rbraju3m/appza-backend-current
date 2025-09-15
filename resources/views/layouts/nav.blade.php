@@ -76,8 +76,6 @@
             </ul>
         </div>
 
-
-
         <div class="nav-group {{ Request::is('appza/theme/*') ? 'show' : ''}}">
             <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.Theme')}}</div>
             <ul class="nav-sidebar">
@@ -122,6 +120,19 @@
             </div>
         @endif
 
+
+
+        @if(auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN' || auth()->user()->user_type === 'PLUGIN')
+            <div class="nav-group {{ Request::is('appza/addon-version/*') ? 'show' : ''}}">
+                <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.AddonVersion')}}</div>
+                <ul class="nav-sidebar">
+                    <li class="nav-item ">
+                        <a href="{{route('addon_version_list')}}" class="nav-link {{ Request::is('appza/addon-version/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.AddonVersion')}}</span></a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
         @if(auth()->user()->user_type === 'DEVELOPER')
             <div class="nav-group {{ Request::is('appza/request-log/*') ? 'show' : ''}}">
                 <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.RequestLog')}}</div>
@@ -133,15 +144,6 @@
             </div>
         @endif
 
-
-            {{--<div class="nav-group {{ Request::is(app()->getLocale().'/appfiy/apk/*') ? 'show' : ''}}">
-                <div class="nav-group-label" style="font-size: 15px !important;">{{__('appfiy::messages.ApkBuildHistory')}}</div>
-                <ul class="nav-sidebar">
-                    <li class="nav-item ">
-                        <a href="{{route('apk_list',app()->getLocale())}}" class="nav-link {{ Request::is(app()->getLocale().'/appfiy/apk/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('appfiy::messages.apkList')}}</span></a>
-                    </li>
-                </ul>
-            </div>--}}
 
     </div><!-- sidebar-body -->
 
