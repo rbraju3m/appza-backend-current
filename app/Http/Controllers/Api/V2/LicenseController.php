@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V2;
 
+use App\Enums\LicenseResponseStatus;
 use App\Models\BuildDomain;
 use App\Models\FluentInfo;
 use App\Models\FluentLicenseInfo;
@@ -41,12 +42,12 @@ class LicenseController extends Controller
         $this->pluginName = $data['plugin_name'] ?? '';
     }
 
-    protected function jsonResponse(int $statusCode, string $message, array $additionalData = []): JsonResponse
+    protected function jsonResponse(string $status, array $message, array $additionalData = []): JsonResponse
     {
         return response()->json(array_merge([
-            'status' => $statusCode,
+            'status' => $status,
             'message' => $message,
-        ], $additionalData), $statusCode);
+        ], $additionalData));
     }
 
     protected function getFluentErrorMessage($code, $default = 'License validation failed.')
@@ -156,13 +157,13 @@ class LicenseController extends Controller
 
     public function appLicenseCheck(Request $request)
     {
-        dump('ok');
-        /*// Caching popup messages is a good practice, keep it.
-        $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
+        // Caching popup messages is a good practice, keep it.
+        /*$popupMessages = Cache::remember('active_popup_messages', 3600, function () {
             return PopupMessage::where('is_active', true)
                 ->get(['message_type as type', 'message'])
                 ->toArray();
-        });
+        });*/
+        $popupMessages = [];
 
         // Validate parameters
         $validator = Validator::make($request->all(), [
@@ -170,50 +171,58 @@ class LicenseController extends Controller
             'product' => 'required|string|in:appza,lazy_task,fcom_mobile',
         ]);
 
+
         if ($validator->fails()) {
             return $this->jsonResponse(
-                Response::HTTP_BAD_REQUEST,
-                'Validation Error',
-                ['errors' => $validator->errors(), 'popup_message' => $popupMessages]
+                LicenseResponseStatus::Invalid->value,
+                [
+                    'user' => ['message' => $validator->errors()->first(),'message_id' => 1],
+                    'admin' => ['message' => 'admin message','message_id' => 2] ,
+                    'special' => ['message' => 'special message','message_id' => 3]
+                ],
+                ['popup_message' => $popupMessages]
             );
         }
 
         $siteUrl = $this->normalizeUrl($request->get('site_url'));
         $product = $request->get('product');
 
+//        dump($siteUrl, $product);
+
         // Fetch the license data in a single, efficient query
-        $licenseData = FreeTrial::where('site_url', $siteUrl)
+        $freeTrailLicenseData = FreeTrial::where('site_url', $siteUrl)
             ->where('product_slug', $product)
             ->where('is_active', true)
             ->first();
 
-        if (!$licenseData) {
-            // No active license found for the given site and product.
-            // This is a more accurate status than 400 Bad Request.
+        if (!$freeTrailLicenseData) {
             return $this->jsonResponse(
-                Response::HTTP_NOT_FOUND,
+                LicenseResponseStatus::Invalid->value,
                 'Plugin not installed or no license found.',
-                ['license_type' => 'invalid','data' => [], 'popup_message' => $popupMessages]
+                ['popup_message' => $popupMessages]
             );
         }
 
         // Handle free trial license check
-        if ($licenseData->is_fluent_license_check === 0) {
-            $isValidFreeTrial = ($licenseData->grace_period_date >= now()->format('Y-m-d'));
+        if ($freeTrailLicenseData->is_fluent_license_check === 0) {
+            $isValidFreeTrial = ($freeTrailLicenseData->grace_period_date >= now()->format('Y-m-d'));
+
+            dump($isValidFreeTrial);
+
             $data = [
-              'status' => $licenseData->status,
-              'site_url' => $licenseData->site_url,
-              'name' => $licenseData->name,
-              'email' => $licenseData->email,
-              'product_id' => $licenseData->product_id,
-              'variation_id' => $licenseData->variation_id,
-              'license_key' => $licenseData->license_key,
-              'product_title' => $licenseData->product_title,
-              'variation_title' => $licenseData->variation_title,
-              'activation_limit' => $licenseData->activation_limit,
-              'activations_count' => $licenseData->activations_count,
-              'expiration_date' => $licenseData->expiration_date,
-//              'grace_period_date' => $licenseData->grace_period_date,
+              'status' => $freeTrailLicenseData->status,
+              'site_url' => $freeTrailLicenseData->site_url,
+              'name' => $freeTrailLicenseData->name,
+              'email' => $freeTrailLicenseData->email,
+              'product_id' => $freeTrailLicenseData->product_id,
+              'variation_id' => $freeTrailLicenseData->variation_id,
+              'license_key' => $freeTrailLicenseData->license_key,
+              'product_title' => $freeTrailLicenseData->product_title,
+              'variation_title' => $freeTrailLicenseData->variation_title,
+              'activation_limit' => $freeTrailLicenseData->activation_limit,
+              'activations_count' => $freeTrailLicenseData->activations_count,
+              'expiration_date' => $freeTrailLicenseData->expiration_date,
+//              'grace_period_date' => $freeTrailLicenseData->grace_period_date,
             ];
             if ($isValidFreeTrial) {
                 return $this->jsonResponse(
@@ -232,7 +241,7 @@ class LicenseController extends Controller
         }
 
         // Handle premium/fluent license check
-        if ($licenseData->is_fluent_license_check === 1) {
+        /*if ($freeTrailLicenseData->is_fluent_license_check === 1) {
             return DB::transaction(function () use ($request, $siteUrl, $product, $popupMessages) {
                 $buildDomain = BuildDomain::where('site_url', $siteUrl)
                     ->where('is_app_license_check', true)
