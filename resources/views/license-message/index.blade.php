@@ -50,13 +50,15 @@
                                         @foreach($licenseMessages as $message)
                                             <tr>
                                                 <td>{{$serial++}}</td>
-                                                <td>{{$message->product_name}}</td>
+                                                <td>{{$message->product->product_name}}</td>
                                                 <td>{{$message->license_type}}</td>
-                                                <td>{{$message->logic_name}} {{$message->logic_slug}}</td>
+                                                <td>{{$message->logic->name}} {{$message->logic->slug}}</td>
                                                 <td style="text-align: left">
-                                                    <p><b>User :: </b>{{$message->message_user}}</p>
-                                                    <p><b>Admin :: </b>{{$message->message_admin}}</p>
-                                                    <p><b>Special :: </b>{{$message->message_special}}</p>
+                                                    @if($message->message_details)
+                                                        @foreach($message->message_details as $m)
+                                                            <p><b>{{$m->type}} :: </b>{{$m->message}}</p>
+                                                        @endforeach
+                                                    @endif
                                                 </td>
 
                                                 <td>

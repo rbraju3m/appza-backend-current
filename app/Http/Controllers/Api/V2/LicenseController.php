@@ -208,7 +208,7 @@ class LicenseController extends Controller
 //        dump($freeTrailLicenseData);
 
         if (!$freeTrailLicenseData) {
-            $getMessages = LicenseMessage::join('appza_fluent_informations','appza_fluent_informations.id','=','license_messages.product_id')
+            /*$getMessages = LicenseMessage::join('appza_fluent_informations','appza_fluent_informations.id','=','license_messages.product_id')
                 ->join('license_logics','license_logics.id','=','license_messages.license_logic_id')
                 ->where('appza_fluent_informations.product_slug', $product)
                 ->where('license_logics.slug','license_not_found')
@@ -216,10 +216,36 @@ class LicenseController extends Controller
                 ->select([
                     'license_messages.id','license_messages.message_user','license_messages.message_admin','license_messages.message_special'
                 ])
+                ->first();*/
+
+            $getMessages = LicenseMessage::with('message_details')
+                ->whereHas('product', fn($q) => $q->where('product_slug', $product))
+                ->whereHas('logic', fn($q) => $q->where('slug', 'license_not_found'))
+                ->where('is_active', true)
                 ->first();
-//            dump($getMessages);
 
             return $this->jsonResponse(
+                LicenseResponseStatus::Invalid->value,
+                [
+                    'user'       => [
+                        'id' => $getMessages?->message_details->firstWhere('type','user')?->id,
+                        'message' => $getMessages?->message_details->firstWhere('type','user')?->message,
+                    ],
+                    'admin'       => [
+                        'id' => $getMessages?->message_details->firstWhere('type','admin')?->id,
+                        'message' => $getMessages?->message_details->firstWhere('type','admin')?->message,
+                    ],
+                    'special'       => [
+                        'id' => $getMessages?->message_details->firstWhere('type','special')?->id,
+                        'message' => $getMessages?->message_details->firstWhere('type','special')?->message,
+                    ],
+                ],
+                ['popup_message' => $popupMessages]
+            );
+
+            dump($getMessages);
+
+            /*return $this->jsonResponse(
                 LicenseResponseStatus::Invalid->value,
                 [
                     'message_id' => $getMessages->id,
@@ -228,7 +254,7 @@ class LicenseController extends Controller
                     'special' => $getMessages->message_special,
                 ],
                 ['popup_message' => $popupMessages]
-            );
+            );*/
         }
 
         // Handle free trial license check

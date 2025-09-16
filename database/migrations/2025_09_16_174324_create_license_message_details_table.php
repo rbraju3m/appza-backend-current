@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('license_messages', function (Blueprint $table) {
+        Schema::create('license_message_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->nullable()->constrained('appza_fluent_informations')->nullOnDelete();
-            $table->foreignId('addon_id')->nullable()->constrained('appza_product_addons')->nullOnDelete();
-            $table->foreignId('license_logic_id')->constrained('license_logics')->cascadeOnDelete();
-            $table->string('license_type'); // free_trial,premium
+            $table->foreignId('message_id')->nullable()->constrained('license_messages')->nullOnDelete();
+            $table->string('type')->nullable(); //user, admin, special
+            $table->text('message')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_show')->default(false);
             $table->boolean('is_feature')->default(false);
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('license_messages');
+        Schema::dropIfExists('license_message_details');
     }
 };

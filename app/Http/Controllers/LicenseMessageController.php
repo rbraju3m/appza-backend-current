@@ -9,6 +9,7 @@ use App\Models\Component;
 use App\Models\FluentInfo;
 use App\Models\LicenseLogic;
 use App\Models\LicenseMessage;
+use App\Models\LicenseMessageDetails;
 use App\Models\Page;
 use App\Models\Scope;
 use App\Models\SupportsPlugin;
@@ -32,29 +33,23 @@ class LicenseMessageController extends Controller
      */
     public function index()
     {
-
-        // Retrieve active page entries
-        $licenseMessages = LicenseMessage::where('license_messages.is_active', 1)
-            ->join('appza_fluent_informations', 'appza_fluent_informations.id', '=', 'license_messages.product_id')
-            ->leftjoin('appza_product_addons', 'appza_product_addons.id', '=', 'license_messages.addon_id')
-            ->join('license_logics', 'license_logics.id', '=', 'license_messages.license_logic_id')
+        $licenseMessages = LicenseMessage::with([
+            'product:id,product_name,product_slug',
+            'logic:id,name,slug',
+            'message_details:id,message_id,type,message'
+        ])
             ->select([
-                'license_messages.id',
-                'license_logics.name as logic_name',
-                'license_logics.slug as logic_slug',
-                'appza_fluent_informations.product_name',
-                'appza_fluent_informations.product_slug',
-//                'appza_product_addons.addon_name',
-                'license_messages.product_id',
-                'license_messages.addon_id',
-                'license_messages.license_logic_id',
-                'license_messages.license_type',
-                'license_messages.message_user',
-                'license_messages.message_admin',
-                'license_messages.message_special'
+                'id',
+                'product_id',
+                'addon_id',
+                'license_logic_id',
+                'license_type',
             ])
+            ->where('is_active', 1)
             ->orderByDesc('id')
             ->paginate(20);
+//        ->get()->toArray();
+//        dump($licenseMessages);
 
         return view('license-message.index',compact('licenseMessages'));
     }
@@ -79,13 +74,19 @@ class LicenseMessageController extends Controller
     public function store(LicenseMessageRequest $request)
     {
         $inputs = $request->validated();
-//        dump($inputs);
 
         try {
             // Start database transaction
             DB::beginTransaction();
 
-            LicenseMessage::create($inputs);
+            $licenseMessage = LicenseMessage::create($inputs);
+
+            $licenseMessage->message_details()->createMany([
+                ['type' => 'user',    'message' => $inputs['message_user']],
+                ['type' => 'admin',   'message' => $inputs['message_admin']],
+                ['type' => 'special', 'message' => $inputs['message_special']],
+            ]);
+
 
             // Commit the transaction if everything is successful
             DB::commit();
