@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Addon;
 use App\Models\Setup;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,30 +17,22 @@ class FreeTrialResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Determine the hash key based on plugin
+        $findAddonDownload = Addon::join('appza_fluent_informations','appza_fluent_informations.id','=','appza_product_addons.product_id')
+            ->where('appza_fluent_informations.product_slug', $this->product_slug)
+            ->where('appza_product_addons.addon_slug', $this->plugin_slug)
+            ->select('appza_product_addons.addon_json_info')
+            ->lockForUpdate()
+            ->first();
 
-        /*$hashKey = match ($this->plugin_name) {
-            'appza'        => 'appza_hash',
-            'fcom_mobile'  => 'fcom_mobile_hash',
-            default        => 'lazy_task_hash',
-        };*/
-
-//        $setups = Setup::where('is_active', 1)->get()->toArray();
-//        dump($setups);
-// Prepare dynamic setup data
-        /*$setupData = [];
-        foreach ($setups as $setup) {
-            $setupData[$setup['key']] = $setup['value'];
-        }*/
-
-        return [
-            'status' => 200, // HTTP OK
-            'url' => $request->getUri(),
-            'method' => $request->getMethod(),
+        $data = [
+            'status'  => 200,
+            'url'     => $request->getUri(),
+            'method'  => $request->getMethod(),
             'message' => 'Created Successfully',
-            /*'data' => [
-                $hashKey => $this->appza_hash,
-            ]+ $setupData,*/
+            'data'    => $findAddonDownload ? json_decode($findAddonDownload->addon_json_info) : null,
         ];
+
+        return $data;
+
     }
 }

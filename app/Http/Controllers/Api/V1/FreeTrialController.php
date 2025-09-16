@@ -67,6 +67,7 @@ class FreeTrialController extends Controller
             }
 
             $data = FreeTrial::create($inputs);
+            $data['plugin_slug'] = $inputs['plugin_slug'] ?? null;
 
             DB::commit();
 

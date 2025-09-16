@@ -18,6 +18,7 @@ class FreeTrialRequest extends FormRequest
             'name' => 'required|string',
             'email' => ['required', 'email'],
             'site_url' => ['required', 'url'],
+            'plugin_slug' => ['required', 'string'],
         ];
         return $rules;
     }
