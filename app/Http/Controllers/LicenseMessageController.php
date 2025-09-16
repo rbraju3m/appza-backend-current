@@ -1,0 +1,243 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\LicenseLogicRequest;
+use App\Http\Requests\LicenseMessageRequest;
+use App\Http\Requests\PageRequest;
+use App\Models\Component;
+use App\Models\FluentInfo;
+use App\Models\LicenseLogic;
+use App\Models\LicenseMessage;
+use App\Models\Page;
+use App\Models\Scope;
+use App\Models\SupportsPlugin;
+use App\Traits\HandlesFileUploads;
+use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
+
+class LicenseMessageController extends Controller
+{
+    use ValidatesRequests;
+    use HandlesFileUploads;
+
+
+    /**
+     * Display a listing of the resource.
+     * @return Renderable
+     */
+    public function index()
+    {
+
+        // Retrieve active page entries
+        $licenseMessages = LicenseMessage::where('license_messages.is_active', 1)
+            ->join('appza_fluent_informations', 'appza_fluent_informations.id', '=', 'license_messages.product_id')
+            ->leftjoin('appza_product_addons', 'appza_product_addons.id', '=', 'license_messages.addon_id')
+            ->join('license_logics', 'license_logics.id', '=', 'license_messages.license_logic_id')
+            ->select([
+                'license_messages.id',
+                'license_logics.name as logic_name',
+                'license_logics.slug as logic_slug',
+                'appza_fluent_informations.product_name',
+                'appza_fluent_informations.product_slug',
+//                'appza_product_addons.addon_name',
+                'license_messages.product_id',
+                'license_messages.addon_id',
+                'license_messages.license_logic_id',
+                'license_messages.license_type',
+                'license_messages.message_user',
+                'license_messages.message_admin',
+                'license_messages.message_special'
+            ])
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return view('license-message.index',compact('licenseMessages'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     * @return RedirectResponse
+     */
+    public function create()
+    {
+        $products = FluentInfo::pluck('product_name', 'id')->all();
+        $matrixs = LicenseLogic::pluck('name', 'id')->all();
+
+        $licenseType = [
+            'free_trial' => 'Free Trail',
+            'premium' => 'Premium',
+        ];
+
+        return view('license-message.add', compact('products','matrixs','licenseType'));
+    }
+
+    public function store(LicenseMessageRequest $request)
+    {
+        $inputs = $request->validated();
+//        dump($inputs);
+
+        try {
+            // Start database transaction
+            DB::beginTransaction();
+
+            LicenseMessage::create($inputs);
+
+            // Commit the transaction if everything is successful
+            DB::commit();
+
+            return redirect()->route('license_message_list')->with('success', 'Message created successfully.');
+        } catch (\Exception $e) {
+            // Rollback the transaction on error
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Error creating page: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('license_message_list')->with('error', 'Failed to create the page. Please try again.');
+        }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     * @param int $id
+     * @return Renderable
+     */
+
+    public function edit($id)
+    {
+        $data = Page::find($id);
+        $pluginDropdown = SupportsPlugin::getPluginDropdown();
+        $data['page_scope'] = Scope::where('plugin_slug', $data->plugin_slug)
+            ->where('slug', $data['slug'])
+            ->first()?->exists ?? false;
+        return view('page.edit', compact('data', 'pluginDropdown'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     * @param Request $request
+     * @param int $id
+     * @return RedirectResponse
+     */
+
+    public function update(PageRequest $request, $id)
+    {
+        // Get validated input
+        $inputs = $request->validated();
+        $page = Page::findOrFail($id); // Use findOrFail for better error handling
+
+        // Handle 'persistent_footer_buttons'
+        $inputs['persistent_footer_buttons'] = $request->has('persistent_footer_buttons') ? '{}' : null;
+
+        // Set default value for 'component_limit' if null
+        $inputs['component_limit'] = $inputs['component_limit'] ?? null;
+
+        $scope = Scope::where('page_id', $id)->firstOrFail();
+
+        try {
+            DB::beginTransaction(); // Start transaction
+
+            // Check if slug needs to be updated
+            if (isset($inputs['slug']) && $page->slug === $inputs['slug']) {
+                // Update the Page and Scope (no slug changes)
+                $page->update($inputs);
+                $scope->update($inputs);
+            } else {
+                // Update components with old slug in the scope field if slug changes
+                $scopeWiseComponent = Component::where('scope', 'LIKE', '%' . $scope->slug . '%')
+                    ->where('plugin_slug', $scope->plugin_slug) // Direct comparison
+                    ->get(); // Retrieve matching components
+
+                if ($scopeWiseComponent->isNotEmpty()) {
+                    foreach ($scopeWiseComponent as $component) {
+                        if (isset($component['scope'])) {
+                            $scopeArray = json_decode($component['scope'], true); // Decode 'scope' JSON
+
+                            if (is_array($scopeArray)) {
+                                // Replace the slug with the new slug
+                                $updatedScope = array_map(function ($item) use ($scope, $inputs) {
+                                    return $item === $scope->slug ? $inputs['slug'] : $item;
+                                }, $scopeArray);
+
+                                // Encode back to JSON and update
+                                $component->update([
+                                    'scope' => json_encode($updatedScope),
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                // Update Scope and Page with new slug
+                $scope->update($inputs);
+                $page->update($inputs);
+            }
+
+            DB::commit(); // Commit the transaction
+            return redirect()->route('page_list')->with('success', 'Page updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack(); // Rollback on error
+            \Log::error('Error updating page: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'inputs' => $inputs,
+            ]);
+            return redirect()->route('page_list')->with('error', 'Failed to update the page. Please try again.');
+        }
+    }
+
+
+
+    public function destroy($id)
+    {
+        $page = Page::findOrFail($id);
+
+        $existsComponent = Component::where('plugin_slug', $page->plugin_slug)
+            ->where('scope', 'like', '%' . $page->slug . '%')
+            ->exists();
+
+        if ($existsComponent){
+            return redirect()->route('page_list')->with('validate', 'Page already exists in component.');
+        }
+
+        try {
+            // Begin a transaction
+            DB::beginTransaction();
+
+            // Handle associated scope deletion (soft-delete)
+            $scope = Scope::where('plugin_slug', $page->plugin_slug)
+                ->where('slug', $page->slug) // Assuming 'slug' is used to link Page and Scope
+                ->first();
+
+            if ($scope) {
+                $scope->delete(); // Soft delete the scope
+            }
+
+            // Soft delete the page itself
+            $page->delete();
+
+            // Commit the transaction
+            DB::commit();
+
+            return redirect()->route('page_list')->with('success', 'Page and associated scope soft-deleted successfully.');
+        } catch (\Exception $e) {
+            // Rollback the transaction if something goes wrong
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Error during soft delete: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('page_list')->with('error', 'Failed to delete the page. Please try again.');
+        }
+    }
+
+
+}

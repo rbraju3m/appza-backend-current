@@ -350,5 +350,36 @@ return [
     | Component Group language End
     |--------------------------------------------------------------------------
     */
+    /*
+    |--------------------------------------------------------------------------
+    | license language Start
+    |--------------------------------------------------------------------------
+    */
+    'License' => 'License',
+    'Matrix' => 'Matrix',
+    'Message' => 'Message',
+    'New' => 'New',
+    'createNewMatrix' => 'New Matrix',
+    'Identifier' => 'Identifier',
+    'ChooseEvent' => 'Choose Event',
+    'Direction' => 'Direction',
+    'ChooseDirection' => 'Choose Direction',
+    'ToDays' => 'To Days',
+    'FromDays' => 'From Days',
+    'ChooseToDays' => 'Choose to days',
+    'ChooseFromDays' => 'Choose from days',
+    'LicenseType' => 'License Type',
+    'Product' => 'Product',
+    'ChooseMatrix' => 'Choose Matrix',
+    'ChooseLicenseType' => 'Choose license type',
+    'UserMessage' => 'User Message',
+    'AdminMessage' => 'Admin Message',
+    'SpecialMessage' => 'Special Message',
+    'createNewMessage' => 'New Message',
+    /*
+    |--------------------------------------------------------------------------
+    | license language End
+    |--------------------------------------------------------------------------
+    */
 
 ];

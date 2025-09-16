@@ -9,6 +9,8 @@ use App\Http\Controllers\ComponentGroupController;
 use App\Http\Controllers\GlobalConfigController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LayoutTypeController;
+use App\Http\Controllers\LicenseLogicController;
+use App\Http\Controllers\LicenseMessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PluginController;
 use App\Http\Controllers\RequestLogController;
@@ -204,5 +206,27 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('list',[RequestLogController::class,'index'])->name('request_log_list');
     });
     /* request log route end */
+
+
+    /* license message logic route start */
+    Route::prefix('license')->group(function () {
+        Route::prefix('logic')->group(function () {
+            Route::get('list',[LicenseLogicController::class,'index'])->name('license_logic_list');
+            Route::get('create',[LicenseLogicController::class,'create'])->name('license_logic_add');
+            Route::POST('store',[LicenseLogicController::class,'store'])->name('license_logic_store');
+            Route::get('edit/{id}',[LicenseLogicController::class, 'edit'])->name('license_logic_edit');
+            Route::PATCH('update/{page}',[LicenseLogicController::class, 'update'])->name('license_logic_update');
+            Route::get('delete/{id}',[LicenseLogicController::class,'destroy'])->name('license_logic_delete');
+        });
+        Route::prefix('message')->group(function () {
+            Route::get('list',[LicenseMessageController::class,'index'])->name('license_message_list');
+            Route::get('create',[LicenseMessageController::class,'create'])->name('license_message_add');
+            Route::POST('store',[LicenseMessageController::class,'store'])->name('license_message_store');
+            Route::get('edit/{id}',[LicenseMessageController::class, 'edit'])->name('license_message_edit');
+            Route::PATCH('update/{page}',[LicenseMessageController::class, 'update'])->name('license_message_update');
+            Route::get('delete/{id}',[LicenseMessageController::class,'destroy'])->name('license_message_delete');
+        });
+    });
+    /* license message logic route end */
 });
 

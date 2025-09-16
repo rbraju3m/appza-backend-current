@@ -14,14 +14,12 @@ return new class extends Migration
         Schema::create('license_logics', function (Blueprint $table) {
             $table->id();
             $table->string('name',100);
-            $table->string('type',20);
-            $table->enum('direction', ['before', 'after', 'equal']);
-            $table->unsignedInteger('from_days');
-            $table->unsignedInteger('to_days');
+            $table->string('slug',100)->unique();
+            $table->enum('event', ['expiration','grace','invalid']);
+            $table->enum('direction', ['before','equal','after'])->nullable(); // null for invalid
+            $table->unsignedInteger('from_days')->nullable();
+            $table->unsignedInteger('to_days')->nullable();
             $table->timestamps();
-
-            // Composite unique constraint
-            $table->unique(['type', 'direction', 'from_days', 'to_days'], 'unique_logic_rule');
         });
     }
 

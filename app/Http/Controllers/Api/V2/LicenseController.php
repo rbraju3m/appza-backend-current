@@ -8,6 +8,7 @@ use App\Models\FluentInfo;
 use App\Models\FluentLicenseInfo;
 use App\Models\FreeTrial;
 use App\Models\Lead;
+use App\Models\LicenseMessage;
 use App\Models\PopupMessage;
 use Exception;
 use GuzzleHttp\Exception\ConnectException;
@@ -173,6 +174,16 @@ class LicenseController extends Controller
 
 
         if ($validator->fails()) {
+            /*return $this->jsonResponse(
+                LicenseResponseStatus::Invalid->value,
+                [
+                    'user' => ['message' => $validator->errors()->first(),'message_id' => 1],
+                    'admin' => ['message' => 'admin message','message_id' => 2] ,
+                    'special' => ['message' => 'special message','message_id' => 3]
+                ],
+                ['popup_message' => $popupMessages]
+            );*/
+
             return $this->jsonResponse(
                 LicenseResponseStatus::Invalid->value,
                 [
@@ -194,11 +205,28 @@ class LicenseController extends Controller
             ->where('product_slug', $product)
             ->where('is_active', true)
             ->first();
+//        dump($freeTrailLicenseData);
 
         if (!$freeTrailLicenseData) {
+            $getMessages = LicenseMessage::join('appza_fluent_informations','appza_fluent_informations.id','=','license_messages.product_id')
+                ->join('license_logics','license_logics.id','=','license_messages.license_logic_id')
+                ->where('appza_fluent_informations.product_slug', $product)
+                ->where('license_logics.slug','license_not_found')
+                ->where('license_messages.is_active', true)
+                ->select([
+                    'license_messages.id','license_messages.message_user','license_messages.message_admin','license_messages.message_special'
+                ])
+                ->first();
+//            dump($getMessages);
+
             return $this->jsonResponse(
                 LicenseResponseStatus::Invalid->value,
-                'Plugin not installed or no license found.',
+                [
+                    'message_id' => $getMessages->id,
+                    'user' => $getMessages->message_user,
+                    'admin' => $getMessages->message_admin,
+                    'special' => $getMessages->message_special,
+                ],
                 ['popup_message' => $popupMessages]
             );
         }
@@ -206,8 +234,6 @@ class LicenseController extends Controller
         // Handle free trial license check
         if ($freeTrailLicenseData->is_fluent_license_check === 0) {
             $isValidFreeTrial = ($freeTrailLicenseData->grace_period_date >= now()->format('Y-m-d'));
-
-            dump($isValidFreeTrial);
 
             $data = [
               'status' => $freeTrailLicenseData->status,

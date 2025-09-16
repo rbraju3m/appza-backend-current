@@ -133,6 +133,18 @@
             </div>
         @endif
 
+        @if(auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN')
+            <div class="nav-group {{ Request::is('appza/license/*') ? 'show' : ''}}">
+                <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.License')}}</div>
+                <ul class="nav-sidebar">
+                    <li class="nav-item ">
+                        <a href="{{route('license_logic_list')}}" class="nav-link {{ Request::is('appza/license/logic/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.Matrix')}}</span></a>
+                        <a href="{{route('license_message_list')}}" class="nav-link {{ Request::is('appza/license/message/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.Message')}}</span></a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
         @if(auth()->user()->user_type === 'DEVELOPER')
             <div class="nav-group {{ Request::is('appza/request-log/*') ? 'show' : ''}}">
                 <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.RequestLog')}}</div>
