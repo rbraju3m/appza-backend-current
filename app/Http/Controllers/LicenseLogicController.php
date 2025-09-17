@@ -36,6 +36,7 @@ class LicenseLogicController extends Controller
         // Retrieve active page entries
         $licenseLogics = LicenseLogic::where('is_active', 1)
             ->select(['id','name','slug','event','direction','from_days','to_days'])
+            ->where('event','<>','invalid')
             ->orderByDesc('id')
             ->paginate(20);
 

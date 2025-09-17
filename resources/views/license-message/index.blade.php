@@ -52,7 +52,7 @@
                                                 <td>{{$serial++}}</td>
                                                 <td>{{$message->product->product_name}}</td>
                                                 <td>{{$message->license_type}}</td>
-                                                <td>{{$message->logic->name}} {{$message->logic->slug}}</td>
+                                                <td>{{$message->logic->name}}</td>
                                                 <td style="text-align: left">
                                                     @if($message->message_details)
                                                         @foreach($message->message_details as $m)

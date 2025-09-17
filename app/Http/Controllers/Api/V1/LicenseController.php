@@ -304,13 +304,6 @@ class LicenseController extends Controller
 
     public function appLicenseCheck(Request $request)
     {
-        // Caching popup messages is a good practice, keep it.
-        $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
-            return PopupMessage::where('is_active', true)
-                ->get(['message_type as type', 'message'])
-                ->toArray();
-        });
-
         // Validate parameters
         $validator = Validator::make($request->all(), [
             'site_url' => 'required|url',
@@ -321,12 +314,34 @@ class LicenseController extends Controller
             return $this->jsonResponse(
                 Response::HTTP_BAD_REQUEST,
                 'Validation Error',
-                ['errors' => $validator->errors(), 'popup_message' => $popupMessages]
+//                ['errors' => $validator->errors(), 'popup_message' => $popupMessages]
+                ['errors' => $validator->errors()]
             );
         }
 
         $siteUrl = $this->normalizeUrl($request->get('site_url'));
         $product = $request->get('product');
+
+        // Cache popup messages per product for 1 hour
+        $popupMessages = Cache::remember(
+            'active_popup_messages_' . $product, // unique cache key per product
+            3600,
+            function () use ($product) {
+                return PopupMessage::join(
+                    'appza_fluent_informations',
+                    'appza_fluent_informations.id',
+                    '=',
+                    'appza_popup_messages_android.product_id'
+                )
+                    ->where('appza_popup_messages_android.is_active', true)
+                    ->where('appza_fluent_informations.product_slug', $product)
+                    ->get([
+                        'appza_popup_messages_android.message_type as type',
+                        'appza_popup_messages_android.message',
+                    ])
+                    ->toArray();
+            }
+        );
 
         // Fetch the license data in a single, efficient query
         $licenseData = FreeTrial::where('site_url', $siteUrl)
