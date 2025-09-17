@@ -33,14 +33,38 @@ class VersionAddedRequest extends FormRequest
     {
         return [
             // Only allow ZIP files (max 10 MB, adjust if needed)
-            'addon_file' => 'required|file|mimes:zip|max:10240',
+            'addon_file' => [
+                'required',
+                'file',
+                'mimes:zip',
+                'max:10240',
+                function ($attribute, $value, $fail) {
+                    $filename = pathinfo($value->getClientOriginalName(), PATHINFO_FILENAME);
+                    // Allow only a-z, A-Z, 0-9, dash, dot
+                    if (!preg_match('/^[a-zA-Z0-9\.\-]+$/', $filename)) {
+                        $fail("The $attribute may only contain letters, numbers, dots, and dashes (no spaces or special characters).");
+                    }
+                }
+            ],
         ];
     }
 
     protected function updateRules()
     {
         return [
-            'addon_file' => 'nullable|file|mimes:zip|max:10240',
+            'addon_file' => [
+                'nullable',
+                'file',
+                'mimes:zip',
+                'max:10240',
+                function ($attribute, $value, $fail) {
+                    $filename = pathinfo($value->getClientOriginalName(), PATHINFO_FILENAME);
+                    // Allow only a-z, A-Z, 0-9, dash, dot
+                    if (!preg_match('/^[a-zA-Z0-9\.\-]+$/', $filename)) {
+                        $fail("The $attribute may only contain letters, numbers, dots, and dashes (no spaces or special characters).");
+                    }
+                }
+            ],
         ];
     }
 

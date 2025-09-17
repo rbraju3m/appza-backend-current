@@ -42,9 +42,11 @@ trait HandlesFileUploads
                 Storage::disk($disk)->delete($model->$attribute);
             }
 
-            $originalName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+            $originalName = str_replace(' ', '-', pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+
             $extension    = $file->getClientOriginalExtension();
             $filename     = $originalName . '.' . $extension;
+
 
             return $file->storeAs($directory, $filename, $disk); // stored path
         }

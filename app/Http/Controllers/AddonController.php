@@ -92,6 +92,7 @@ class AddonController extends Controller
             AddonVersion::create([
                 'addon_id' => $addon->id,
                 'version'  => $inputs['version'],
+                'version_json_info'  => json_encode($jsonData),
             ]);
 
             DB::commit();
@@ -178,6 +179,7 @@ class AddonController extends Controller
             AddonVersion::create([
                 'addon_id' => $addon->id,
                 'version'  => $inputs['version'],
+                'version_json_info'  => json_encode($jsonData),
             ]);
 
             DB::commit();
