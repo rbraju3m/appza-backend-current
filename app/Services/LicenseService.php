@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FluentInfo;
 use App\Models\LicenseLogic;
 use App\Models\LicenseMessage;
 use Carbon\Carbon;
@@ -9,136 +10,168 @@ use Illuminate\Support\Facades\Cache;
 
 class LicenseService
 {
+    protected const CACHE_LICENSE_LOGICS = 'license_logics_all';
+    protected const CACHE_LICENSE_MESSAGES = 'license_messages_by_logic_and_product_id';
+
     /**
-     * Evaluate license status (free_trial | premium)
+     * Evaluate the license status and return a structured response.
      */
-    public static function evaluate($license, string $provider, string $productSlug): array
+    public function evaluate(object $license, array $context = []): array
     {
-        $today = Carbon::today();
-        $expDate = Carbon::parse($license->expire_date)->startOfDay();
-        $graceDate = $license->grace_period_date
-            ? Carbon::parse($license->grace_period_date)->startOfDay()
-            : $expDate;
+        $today = Carbon::now()->startOfDay();
 
-        $daysUntilExp = $today->diffInDays($expDate, false);
-        $daysAfterExp = $expDate->diffInDays($today, false);
-        $daysAfterGrace = $graceDate->diffInDays($today, false);
+        $productSlug = data_get($license, 'product_slug');
+        $expirationString = data_get($license, 'expiration_date');
+        $graceString = data_get($license, 'grace_period_date');
 
-        $subStatus = 'unknown';
-        $logic = null;
+        if (!$expirationString) {
+            return $this->formatInvalidResponse('invalid_license_data');
+        }
 
-        // 🔹 Expiration checks
-        if ($today->lt($expDate)) {
-            $subStatus = 'before_exp';
-            $logic = self::findMatchedMessage($provider, 'expiration', 'before', abs($daysUntilExp), $productSlug);
-        } elseif ($today->eq($expDate)) {
-            $subStatus = 'expires_today';
-            $logic = self::findMatchedMessage($provider, 'expiration', 'equal', 0, $productSlug);
-        } elseif ($today->gt($expDate) && $today->lte($graceDate)) {
-            $subStatus = 'in_grace';
-            $logic = self::findMatchedMessage($provider, 'grace', 'before', abs($daysAfterExp), $productSlug);
-        } elseif ($today->gt($graceDate)) {
-            $subStatus = 'grace_expired';
-            $logic = self::findMatchedMessage($provider, 'grace', 'after', abs($daysAfterGrace), $productSlug);
+        $expDate = Carbon::parse($expirationString)->startOfDay();
+        $graceDate = $graceString ? Carbon::parse($graceString)->startOfDay() : $expDate->copy();
+
+        $product = FluentInfo::where('product_slug', $productSlug)->where('is_active', 1)->first();
+        $productId = $product?->id ?? null;
+
+        $expDiff = $today->diffInDays($expDate, false);
+        $graceDiff = $today->diffInDays($graceDate, false);
+
+        $status = $today->gt($graceDate) ? 'expire' : 'active';
+        $subStatus = $today->lt($expDate) ? 'before_exp' : ($today->eq($expDate) ? 'expires_today' : ($today->lte($graceDate) ? 'in_grace' : 'grace_expired'));
+
+        if ($today->lte($expDate)) {
+            $primaryMsg = $this->findMatchedMessage('expiration', $expDiff, $productId);
+        } else {
+            $primaryMsg = $this->findMatchedMessage('grace', $graceDiff, $productId);
         }
 
         return [
-            'status' => in_array($subStatus, ['before_exp', 'expires_today', 'in_grace']) ? 'active' : 'expired',
+            'status' => $status,
             'sub_status' => $subStatus,
-            'message' => $logic ?? [],
+            'message' => $primaryMsg ?? $this->emptyMessageObject(),
+            'meta' => [
+                'expiration_days_diff' => $expDiff,
+                'grace_days_diff' => $graceDiff,
+                'product_id' => $productId,
+            ],
         ];
     }
 
     /**
-     * Match a message from license_logics/messages
+     * Format a response for an invalid license scenario.
      */
-    public static function findMatchedMessage(string $provider, string $logicType, string $direction, int $absDays, string $productSlug): ?array
+    public function formatInvalidResponse(string $slug, ?string $extra = null, ?string $productSlug = null): array
     {
-        $logics = self::getCachedLogicsForEvent($provider, $logicType, $direction);
+        $logic = LicenseLogic::where('slug', $slug)->first();
+        $productId = null;
 
-        foreach ($logics as $logic) {
-            if ($absDays >= $logic->from_days && $absDays <= $logic->to_days) {
-                return self::getCachedMessageForLogic($logic->id, $productSlug);
-            }
+        if ($productSlug) {
+            $product = FluentInfo::where('product_slug', $productSlug)->where('is_active', 1)->first();
+            $productId = $product?->id ?? null;
         }
-        return null;
-    }
 
-    /**
-     * Cache: license_logics
-     */
-    public static function getCachedLogicsForEvent(string $provider, string $logicType, string $direction)
-    {
-        return Cache::rememberForever("license_logics_{$provider}_{$logicType}_{$direction}", function () use ($provider, $logicType, $direction) {
-            return LicenseLogic::where('provider', $provider)
-                ->where('logic_type', $logicType)
-                ->where('direction', $direction)
-                ->get();
-        });
-    }
-
-    /**
-     * Cache: license_messages
-     */
-    public static function getCachedMessageForLogic(int $logicId, string $productSlug): ?array
-    {
-        return Cache::rememberForever("license_message_{$logicId}_{$productSlug}", function () use ($logicId, $productSlug) {
-            $logic = LicenseLogic::find($logicId);
-            if (!$logic) return null;
-
-            $productId = optional($logic->product)->id;
-
-            $message = LicenseMessage::where('license_logic_id', $logicId)
-                ->where('product_id', $productId)
-                ->where('is_active', 1)
-                ->first();
-
-            if (!$message) {
-                $message = LicenseMessage::where('license_logic_id', $logicId)
-                    ->whereNull('product_id')
-                    ->where('is_active', 1)
-                    ->first();
-            }
-
-            return $message ? [
-                'user' => [
-                    'message' => $message->user_message,
-                    'message_id' => $message->id,
-                ],
-                'admin' => [
-                    'message' => $message->admin_message,
-                    'message_id' => $message->id,
-                ],
-                'special' => [
-                    'message' => $message->special_message,
-                    'message_id' => $message->id,
-                ],
-            ] : null;
-        });
-    }
-
-    /**
-     * Format invalid response
-     */
-    public static function formatInvalidResponse(string $logicSlug, ?string $customMessage = null)
-    {
-        $logic = LicenseLogic::where('slug', $logicSlug)->first();
-
-        $message = null;
+        $msg = null;
         if ($logic) {
-            $message = self::getCachedMessageForLogic($logic->id, request()->input('product', ''));
+            $msg = $this->getCachedMessageForLogic($logic->id, $productId) ?? $this->getCachedMessageForLogic($logic->id, null);
         }
 
-        // Override user message if validation error
-        if ($customMessage) {
-            $message['user']['message'] = $customMessage;
+        $msgFormat = $msg ? [
+            'user' => ['message' => $msg['message_user'], 'message_id' => $msg['id']],
+            'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['id']],
+            'special' => ['message' => $msg['message_special'], 'message_id' => $msg['id']],
+        ] : $this->emptyMessageObject();
+
+        // Handle specific case for validation errors that don't come from the DB
+        if ($slug === 'validation_error' && $extra) {
+            $msgFormat = [
+                'user' => ['message' => $extra, 'message_id' => null],
+                'admin' => ['message' => $extra, 'message_id' => null],
+                'special' => ['message' => $extra, 'message_id' => null],
+            ];
         }
 
-        return response()->json([
-            'status' => 'invalid',
-            'sub_status' => $logicSlug,
-            'message' => $message,
-            'popup_message' => [],
-        ]);
+        return [
+            'sub_status' => $slug,
+            'message' => $msgFormat,
+        ];
+    }
+
+    protected function emptyMessageObject(): array
+    {
+        return [
+            'user' => ['message' => null, 'message_id' => null],
+            'admin' => ['message' => null, 'message_id' => null],
+            'special' => ['message' => null, 'message_id' => null],
+        ];
+    }
+
+    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null): ?array
+    {
+        $direction = $dayDiff > 0 ? 'before' : ($dayDiff < 0 ? 'after' : 'equal');
+        $absDays = abs($dayDiff);
+
+        $logics = $this->getCachedLogicsForEvent($event);
+
+        $logic = collect($logics)->first(function ($l) use ($direction, $absDays) {
+            return $l['direction'] === $direction && $l['from_days'] <= $absDays && $l['to_days'] >= $absDays;
+        });
+
+        if (!$logic) return null;
+
+        $msg = $this->getCachedMessageForLogic($logic['id'], $productId) ?? $this->getCachedMessageForLogic($logic['id'], null);
+
+        if (!$msg) return null;
+
+        return [
+            'user' => ['message' => $msg['message_user'], 'message_id' => $msg['id']],
+            'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['id']],
+            'special' => ['message' => $msg['message_special'], 'message_id' => $msg['id']],
+        ];
+    }
+
+    /* ---------- Caching helpers ---------- */
+
+    protected function getCachedLogicsForEvent(string $event): array
+    {
+        $all = Cache::rememberForever(self::CACHE_LICENSE_LOGICS, function () {
+            return LicenseLogic::orderBy('event')->orderBy('from_days')->get()->map(function ($l) {
+                return [
+                    'id' => $l->id,
+                    'slug' => $l->slug ?? null,
+                    'name' => $l->name,
+                    'event' => $l->event,
+                    'direction' => $l->direction,
+                    'from_days' => (int)($l->from_days ?? 0),
+                    'to_days' => (int)($l->to_days ?? 0),
+                ];
+            })->toArray();
+        });
+
+        return array_values(array_filter($all, fn ($r) => $r['event'] === $event));
+    }
+
+    protected function getCachedMessageForLogic(int $logicId, ?int $productId = null): ?array
+    {
+        $cacheKey = self::CACHE_LICENSE_MESSAGES . "_{$logicId}_product_" . ($productId ?? 'any');
+
+        return Cache::remember($cacheKey, 3600, function () use ($logicId, $productId) {
+            $q = LicenseMessage::where('license_logic_id', $logicId)->where('is_active', true);
+            if ($productId) {
+                $q->where('product_id', $productId);
+            }
+            $row = $q->first();
+
+            if (!$row) return null;
+
+            return [
+                'id' => $row->id,
+                'license_logic_id' => $row->license_logic_id,
+                'product_id' => $row->product_id,
+                'message_user' => optional($row->message_details->firstWhere('type', 'user'))->message,
+                'message_admin' => optional($row->message_details->firstWhere('type', 'admin'))->message,
+                'message_special' => optional($row->message_details->firstWhere('type', 'special'))->message,
+            ];
+        });
     }
 }

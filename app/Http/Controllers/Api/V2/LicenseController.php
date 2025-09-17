@@ -157,12 +157,15 @@ class LicenseController extends Controller
         }
     }
 
-    public function appLicenseCheck1(Request $request, LicenseService $licenseService)
+    /**
+     * Handles the mobile application license check.
+     */
+    public function appLicenseCheck(Request $request, LicenseService $licenseService)
     {
+        // Fetch active popup messages from cache. This should not be cleared later.
         $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
             return PopupMessage::where('is_active', true)->get(['message_type as type', 'message'])->toArray();
         });
-        $popupMessages = [];
 
         // Validate input
         $validator = Validator::make($request->all(), [
@@ -171,8 +174,8 @@ class LicenseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $resp = $licenseService->formatInvalidResponse('validation_error',$validator->errors()->first(),null);
-            return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
+            $resp = $licenseService->formatInvalidResponse('validation_error', $validator->errors()->first(), null);
+            return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
         $siteUrl = $this->normalizeUrl($request->get('site_url'));
@@ -184,87 +187,40 @@ class LicenseController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (!$freeTrial){
+        if ($freeTrial) {
+            // Check if the free trial uses local or external logic
+            if ($freeTrial->is_fluent_license_check === 0) {
+                $resp = $licenseService->evaluate($freeTrial);
+                $statusCode = $resp['status'] === 'expire' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
+                return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+            }
+
+            if ($freeTrial->is_fluent_license_check === 1) {
+                // --- Premium (external API) ---
+                try {
+                    // Use an external provider adapter to fetch and normalize the license data
+                    $externalDto = app(\App\Services\ExternalLicenseProvider::class)->fetchLicense($siteUrl, $productSlug);
+
+                    if (!$externalDto) {
+                        $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
+                        return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+                    }
+
+                    // Evaluate the external license data
+                    $resp = $licenseService->evaluate($externalDto);
+                    $statusCode = $resp['status'] === 'expire' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
+                    return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta']]);
+
+                } catch (\Exception $e) {
+                    \Log::error('External license check failed', ['err' => $e->getMessage()]);
+                    $resp = $licenseService->formatInvalidResponse('external_api_error', null, $productSlug);
+                    return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+                }
+
+            }
+        }else{
             $resp = $licenseService->formatInvalidResponse('license_not_found','',$productSlug);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
         }
-
-
-        if ( $freeTrial->is_fluent_license_check === 0) {
-            // Ensure your FreeTrial model has 'expiration_date' and 'grace_period_date' as strings/dates
-            $resp = $licenseService->evaluate($freeTrial);
-            $statusCode = $resp['status'] === 'expire' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-            return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
-        }
-
-        // --- Premium (external API) ---
-        // Try external provider: create an adapter to fetch license info and normalize to same DTO shape
-        try {
-            $externalDto = app(\App\Services\ExternalLicenseProvider::class)->fetchLicense($siteUrl, $productSlug);
-            if (! $externalDto) {
-                $resp = $licenseService->evaluate(null, 'user', ['error_slug' => 'license_not_found']);
-                $resp['popup_message'] = $popupMessages;
-                return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $resp['popup_message']]);
-            }
-            // externalDto must have expiration_date and grace_period_date (compute grace_period_date = expiration + 15 inside provider)
-            $resp = $licenseService->evaluate($externalDto, 'user');
-            $resp['popup_message'] = $popupMessages;
-            $statusCode = $resp['status'] === 'expire' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-            return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $resp['popup_message'], 'meta'=>$resp['meta']]);
-        } catch (\Exception $e) {
-            // Treat external failures as invalid (or log and return specific 'plugin' slug)
-            \Log::error('External license check failed', ['err'=>$e->getMessage()]);
-            $resp = $licenseService->evaluate(null, 'user', ['error_slug' => 'external_api_error']);
-            $resp['popup_message'] = $popupMessages;
-            return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $resp['popup_message']]);
-        }
     }
-
-    public function appLicenseCheck(Request $request)
-    {
-        try {
-            // 🔹 Cache popup messages (per product)
-            $product = $request->input('product');
-            $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
-                return PopupMessage::where('is_active', true)->get(['message_type as type', 'message'])->toArray();
-            });
-            $popupMessages = [];
-
-            // 🔹 Validate request
-            $validator = Validator::make($request->all(), [
-                'product' => 'required|string',
-                'site_url' => 'required|string',
-            ]);
-
-            if ($validator->fails()) {
-                return LicenseService::formatInvalidResponse(
-                    'validation_error',
-                    $validator->errors()->first()
-                );
-            }
-
-            // 🔹 Free Trial branch
-            $license = FreeTrial::where('site_url', $request->site_url)
-                ->where('product_slug', $request->product)
-                ->where('is_active', 1)
-                ->first();
-
-            if (!$license) {
-                return LicenseService::formatInvalidResponse('license_not_found');
-            }
-
-            $resp = LicenseService::evaluate($license, 'free_trial', $request->product);
-
-            return response()->json([
-                'status' => $resp['status'], // invalid | active | expired
-                'sub_status' => $resp['sub_status'], // before_exp, in_grace, etc.
-                'message' => $resp['message'],
-                'popup_message' => $popupMessages,
-            ]);
-        } catch (\Exception $e) {
-            return LicenseService::formatInvalidResponse('server_error', $e->getMessage());
-        }
-    }
-
-
 }
