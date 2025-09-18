@@ -112,15 +112,8 @@
                                         </div>
 
                                         <div class="col-sm-4">
-                                            {{--{{html()
-                                                ->text('addon_json_info')
-                                                ->class('form-control')
-                                                ->placeholder(__('messages.VersionJson'))
-                                                ->required()
-                                            }}--}}
                                             {{html()
                                                 ->textarea('addon_json_info')
-//                                                ->value($data->items?json_encode(json_decode($data->items, false), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
                                                 ->class('form-control')
                                                 ->placeholder(__('messages.VersionJson'))
                                                 ->attribute('rows',5)
@@ -139,7 +132,7 @@
                                         <div class="col-sm-10">
                                             <input class="form-control" name="addon_file" type="file" id="zipInp" accept=".zip" required>
                                             <span class="textRed">{!! $errors->first('addon_file') !!}</span>
-                                            <p id="fileName" class="mt-2 text-info"></p>
+                                            <p id="fileName" class="mt-2 text-info">Ex: appza-plugin-1.0.0.zip</p>
                                         </div>
                                     </div>
 

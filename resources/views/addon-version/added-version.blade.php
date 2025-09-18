@@ -24,7 +24,6 @@
                     <div class="card-body">
                         @include('layouts.message')
 
-                        <form method="post" role="form" id="search-form">
                             <table id="leave_settings" class="table table-bordered datatable table-responsive mainTable text-center">
 
                                 <thead class="thead-dark">
@@ -34,6 +33,7 @@
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.version')}}</th>
+                                    <th width="20%">{{__('messages.action')}}</th>
                                 </tr>
                                 </thead>
 
@@ -52,6 +52,40 @@
                                             <td>{{$addon->addon_name}}</td>
                                             <td>{{$addon->addon_slug}}</td>
                                             <td>{{$addon->version}}</td>
+                                            <td>
+                                                @if($addon->is_edited)
+                                                    {{ html()
+                                                        ->form('POST', route('added_version_update', $addon->id))
+                                                        ->attribute('enctype', 'multipart/form-data')
+                                                        ->attribute('files', true)
+                                                        ->attribute('autocomplete', 'off')
+                                                        ->open()
+                                                    }}
+
+                                                    <div class="input-group">
+                                                        <input
+                                                            class="form-control"
+                                                            name="addon_file"
+                                                            type="file"
+                                                            id="zipInp_{{ $addon->id }}"
+                                                            accept=".zip"
+                                                            placeholder="test"
+                                                            required
+                                                        >
+
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class="fas fa-upload"></i>
+                                                        </button>
+                                                    </div>
+                                                    <input type="hidden" name="version" value="{{$addon->version}}">
+                                                    <span class="textRed d-block mt-1">{!! $errors->first('addon_file') !!}</span>
+                                                    <p id="fileName_{{ $addon->id }}" class="mt-2 text-info"> Ex: appza-plugin-1.0.0.zip </p>
+
+                                                    {{ html()->form()->close() }}
+                                                @endif
+                                            </td>
+
+
                                         </tr>
                                         @php $i++; @endphp
                                     @endforeach
@@ -63,7 +97,6 @@
                                     {{ $versions->links('layouts.pagination') }}
                                 </div>
                             @endif
-                        </form>
 
                         <hr style="margin-top: 20px">
 
@@ -101,7 +134,7 @@
                                             <div class="col-sm-4">
                                                 <input class="form-control" name="addon_file" type="file" id="zipInp" accept=".zip" required>
                                                 <span class="textRed">{!! $errors->first('addon_file') !!}</span>
-                                                <p id="fileName" class="mt-2 text-info"></p>
+                                                <p id="fileName" class="mt-2 text-info">Ex: appza-plugin-1.0.0.zip</p>
                                             </div>
                                         </div>
 
@@ -150,5 +183,21 @@
             }
         };
     </script>
+
+    @section('footer.scripts')
+        <script>
+            document.querySelectorAll('input[type="file"][id^="zipInp_"]').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    let fileNameEl = document.getElementById("fileName_" + this.id.split("_")[1]);
+                    if (this.files.length > 0) {
+                        fileNameEl.textContent = "Selected file: " + this.files[0].name;
+                    } else {
+                        fileNameEl.textContent = "";
+                    }
+                });
+            });
+        </script>
+    @endsection
+
 
 @endsection

@@ -277,6 +277,7 @@ return [
     'AddonFile' => 'Addon File',
     'ProductName' => 'Product Name',
     'version' => 'Version',
+    'action' => 'Action',
     'domainName' => 'Domain Name',
     'licenseKey' => 'License Key',
     'BuildLog' => 'Build Log',

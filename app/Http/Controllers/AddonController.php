@@ -92,6 +92,8 @@ class AddonController extends Controller
             AddonVersion::create([
                 'addon_id' => $addon->id,
                 'version'  => $inputs['version'],
+                'addon_file'  => $inputs['addon_file'],
+                'is_edited'  => true,
                 'version_json_info'  => json_encode($jsonData),
             ]);
 
@@ -119,6 +121,8 @@ class AddonController extends Controller
                 'appza_product_addons_versions.id',
                 'appza_product_addons_versions.addon_id',
                 'appza_product_addons_versions.version',
+                'appza_product_addons_versions.addon_file',
+                'appza_product_addons_versions.is_edited',
                 'appza_product_addons.addon_name',
                 'appza_product_addons.addon_slug',
                 'appza_fluent_informations.product_slug',
@@ -176,17 +180,61 @@ class AddonController extends Controller
             ]);
 
             // Create new version record
-            AddonVersion::create([
-                'addon_id' => $addon->id,
-                'version'  => $inputs['version'],
-                'version_json_info'  => json_encode($jsonData),
+            $version = AddonVersion::create([
+                'addon_id'          => $addon->id,
+                'version'           => $inputs['version'],
+                'is_edited'         => true,
+                'addon_file'        => $addonFile,
+                'version_json_info' => json_encode($jsonData),
             ]);
+
+            // Reset all others to false
+            AddonVersion::where('id', '<>', $version->id)
+                ->where('addon_id', $addon->id)
+                ->update(['is_edited' => false]);
 
             DB::commit();
 
             return redirect()
                 ->route('addon_version_added', $addonId)
                 ->with('message', 'New version upload successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error creating addon version: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('addon_version_added', $addonId)
+                ->with('validate', 'Failed to add new version. Please try again.');
+        }
+    }
+
+    public function addedVersionUpdate(VersionAddedRequest $request, $addonId): RedirectResponse
+    {
+        $inputs = $request->validated();
+//        $addonVersion  = AddonVersion::findOrFail($addonId);
+        $latestVersion = optional(
+            AddonVersion::where('addon_id', $addonId)->latest()->first()
+        )->version;
+
+        if ($latestVersion && version_compare($inputs['version'], $latestVersion, '=')) {
+            return back()->with('validate', "Version must be equal {$latestVersion}");
+        }
+
+        try {
+
+            // Handle ZIP Upload
+            $this->handleFileUploadWithOriginalName(
+                $request,
+                null,
+                'addon_file',
+                'addons',
+                'r2'
+            );
+
+            return redirect()
+                ->back()
+                ->with('message', 'Upload successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error creating addon version: ' . $e->getMessage(), [

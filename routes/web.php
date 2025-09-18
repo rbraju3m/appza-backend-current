@@ -179,6 +179,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
 
         Route::get('added/{addon_id}', [AddonController::class,'addedVersion'])->name('addon_version_added');
         Route::post('added/store/{addon_id}', [AddonController::class,'addedVersionStore'])->name('added_version_store');
+        Route::post('added/update/{addon_id}', [AddonController::class,'addedVersionUpdate'])->name('added_version_update');
 
     });
     /* addon-version route start */
