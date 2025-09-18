@@ -46,11 +46,24 @@ class LicenseController extends Controller
 
     protected function jsonResponse(string $status, array $message, array $additionalData = []): JsonResponse
     {
-        return response()->json(array_merge([
+        $response = [
             'status' => $status,
-            'message' => $message,
-        ], $additionalData));
+        ];
+
+        // Merge optional keys in desired order
+        if (isset($additionalData['sub_status'])) {
+            $response['sub_status'] = $additionalData['sub_status'];
+            unset($additionalData['sub_status']); // remove to avoid duplication
+        }
+
+        $response['message'] = $message;
+
+        // Merge remaining additional data (like popup_message)
+        $response = array_merge($response, $additionalData);
+
+        return response()->json($response);
     }
+
 
     protected function getFluentErrorMessage($code, $default = 'License validation failed.')
     {
@@ -166,6 +179,7 @@ class LicenseController extends Controller
         $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
             return PopupMessage::where('is_active', true)->get(['message_type as type', 'message'])->toArray();
         });
+        $popupMessages = [];
 
         // Validate input
         $validator = Validator::make($request->all(), [
@@ -175,33 +189,36 @@ class LicenseController extends Controller
 
         if ($validator->fails()) {
             $resp = $licenseService->formatInvalidResponse('validation_error', $validator->errors()->first(), null);
-            return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+            return $this->jsonResponse(
+                LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
         $siteUrl = $this->normalizeUrl($request->get('site_url'));
         $productSlug = $request->get('product');
 
         // --- Free-trial (local DB) ---
-        $freeTrial = FreeTrial::where('site_url', $siteUrl)
+        $localLicenseData = FreeTrial::where('site_url', $siteUrl)
             ->where('product_slug', $productSlug)
             ->where('is_active', true)
             ->first();
 
-        if ($freeTrial) {
+        if ($localLicenseData) {
             // Check if the free trial uses local or external logic
-            if ($freeTrial->is_fluent_license_check === 0) {
-                $resp = $licenseService->evaluate($freeTrial);
+            if ($localLicenseData->is_fluent_license_check === 0) {
+                $resp = $licenseService->evaluate($localLicenseData);
                 $statusCode = $resp['status'] === 'expire' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
                 return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
             }
 
-            if ($freeTrial->is_fluent_license_check === 1) {
+            if ($localLicenseData->is_fluent_license_check === 1) {
                 // --- Premium (external API) ---
                 try {
                     // Use an external provider adapter to fetch and normalize the license data
-                    $externalDto = app(\App\Services\ExternalLicenseProvider::class)->fetchLicense($siteUrl, $productSlug);
+//                    $externalDto = app(\App\Services\ExternalLicenseProvider::class)->fetchLicense($siteUrl, $productSlug);
+                    $premiumResp = LicenseService::checkPremiumLicense($request->product, $request->site_url);
 
-                    if (!$externalDto) {
+
+                    /*if (!$externalDto) {
                         $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
                         return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
                     }
@@ -209,7 +226,7 @@ class LicenseController extends Controller
                     // Evaluate the external license data
                     $resp = $licenseService->evaluate($externalDto);
                     $statusCode = $resp['status'] === 'expire' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-                    return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta']]);
+                    return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta']]);*/
 
                 } catch (\Exception $e) {
                     \Log::error('External license check failed', ['err' => $e->getMessage()]);

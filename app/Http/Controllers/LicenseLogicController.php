@@ -32,15 +32,19 @@ class LicenseLogicController extends Controller
      */
     public function index()
     {
+        $events = LicenseLogic::distinct('event')->pluck('event');
+//        $events = ['expiration', 'grace', 'invalid'];
 
-        // Retrieve active page entries
-        $licenseLogics = LicenseLogic::where('is_active', 1)
-            ->select(['id','name','slug','event','direction','from_days','to_days'])
-            ->where('event','<>','invalid')
-            ->orderByDesc('id')
-            ->paginate(20);
+        $licenseLogicsByEvent = [];
+        foreach ($events as $event) {
+            $licenseLogicsByEvent[$event] = LicenseLogic::where('is_active', 1)
+                ->where('event', $event)
+                ->select(['id','name','slug','event','direction','from_days','to_days'])
+                ->orderByDesc('id')
+                ->paginate(20, ['*'], $event . '_page'); // page name for pagination
+        }
 
-        return view('license-logic.index',compact('licenseLogics'));
+        return view('license-logic.index', compact('licenseLogicsByEvent', 'events'));
     }
 
     /**

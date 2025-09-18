@@ -77,9 +77,9 @@ class LicenseService
         }
 
         $msgFormat = $msg ? [
-            'user' => ['message' => $msg['message_user'], 'message_id' => $msg['id']],
-            'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['id']],
-            'special' => ['message' => $msg['message_special'], 'message_id' => $msg['id']],
+            'user' => ['message' => $msg['message_user'], 'message_id' => $msg['message_user_id']],
+            'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['message_admin_id']],
+            'special' => ['message' => $msg['message_special'], 'message_id' => $msg['message_special_id']],
         ] : $this->emptyMessageObject();
 
         // Handle specific case for validation errors that don't come from the DB
@@ -124,9 +124,9 @@ class LicenseService
         if (!$msg) return null;
 
         return [
-            'user' => ['message' => $msg['message_user'], 'message_id' => $msg['id']],
-            'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['id']],
-            'special' => ['message' => $msg['message_special'], 'message_id' => $msg['id']],
+            'user' => ['message' => $msg['message_user'], 'message_id' => $msg['message_user_id']],
+            'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['message_admin_id']],
+            'special' => ['message' => $msg['message_special'], 'message_id' => $msg['message_special_id']],
         ];
     }
 
@@ -134,8 +134,8 @@ class LicenseService
 
     protected function getCachedLogicsForEvent(string $event): array
     {
-        $all = Cache::rememberForever(self::CACHE_LICENSE_LOGICS, function () {
-            return LicenseLogic::orderBy('event')->orderBy('from_days')->get()->map(function ($l) {
+//        $all = Cache::rememberForever(self::CACHE_LICENSE_LOGICS, function () {
+            return LicenseLogic::orderBy('event')->where('event',$event)->orderBy('from_days')->get()->map(function ($l) {
                 return [
                     'id' => $l->id,
                     'slug' => $l->slug ?? null,
@@ -146,16 +146,16 @@ class LicenseService
                     'to_days' => (int)($l->to_days ?? 0),
                 ];
             })->toArray();
-        });
+//        });
 
-        return array_values(array_filter($all, fn ($r) => $r['event'] === $event));
+//        return array_values(array_filter($all, fn ($r) => $r['event'] === $event));
     }
 
     protected function getCachedMessageForLogic(int $logicId, ?int $productId = null): ?array
     {
-        $cacheKey = self::CACHE_LICENSE_MESSAGES . "_{$logicId}_product_" . ($productId ?? 'any');
+//        $cacheKey = self::CACHE_LICENSE_MESSAGES . "_{$logicId}_product_" . ($productId ?? 'any');
 
-        return Cache::remember($cacheKey, 3600, function () use ($logicId, $productId) {
+//        return Cache::remember($cacheKey, 3600, function () use ($logicId, $productId) {
             $q = LicenseMessage::where('license_logic_id', $logicId)->where('is_active', true);
             if ($productId) {
                 $q->where('product_id', $productId);
@@ -169,9 +169,51 @@ class LicenseService
                 'license_logic_id' => $row->license_logic_id,
                 'product_id' => $row->product_id,
                 'message_user' => optional($row->message_details->firstWhere('type', 'user'))->message,
+                'message_user_id' => optional($row->message_details->firstWhere('type', 'user'))->id,
                 'message_admin' => optional($row->message_details->firstWhere('type', 'admin'))->message,
+                'message_admin_id' => optional($row->message_details->firstWhere('type', 'admin'))->id,
                 'message_special' => optional($row->message_details->firstWhere('type', 'special'))->message,
+                'message_special_id' => optional($row->message_details->firstWhere('type', 'special'))->id
             ];
-        });
+//        });
     }
+
+    public static function checkPremiumLicense(string $product, string $siteUrl): array
+    {
+        try {
+            // Example API request (use Http facade, Guzzle, etc.)
+            $response = \Http::timeout(10)->post('https://premium-provider.com/api/check-license', [
+                'product' => $product,
+                'site_url' => $siteUrl,
+            ]);
+
+            if (!$response->ok()) {
+                return self::formatInvalidResponse('server_error', 'Premium API error');
+            }
+
+            $data = $response->json();
+
+            // Example: API returns { status: "active|expired", expiration_date: "2025-09-30" }
+            if ($data['status'] === 'active') {
+                $licenseObj = (object) [
+                    'expire_date' => $data['expiration_date'],
+                    // Premium has fixed 15-day grace period
+                    'grace_period_date' => \Carbon\Carbon::parse($data['expiration_date'])->addDays(15),
+                ];
+
+                $resp = self::evaluate($licenseObj, 'premium', $product);
+
+                return [
+                    'status' => $resp['status'],
+                    'sub_status' => $resp['sub_status'],
+                    'message' => $resp['message'],
+                ];
+            } else {
+                return self::formatInvalidResponse('license_not_found', 'Premium license expired or not found.');
+            }
+        } catch (\Exception $e) {
+            return self::formatInvalidResponse('server_error', $e->getMessage());
+        }
+    }
+
 }

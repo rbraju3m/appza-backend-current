@@ -23,61 +23,68 @@
 
                     <div class="card-body">
                         @include('layouts.message')
-                        <form method="post" role="form" id="search-form">
-                            <table id="leave_settings" class="table table-bordered datatable table-responsive mainTable text-center">
 
-                                <thead class="thead-dark">
-                                <tr>
-                                    <th>{{__('messages.SL')}}</th>
-                                    <th>{{__('messages.name')}}</th>
-                                    <th>{{__('messages.slug')}}</th>
-                                    <th>Event</th>
-                                    <th>Direction</th>
-                                    <th>From days</th>
-                                    <th>To days</th>
-                                    <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
-                                        <i class="fas fa-cog"></i>
-                                    </th>
-                                </tr>
-                                </thead>
+                        {{-- Bootstrap Tabs --}}
+                        <ul class="nav nav-tabs" id="eventTabs" role="tablist">
+                            @foreach($events as $event)
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                            id="{{ $event }}-tab"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#tab-{{ $event }}"
+                                            type="button" role="tab"
+                                            aria-controls="tab-{{ $event }}"
+                                            aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                        {{ ucfirst($event) }}
+                                    </button>
+                                </li>
+                            @endforeach
+                        </ul>
 
-                                @if(sizeof($licenseLogics)>0)
-                                    <tbody>
+                        <div class="tab-content mt-3">
+                            @foreach($events as $event)
+                                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="tab-{{ $event }}" role="tabpanel" aria-labelledby="{{ $event }}-tab">
+
+                                    <table class="table table-bordered datatable table-responsive mainTable text-center">
+                                        <thead class="thead-dark">
+                                        <tr>
+                                            <th>SL</th>
+                                            <th>Name</th>
+                                            <th>Slug</th>
+                                            <th>Event</th>
+                                            @if($event === 'expiration' || $event === 'grace')
+                                                <th>Direction</th>
+                                                <th>From days</th>
+                                                <th>To days</th>
+                                            @endif
+                                        </tr>
+                                        </thead>
+                                        <tbody>
                                         @php
-                                            $i=1;
-                                            $currentPage = $licenseLogics->currentPage();
-                                            $perPage = $licenseLogics->perPage();
-                                            $serial = ($currentPage - 1) * $perPage + 1;
+                                            $serial = ($licenseLogicsByEvent[$event]->currentPage() - 1) * $licenseLogicsByEvent[$event]->perPage() + 1;
                                         @endphp
-                                        @foreach($licenseLogics as $logics)
+                                        @foreach($licenseLogicsByEvent[$event] as $logics)
                                             <tr>
-                                                <td>{{$serial++}}</td>
-                                                <td>{{$logics->name}}</td>
-                                                <td>{{$logics->slug}}</td>
-                                                <td>{{$logics->event}}</td>
-                                                <td>{{$logics->direction}}</td>
-                                                <td>{{$logics->from_days}}</td>
-                                                <td>{{$logics->to_days}}</td>
-
-                                                <td>
-                                                    <div class="btn-group" role="group" aria-label="Basic outlined example">
-{{--                                                            <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('page_edit',$logics->id)}}"><i class="fas fa-edit"></i></a>--}}
-{{--                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$logics->id)}}"><i class="fas fa-trash"></i></a>--}}
-
-                                                    </div>
-                                                </td>
+                                                <td>{{ $serial++ }}</td>
+                                                <td>{{ $logics->name }}</td>
+                                                <td>{{ $logics->slug }}</td>
+                                                <td>{{ $logics->event }}</td>
+                                                @if($event === 'expiration' || $event === 'grace')
+                                                    <td>{{ $logics->direction }}</td>
+                                                    <td>{{ $logics->from_days }}</td>
+                                                    <td>{{ $logics->to_days }}</td>
+                                                @endif
                                             </tr>
-                                            @php $i++; @endphp
                                         @endforeach
-                                    </tbody>
-                                @endif
-                            </table>
-                            @if(isset($licenseLogics) && count($licenseLogics)>0)
-                                <div class=" justify-content-right">
-                                    {{ $licenseLogics->links('layouts.pagination') }}
+                                        </tbody>
+                                    </table>
+
+                                    {{-- Pagination --}}
+                                    {{ $licenseLogicsByEvent[$event]->links('layouts.pagination') }}
+
                                 </div>
-                            @endif
-                        </form>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
