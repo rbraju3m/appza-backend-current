@@ -115,6 +115,15 @@ class LicenseController extends Controller
         $data = $request->only('site_url', 'license_key', 'email');
         $normalizedSiteUrl = $this->normalizeUrl($data['site_url']);
 
+        $localLicenseData = FreeTrial::where('site_url', $normalizedSiteUrl)
+            ->where('product_slug',$this->pluginName)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$localLicenseData) {
+            return $this->jsonResponse( Response::HTTP_UNPROCESSABLE_ENTITY, 'Local license not found.');
+        }
+
         $fluentInfo = FluentInfo::where('product_slug', $this->pluginName)->where('is_active', true)->first();
 
         if (!$fluentInfo || !is_numeric($fluentInfo->item_id) || !$fluentInfo->api_url) {
@@ -183,7 +192,7 @@ class LicenseController extends Controller
                 ]
             );
 
-            FreeTrial::where('site_url', $normalizedSiteUrl)->where('product_slug',$this->pluginName)->where('is_active', true)->update(['is_fluent_license_check' => true]);
+            $localLicenseData->update(['is_fluent_license_check' => true]);
 
             DB::commit();
 

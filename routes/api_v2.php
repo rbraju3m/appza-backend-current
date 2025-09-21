@@ -52,7 +52,7 @@ Route::prefix('/appza/v2')
 
         // license api
         Route::prefix('license')->group(function () {
-            Route::get('check', [LicenseControllerV1::class,'check'])->name('license_check');
+            Route::get('check', [LicenseControllerV2::class,'webLicenseCheck'])->name('license_check');
             Route::post('activate', [LicenseControllerV1::class,'activate'])->name('license_activate');
             Route::get('deactivate', [LicenseControllerV1::class,'deactivate'])->name('license_deactivate');
             Route::post('version/check', [LicenseControllerV1::class,'versionCheck'])->name('license_version_check');

@@ -7,6 +7,7 @@ use App\Models\LicenseLogic;
 use App\Models\LicenseMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class LicenseService
 {
@@ -16,7 +17,7 @@ class LicenseService
     /**
      * Evaluate the license status and return a structured response.
      */
-    public function evaluate(object $license, array $context = []): array
+    public function evaluate(object $license, string $licenseType, array $context = []): array
     {
         $today = Carbon::now()->startOfDay();
 
@@ -41,9 +42,9 @@ class LicenseService
         $subStatus = $today->lt($expDate) ? 'before_exp' : ($today->eq($expDate) ? 'expires_today' : ($today->lte($graceDate) ? 'in_grace' : 'grace_expired'));
 
         if ($today->lte($expDate)) {
-            $primaryMsg = $this->findMatchedMessage('expiration', $expDiff, $productId);
+            $primaryMsg = $this->findMatchedMessage('expiration', $expDiff, $productId,$licenseType);
         } else {
-            $primaryMsg = $this->findMatchedMessage('grace', $graceDiff, $productId);
+            $primaryMsg = $this->findMatchedMessage('grace', $graceDiff, $productId,$licenseType);
         }
 
         return [
@@ -83,7 +84,7 @@ class LicenseService
         ] : $this->emptyMessageObject();
 
         // Handle specific case for validation errors that don't come from the DB
-        if ($slug === 'validation_error' && $extra) {
+        if (($slug === 'validation_error' || $slug === 'unauthorized') && $extra) {
             $msgFormat = [
                 'user' => ['message' => $extra, 'message_id' => null],
                 'admin' => ['message' => $extra, 'message_id' => null],
@@ -106,7 +107,7 @@ class LicenseService
         ];
     }
 
-    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null): ?array
+    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null, string $licenseType): ?array
     {
         $direction = $dayDiff > 0 ? 'before' : ($dayDiff < 0 ? 'after' : 'equal');
         $absDays = abs($dayDiff);
@@ -178,14 +179,16 @@ class LicenseService
 //        });
     }
 
-    public static function checkPremiumLicense(string $product, string $siteUrl): array
+    public static function checkPremiumLicense( string $apiUrl , array $params): array
     {
         try {
             // Example API request (use Http facade, Guzzle, etc.)
-            $response = \Http::timeout(10)->post('https://premium-provider.com/api/check-license', [
-                'product' => $product,
-                'site_url' => $siteUrl,
-            ]);
+
+            $response = Http::timeout(15)
+                ->retry(2, 100)
+                ->get($apiUrl, $params);
+//            $data = $response->json();
+            dump($response);
 
             if (!$response->ok()) {
                 return self::formatInvalidResponse('server_error', 'Premium API error');
