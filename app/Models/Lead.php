@@ -14,6 +14,10 @@ class Lead extends Model
     public $timestamps = false;
     protected $guarded = ['id'];
     protected $dates = ['created_at', 'updated_at'];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
     protected $fillable = [
         'first_name', 'last_name', 'email', 'mobile', 'domain',
         'customer_id', 'license_id', 'note', 'appza_hash', 'plugin_name'

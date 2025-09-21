@@ -6,9 +6,11 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\BuildOrderController;
 use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ComponentGroupController;
+use App\Http\Controllers\FreeTrialController;
 use App\Http\Controllers\GlobalConfigController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LayoutTypeController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LicenseLogicController;
 use App\Http\Controllers\LicenseMessageController;
 use App\Http\Controllers\PageController;
@@ -184,29 +186,11 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     });
     /* addon-version route start */
 
-
-    /* build-order start */
-    Route::prefix('setup')->group(function () {
-        Route::get('list',[SetupController::class,'index'])->name('setup_list');
-        Route::get('create',[SetupController::class,'create'])->name('setup_add');
-        Route::post('store',[SetupController::class,'store'])->name('setup_store');
-        Route::get('edit/{id}',[SetupController::class, 'edit'])->name('setup_edit');
-        Route::PATCH('update/{setup}',[SetupController::class, 'update'])->name('setup_update');
-        Route::get('delete/{id}',[SetupController::class,'destroy'])->name('setup_delete');
-    });
-    /* build-order route end */
-
     /* build-order start */
     Route::prefix('build-order')->group(function () {
         Route::get('list',[BuildOrderController::class,'index'])->name('build_order_list');
     });
     /* build-order route end */
-
-    /* request log start */
-    Route::prefix('request-log')->group(function () {
-        Route::get('list',[RequestLogController::class,'index'])->name('request_log_list');
-    });
-    /* request log route end */
 
 
     /* license message logic route start */
@@ -229,5 +213,37 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         });
     });
     /* license message logic route end */
+
+
+    /*ONLY FOR DEVELOPER*/
+    /* request log start */
+    Route::prefix('request-log')->group(function () {
+        Route::get('list',[RequestLogController::class,'index'])->name('request_log_list');
+    });
+    /* request log route end */
+
+    /* setup start */
+    Route::prefix('setup')->group(function () {
+        Route::get('list',[SetupController::class,'index'])->name('setup_list');
+        Route::get('create',[SetupController::class,'create'])->name('setup_add');
+        Route::post('store',[SetupController::class,'store'])->name('setup_store');
+        Route::get('edit/{id}',[SetupController::class, 'edit'])->name('setup_edit');
+        Route::PATCH('update/{setup}',[SetupController::class, 'update'])->name('setup_update');
+        Route::get('delete/{id}',[SetupController::class,'destroy'])->name('setup_delete');
+    });
+    /* setup route end */
+
+    /* request log start */
+    Route::prefix('lead')->group(function () {
+        Route::get('list',[LeadController::class,'index'])->name('lead_list');
+        Route::get('delete/{id}',[LeadController::class,'destroy'])->name('lead_delete');
+
+    });
+    Route::prefix('free-trial')->group(function () {
+        Route::get('list',[FreeTrialController::class,'index'])->name('free_trial_list');
+        Route::get('delete/{id}',[FreeTrialController::class,'destroy'])->name('free_trial_delete');
+    });
+    /* request log route end */
+
 });
 

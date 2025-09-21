@@ -11,6 +11,13 @@ class FreeTrial extends Model
     public $timestamps = false;
     protected $guarded = ['id'];
     protected $dates = ['created_at', 'updated_at'];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'expiration_date' => 'datetime',
+        'grace_period_date' => 'datetime',
+    ];
+
     protected $fillable = [
         'product_slug',
         'site_url',

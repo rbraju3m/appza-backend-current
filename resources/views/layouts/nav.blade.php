@@ -99,14 +99,7 @@
             </ul>
         </div>
 
-        {{--<div class="nav-group {{ Request::is('appza/setup/*') ? 'show' : ''}}">
-            <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.Setup')}}</div>
-            <ul class="nav-sidebar">
-                <li class="nav-item ">
-                    <a href="{{route('setup_list')}}" class="nav-link {{ Request::is('appza/setup/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.SetupList')}}</span></a>
-                </li>
-            </ul>
-        </div>--}}
+
         @endif
 
         @if(auth()->user()->user_type === 'DEVELOPER' || auth()->user()->user_type === 'ADMIN' || auth()->user()->user_type === 'ANDROID')
@@ -146,11 +139,35 @@
         @endif
 
         @if(auth()->user()->user_type === 'DEVELOPER')
+            <div class="nav-group {{ Request::is('appza/setup/*') ? 'show' : ''}}">
+                <div class="nav-group-label" style="font-size: 15px !important;color: red">{{__('messages.Setup')}}</div>
+                <ul class="nav-sidebar">
+                    <li class="nav-item ">
+                        <a href="{{route('setup_list')}}" class="nav-link {{ Request::is('appza/setup/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.SetupList')}}</span></a>
+                    </li>
+                </ul>
+            </div>
             <div class="nav-group {{ Request::is('appza/request-log/*') ? 'show' : ''}}">
-                <div class="nav-group-label" style="font-size: 15px !important;">{{__('messages.RequestLog')}}</div>
+                <div class="nav-group-label" style="font-size: 15px !important;color: red">{{__('messages.RequestLog')}}</div>
                 <ul class="nav-sidebar">
                     <li class="nav-item ">
                         <a href="{{route('request_log_list')}}" class="nav-link {{ Request::is('appza/request-log/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.RequestLogList')}}</span></a>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-group {{ Request::is('appza/lead/*') ? 'show' : ''}}">
+                <div class="nav-group-label" style="font-size: 15px !important;color: red">{{__('messages.Lead')}}</div>
+                <ul class="nav-sidebar">
+                    <li class="nav-item ">
+                        <a href="{{route('lead_list')}}" class="nav-link {{ Request::is('appza/lead/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.list')}}</span></a>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-group {{ Request::is('appza/free-trial/*') ? 'show' : ''}}">
+                <div class="nav-group-label" style="font-size: 15px !important;color: red">{{__('messages.FreeTrial')}}</div>
+                <ul class="nav-sidebar">
+                    <li class="nav-item ">
+                        <a href="{{route('free_trial_list')}}" class="nav-link {{ Request::is('appza/free-trial/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.list')}}</span></a>
                     </li>
                 </ul>
             </div>
