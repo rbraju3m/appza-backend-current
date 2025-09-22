@@ -6,8 +6,6 @@ use App\Models\FluentInfo;
 use App\Models\LicenseLogic;
 use App\Models\LicenseMessage;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 class LicenseService
 {
@@ -62,7 +60,7 @@ class LicenseService
     /**
      * Format a response for an invalid license scenario.
      */
-    public function formatInvalidResponse(string $slug, ?string $extra = null, ?string $productSlug = null): array
+    public function formatInvalidResponse(string $slug, ?string $extra = null, ?string $productSlug = null , ?string $licenseType): array
     {
         $logic = LicenseLogic::where('slug', $slug)->first();
         $productId = null;
@@ -74,7 +72,7 @@ class LicenseService
 
         $msg = null;
         if ($logic) {
-            $msg = $this->getCachedMessageForLogic($logic->id, $productId) ?? $this->getCachedMessageForLogic($logic->id, null);
+            $msg = $this->getCachedMessageForLogic($logic->id, $productId , $licenseType) ?? $this->getCachedMessageForLogic($logic->id, null ,$licenseType);
         }
 
         $msgFormat = $msg ? [
@@ -107,7 +105,7 @@ class LicenseService
         ];
     }
 
-    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null, string $licenseType): ?array
+    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null, ?string $licenseType): ?array
     {
         $direction = $dayDiff > 0 ? 'before' : ($dayDiff < 0 ? 'after' : 'equal');
         $absDays = abs($dayDiff);
@@ -118,9 +116,18 @@ class LicenseService
             return $l['direction'] === $direction && $l['from_days'] <= $absDays && $l['to_days'] >= $absDays;
         });
 
+        /*if i want to get only one logic from db if not use of cache*/
+        /*$logic = LicenseLogic::where('event', $event)
+            ->where('direction', $direction)
+            ->where('from_days', '<=', $absDays)
+            ->where('to_days', '>=', $absDays)
+            ->orderBy('from_days')
+            ->first();*/
+
+
         if (!$logic) return null;
 
-        $msg = $this->getCachedMessageForLogic($logic['id'], $productId) ?? $this->getCachedMessageForLogic($logic['id'], null);
+        $msg = $this->getCachedMessageForLogic($logic['id'], $productId , $licenseType) ?? $this->getCachedMessageForLogic($logic['id'], null, $licenseType);
 
         if (!$msg) return null;
 
@@ -152,12 +159,16 @@ class LicenseService
 //        return array_values(array_filter($all, fn ($r) => $r['event'] === $event));
     }
 
-    protected function getCachedMessageForLogic(int $logicId, ?int $productId = null): ?array
+    protected function getCachedMessageForLogic(int $logicId, ?int $productId = null, ?string $licenseType = null): ?array
     {
 //        $cacheKey = self::CACHE_LICENSE_MESSAGES . "_{$logicId}_product_" . ($productId ?? 'any');
 
 //        return Cache::remember($cacheKey, 3600, function () use ($logicId, $productId) {
             $q = LicenseMessage::where('license_logic_id', $logicId)->where('is_active', true);
+//            dump($licenseType);
+            if ($licenseType) {
+                $q->where('license_type', $licenseType);
+            }
             if ($productId) {
                 $q->where('product_id', $productId);
             }
@@ -178,45 +189,4 @@ class LicenseService
             ];
 //        });
     }
-
-    public static function checkPremiumLicense( string $apiUrl , array $params): array
-    {
-        try {
-            // Example API request (use Http facade, Guzzle, etc.)
-
-            $response = Http::timeout(15)
-                ->retry(2, 100)
-                ->get($apiUrl, $params);
-//            $data = $response->json();
-            dump($response);
-
-            if (!$response->ok()) {
-                return self::formatInvalidResponse('server_error', 'Premium API error');
-            }
-
-            $data = $response->json();
-
-            // Example: API returns { status: "active|expired", expiration_date: "2025-09-30" }
-            if ($data['status'] === 'active') {
-                $licenseObj = (object) [
-                    'expire_date' => $data['expiration_date'],
-                    // Premium has fixed 15-day grace period
-                    'grace_period_date' => \Carbon\Carbon::parse($data['expiration_date'])->addDays(15),
-                ];
-
-                $resp = self::evaluate($licenseObj, 'premium', $product);
-
-                return [
-                    'status' => $resp['status'],
-                    'sub_status' => $resp['sub_status'],
-                    'message' => $resp['message'],
-                ];
-            } else {
-                return self::formatInvalidResponse('license_not_found', 'Premium license expired or not found.');
-            }
-        } catch (\Exception $e) {
-            return self::formatInvalidResponse('server_error', $e->getMessage());
-        }
-    }
-
 }

@@ -8,23 +8,16 @@ use App\Models\FluentInfo;
 use App\Models\FluentLicenseInfo;
 use App\Models\FreeTrial;
 use App\Models\Lead;
-use App\Models\LicenseMessage;
 use App\Models\PopupMessage;
 use App\Services\LicenseService;
-use Exception;
-use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 class LicenseController extends Controller
 {
@@ -63,31 +56,6 @@ class LicenseController extends Controller
 
         return response()->json($response);
     }
-
-
-    protected function getFluentErrorMessage($code, $default = 'License validation failed.')
-    {
-        $messages = [
-            'validation_error' => "Please provide the license key, URL, and item ID.",
-            'key_mismatch' => "This license key doesn't match the product. Please check your key.",
-            'license_error' => "Invalid license key for this product. Please verify your key.",
-            'license_not_found' => "License key not found. Please make sure it is correct.",
-            'license_expired' => "Your license key has expired. Please renew or buy a new one.",
-            'activation_error' => "Unable to activate. Your license may be expired.",
-            'activation_limit_exceeded' => "Activation limit reached. Please upgrade or get a new license.",
-            'site_not_found' => "This website is not registered under your license.",
-            'deactivation_error' => "Unable to deactivate the license. Please try again later.",
-            'product_not_found' => "Product not found. Please check the product ID.",
-            'license_settings_not_found' => "License settings not configured for this product.",
-            'license_not_enabled' => "Licensing hasn’t been enabled for this product.",
-            'invalid_package_data' => "The package data is invalid. Please check the details.",
-            'expired_license' => "Your license key is invalid or expired.",
-            'downloadable_file_not_found' => "No downloadable file available for this product."
-        ];
-
-        return $messages[$code] ?? $default;
-    }
-
     protected function normalizeUrl($url)
     {
         if (!preg_match('#^https?://#i', $url)) {
@@ -101,19 +69,6 @@ class LicenseController extends Controller
         return $host ? "{$scheme}://{$host}" : null;
     }
 
-    protected function getSubdomainAndDomain($url)
-    {
-        $parsedUrl = parse_url($url);
-        if (isset($parsedUrl['host'])) {
-            $hostParts = explode('.', $parsedUrl['host']);
-            array_pop($hostParts);
-            $cleaned = preg_replace('/[^a-zA-Z]/', '', implode('', $hostParts));
-            return strtolower($cleaned);
-        }
-        return null;
-    }
-
-
 
     public function webLicenseCheck(Request $request, LicenseService $licenseService)
     {
@@ -121,10 +76,9 @@ class LicenseController extends Controller
         $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
             return PopupMessage::where('is_active', true)->get(['message_type as type', 'message'])->toArray();
         });
-        $popupMessages = [];
 
         if (!$this->authorization) {
-            $resp = $licenseService->formatInvalidResponse('unauthorized', 'Unauthorized', null);
+            $resp = $licenseService->formatInvalidResponse('unauthorized', 'Unauthorized', null, null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
@@ -134,7 +88,7 @@ class LicenseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $resp = $licenseService->formatInvalidResponse('validation_error', $validator->errors()->first(), null);
+            $resp = $licenseService->formatInvalidResponse('validation_error', $validator->errors()->first(), null , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
@@ -144,7 +98,7 @@ class LicenseController extends Controller
         $fluentInfo = FluentInfo::where('product_slug', $this->pluginName)->where('is_active', true)->first();
         if (!$fluentInfo || !is_numeric($fluentInfo->item_id)) {
             log::warning('Web:: Fluent api call internal not found for site_url: '.$siteUrl.' product: '.$this->pluginName);
-            $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$this->pluginName);
+            $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$this->pluginName , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
 
         }
@@ -157,7 +111,7 @@ class LicenseController extends Controller
 
         if (!$buildDomain) {
             log::warning('Mobile:: Build domain not found for site_url: '.$siteUrl.' product: '.$this->pluginName);
-            $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$this->pluginName);
+            $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$this->pluginName , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
         }
 
@@ -173,7 +127,6 @@ class LicenseController extends Controller
         $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
             return PopupMessage::where('is_active', true)->get(['message_type as type', 'message'])->toArray();
         });
-        $popupMessages = [];
 
         // Validate input
         $validator = Validator::make($request->all(), [
@@ -182,7 +135,7 @@ class LicenseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $resp = $licenseService->formatInvalidResponse('validation_error', $validator->errors()->first(), null);
+            $resp = $licenseService->formatInvalidResponse('validation_error', $validator->errors()->first(), null , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
@@ -205,7 +158,6 @@ class LicenseController extends Controller
 
             if ($localLicenseData->is_fluent_license_check === 1) {
                 // --- Premium (external API) ---
-
                 $buildDomain = BuildDomain::where('site_url', $localLicenseData->site_url)
                     ->where('is_app_license_check', true)
                     ->where('plugin_name', $localLicenseData->product_slug)
@@ -214,7 +166,7 @@ class LicenseController extends Controller
 
                 if (!$buildDomain) {
                     log::warning('Mobile:: Build domain not found for site_url: '.$siteUrl.' product: '.$productSlug);
-                    $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$productSlug);
+                    $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$productSlug , null);
                     return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
                 }
 
@@ -222,7 +174,7 @@ class LicenseController extends Controller
 
                 if (!$findLicense) {
                     log::warning('Mobile:: License not found for site_url: '.$siteUrl.' product: '.$productSlug);
-                    $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$productSlug);
+                    $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$productSlug , null);
                     return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
                 }
 
@@ -230,7 +182,7 @@ class LicenseController extends Controller
 
                 if (!$fluentInfo || !is_numeric($fluentInfo->item_id)) {
                     log::warning('Mobile:: Fluent api call internal not found for site_url: '.$siteUrl.' product: '.$productSlug);
-                    $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$productSlug);
+                    $resp = $licenseService->formatInvalidResponse('plugin_not_installed','',$productSlug , null);
                     return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
                 }
 
@@ -238,7 +190,7 @@ class LicenseController extends Controller
 
             }
         }else{
-            $resp = $licenseService->formatInvalidResponse('license_not_found','',$productSlug);
+            $resp = $licenseService->formatInvalidResponse('license_not_found','',$productSlug , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
         }
     }
@@ -251,7 +203,7 @@ class LicenseController extends Controller
 
         if (!$activationHash) {
             log::warning($device.':: Fluent api call internal not found for site_url: '.$siteUrl.' product: '.$productSlug);
-            $resp = LicenseService::formatInvalidResponse('plugin_not_installed','',$productSlug);
+            $resp = LicenseService::formatInvalidResponse('plugin_not_installed','',$productSlug , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
         }
 
@@ -270,7 +222,7 @@ class LicenseController extends Controller
 
             if (!$response->ok()) {
                 log::warning($device.':: Fluent api response error for site_url: '.$siteUrl.' product: '.$productSlug);
-                $resp = LicenseService::formatInvalidResponse('plugin_not_installed','',$productSlug);
+                $resp = LicenseService::formatInvalidResponse('plugin_not_installed','',$productSlug , null);
                 return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
             }
 
@@ -280,7 +232,7 @@ class LicenseController extends Controller
                 $licenseObj = (object) [
                     'product_slug' => $productSlug,
                     'expiration_date' => $data['expiration_date'],
-                    'grace_period_date' => \Carbon\Carbon::parse($data['expiration_date'])->addDays(15)->format('Y-m-d H:i:s'),
+                    'grace_period_date' => \Carbon\Carbon::parse($data['expiration_date'])->addDays(0)->format('Y-m-d H:i:s'),
                 ];
 
                 $resp = app(LicenseService::class)->evaluate($licenseObj,'premium');
@@ -289,12 +241,12 @@ class LicenseController extends Controller
                 return $this->jsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
             } else {
                 log::warning($device.':: Fluent api response not valid for site_url: '.$siteUrl.' product: '.$productSlug);
-                $resp = app(LicenseService::class)->formatInvalidResponse('plugin_not_installed','',$productSlug);
+                $resp = app(LicenseService::class)->formatInvalidResponse('plugin_not_installed','',$productSlug,null);
                 return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
             }
         } catch (\Exception $e) {
             log::warning($device.':: '.$e->getMessage().' for site_url: '.$siteUrl.' product: '.$productSlug);
-            $resp = app(LicenseService::class)->formatInvalidResponse('plugin_not_installed','',$productSlug);
+            $resp = app(LicenseService::class)->formatInvalidResponse('plugin_not_installed','',$productSlug , null);
             return $this->jsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages,'sub_status' => $resp['sub_status']]);
         }
     }
