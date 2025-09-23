@@ -30,21 +30,25 @@ class LicenseLogicController extends Controller
      * Display a listing of the resource.
      * @return Renderable
      */
-    public function index()
+    public function index(Request $request)
     {
         $events = LicenseLogic::distinct('event')->pluck('event');
-//        $events = ['expiration', 'grace', 'invalid'];
+
+        // Determine active tab
+        $activeTab = $request->query('tab') ?: ($events[0] ?? null);
 
         $licenseLogicsByEvent = [];
         foreach ($events as $event) {
+            $pageName = $event.'_page';
             $licenseLogicsByEvent[$event] = LicenseLogic::where('is_active', 1)
                 ->where('event', $event)
                 ->select(['id','name','slug','event','direction','from_days','to_days'])
                 ->orderByDesc('id')
-                ->paginate(20, ['*'], $event . '_page'); // page name for pagination
+                ->paginate(20, ['*'], $pageName)
+                ->appends(['tab' => $activeTab]); // ensure tab query persists
         }
 
-        return view('license-logic.index', compact('licenseLogicsByEvent', 'events'));
+        return view('license-logic.index', compact('licenseLogicsByEvent', 'events', 'activeTab'));
     }
 
     /**
@@ -73,43 +77,6 @@ class LicenseLogicController extends Controller
         return view('license-logic.add', compact('eventDropdown','directionDropdown','fromDaysDropdown','toDaysDropdown'));
     }
 
-    /*public function store(LicenseLogicRequest $request)
-    {
-        $inputs = $request->validated();
-
-        try {
-            // Start database transaction
-            DB::beginTransaction();
-
-            if (in_array($inputs['event'], ['expiration','grace'])) {
-                $inputs['event_combination'] = $inputs['event'].'_'.$inputs['direction'].'_'.$inputs['from_days'].'_'.$inputs['to_days'];
-            } else {
-                $inputs['event_combination'] = null;
-                $inputs['direction'] = null;
-                $inputs['from_days'] = null;
-                $inputs['to_days'] = null;
-            }
-
-
-            LicenseLogic::create($inputs);
-
-            // Commit the transaction if everything is successful
-            DB::commit();
-
-            return redirect()->route('license_logic_list')->with('success', 'Matrix created successfully.');
-        } catch (\Exception $e) {
-            // Rollback the transaction on error
-            DB::rollBack();
-
-            // Log the error for debugging
-            \Log::error('Error creating page: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return redirect()->route('license_logic_list')->with('success', 'Failed to create the page. Please try again.');
-        }
-    }*/
-
     public function store(LicenseLogicRequest $request)
     {
         $inputs = $request->validated();
@@ -121,9 +88,8 @@ class LicenseLogicController extends Controller
 
             DB::commit();
 
-            return redirect()->route('license_logic_list')
-                ->with('success', 'Matrix created successfully.')
-                ->with('active_tab', $inputs['event']);
+            return redirect()->route('license_logic_list',['tab' => $inputs['event']])
+                ->with('success', 'Matrix created successfully.');
             ;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -189,9 +155,9 @@ class LicenseLogicController extends Controller
             // Commit the transaction if everything is successful
             DB::commit();
 
-            return redirect()->route('license_logic_list')
-                ->with('success', 'Matrix update successfully.')
-                ->with('active_tab', $inputs['event']);
+            return redirect()->route('license_logic_list',['tab' => $inputs['event']])
+                ->with('success', 'Matrix update successfully.');
+//                ->with('active_tab', $inputs['event']);
         } catch (\Exception $e) {
             // Rollback the transaction on error
             DB::rollBack();

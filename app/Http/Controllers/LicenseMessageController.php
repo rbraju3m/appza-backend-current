@@ -31,28 +31,79 @@ class LicenseMessageController extends Controller
      * Display a listing of the resource.
      * @return Renderable
      */
-    public function index()
-    {
-        $licenseMessages = LicenseMessage::with([
-            'product:id,product_name,product_slug',
-            'logic:id,name,slug',
-            'message_details:id,message_id,type,message'
-        ])
-            ->select([
-                'id',
-                'product_id',
-                'addon_id',
-                'license_logic_id',
-                'license_type',
-            ])
-            ->where('is_active', 1)
-            ->orderByDesc('id')
-            ->paginate(20);
-//        ->get()->toArray();
-//        dump($licenseMessages);
 
-        return view('license-message.index',compact('licenseMessages'));
+    /*public function index(Request $request)
+    {
+        $products = FluentInfo::getProductTab();
+
+        $licenseMessages = [];
+
+        foreach ($products as $product) {
+            $licenseMessages[$product->product_slug] = LicenseMessage::with([
+                'product:id,product_name,product_slug',
+                'logic:id,name,slug',
+                'message_details:id,message_id,type,message'
+            ])
+                ->select([
+                    'id',
+                    'product_id',
+                    'addon_id',
+                    'license_logic_id',
+                    'license_type',
+                ])
+                ->where('is_active', 1)
+                ->where('product_id', $product->id)
+                ->orderByDesc('id')
+                ->paginate(10, ['*'], $product->product_slug)
+                ->withQueryString();
+        }
+
+        $activeTab = $request->query('tab') ?: ($products->first()->product_slug ?? null);
+
+        return view('license-message.index', compact('licenseMessages', 'products','activeTab'));
+    }*/
+
+    public function index(Request $request)
+    {
+        $products = FluentInfo::getProductTab(); // your tabs
+        $activeTab = $request->query('tab') ?: ($products->first()->product_slug ?? null);
+        $search = $request->query('search');
+        $licenseType = $request->query('license_type');
+
+        $licenseMessages = [];
+
+        foreach ($products as $product) {
+            $query = LicenseMessage::with([
+                'product:id,product_name,product_slug',
+                'logic:id,name,slug',
+                'message_details:id,message_id,type,message'
+            ])->where('is_active', 1)
+                ->where('product_id', $product->id);
+
+            // Apply search only if tab matches
+            if ($activeTab === $product->product_slug) {
+                if ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('license_type', 'like', "%$search%")
+                            ->orWhereHas('logic', function($l) use ($search) {
+                                $l->where('name', 'like', "%$search%");
+                            });
+                    });
+                }
+
+                if ($licenseType) {
+                    $query->where('license_type', $licenseType);
+                }
+            }
+
+            $licenseMessages[$product->product_slug] = $query->orderByDesc('id')
+                ->paginate(10, ['*'], $product->product_slug . '_page')
+                ->appends($request->query()); // preserve search, license_type, tab
+        }
+
+        return view('license-message.index', compact('licenseMessages', 'products', 'activeTab', 'search', 'licenseType'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -60,7 +111,7 @@ class LicenseMessageController extends Controller
      */
     public function create()
     {
-        $products = FluentInfo::pluck('product_name', 'id')->all();
+        $products = FluentInfo::getProductDropdown();
         $matrixs = LicenseLogic::pluck('name', 'id')->all();
 
         $licenseType = [
@@ -113,13 +164,32 @@ class LicenseMessageController extends Controller
 
     public function edit($id)
     {
-        $data = Page::find($id);
-        $pluginDropdown = SupportsPlugin::getPluginDropdown();
-        $data['page_scope'] = Scope::where('plugin_slug', $data->plugin_slug)
-            ->where('slug', $data['slug'])
-            ->first()?->exists ?? false;
-        return view('page.edit', compact('data', 'pluginDropdown'));
+        // Fetch the LicenseMessage
+        $licenseMessage = LicenseMessage::with('message_details')->findOrFail($id);
+
+        // Prepare dropdowns
+        $products = FluentInfo::getProductDropdown();
+        $matrixs = LicenseLogic::pluck('name', 'id')->all();
+
+        $licenseType = [
+            'free_trial' => 'Free Trial',
+            'premium' => 'Premium',
+        ];
+
+        // Map messages by type for easy access in Blade
+        $messagesByType = collect($licenseMessage->message_details->toArray())
+            ->keyBy('type')
+            ->map(fn($m) => $m['message'])
+            ->all();
+
+        // Add properties to the model for easier form binding
+        $licenseMessage->user_message = $messagesByType['user'] ?? null;
+        $licenseMessage->admin_message = $messagesByType['admin'] ?? null;
+        $licenseMessage->special_message = $messagesByType['special'] ?? null;
+
+        return view('license-message.edit', compact('licenseMessage', 'products', 'matrixs', 'licenseType'));
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -128,68 +198,46 @@ class LicenseMessageController extends Controller
      * @return RedirectResponse
      */
 
-    public function update(PageRequest $request, $id)
+    public function update(LicenseMessageRequest $request, $id)
     {
-        // Get validated input
         $inputs = $request->validated();
-        $page = Page::findOrFail($id); // Use findOrFail for better error handling
-
-        // Handle 'persistent_footer_buttons'
-        $inputs['persistent_footer_buttons'] = $request->has('persistent_footer_buttons') ? '{}' : null;
-
-        // Set default value for 'component_limit' if null
-        $inputs['component_limit'] = $inputs['component_limit'] ?? null;
-
-        $scope = Scope::where('page_id', $id)->firstOrFail();
 
         try {
-            DB::beginTransaction(); // Start transaction
+            DB::beginTransaction();
 
-            // Check if slug needs to be updated
-            if (isset($inputs['slug']) && $page->slug === $inputs['slug']) {
-                // Update the Page and Scope (no slug changes)
-                $page->update($inputs);
-                $scope->update($inputs);
-            } else {
-                // Update components with old slug in the scope field if slug changes
-                $scopeWiseComponent = Component::where('scope', 'LIKE', '%' . $scope->slug . '%')
-                    ->where('plugin_slug', $scope->plugin_slug) // Direct comparison
-                    ->get(); // Retrieve matching components
+            $licenseMessage = LicenseMessage::findOrFail($id);
 
-                if ($scopeWiseComponent->isNotEmpty()) {
-                    foreach ($scopeWiseComponent as $component) {
-                        if (isset($component['scope'])) {
-                            $scopeArray = json_decode($component['scope'], true); // Decode 'scope' JSON
+            // Update LicenseMessage main fields
+            $licenseMessage->update($inputs);
 
-                            if (is_array($scopeArray)) {
-                                // Replace the slug with the new slug
-                                $updatedScope = array_map(function ($item) use ($scope, $inputs) {
-                                    return $item === $scope->slug ? $inputs['slug'] : $item;
-                                }, $scopeArray);
+            // Update or create message_details
+            $details = [
+                'user' => $inputs['message_user'] ?? null,
+                'admin' => $inputs['message_admin'] ?? null,
+                'special' => $inputs['message_special'] ?? null,
+            ];
 
-                                // Encode back to JSON and update
-                                $component->update([
-                                    'scope' => json_encode($updatedScope),
-                                ]);
-                            }
-                        }
-                    }
+            foreach ($details as $type => $message) {
+                if ($message !== null) {
+                    $licenseMessage->message_details()->updateOrCreate(
+                        ['type' => $type],
+                        ['message' => $message]
+                    );
                 }
-
-                // Update Scope and Page with new slug
-                $scope->update($inputs);
-                $page->update($inputs);
             }
 
-            DB::commit(); // Commit the transaction
-            return redirect()->route('page_list')->with('success', 'Page updated successfully.');
+            DB::commit();
+
+            return redirect()->route('license_message_list',['tab' => $licenseMessage->product->product_slug])
+                ->with('success', 'Message updated successfully.');
         } catch (\Exception $e) {
-            DB::rollBack(); // Rollback on error
-            \Log::error('Error updating page: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'inputs' => $inputs,
+            DB::rollBack();
+
+            \Log::error('Error updating message: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->route('page_list')->with('error', 'Failed to update the page. Please try again.');
+
+            return redirect()->back()->with('error', 'Failed to update the message. Please try again.');
         }
     }
 

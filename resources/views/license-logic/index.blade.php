@@ -24,93 +24,55 @@
                     <div class="card-body">
                         @include('layouts.message')
 
-                        {{-- Bootstrap Tabs --}}
-                        @php
-                            $activeTab = session('active_tab'); // could be null
-                        @endphp
-
                         <ul class="nav nav-tabs" id="eventTabs" role="tablist">
                             @foreach($events as $event)
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link
-                {{ $activeTab
-                    ? ($activeTab === $event ? 'active' : '')
-                    : ($loop->first ? 'active' : '') }}"
-                                            id="{{ $event }}-tab"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#tab-{{ $event }}"
-                                            type="button" role="tab"
-                                            aria-controls="tab-{{ $event }}"
-                                            aria-selected="{{ $activeTab
-                    ? ($activeTab === $event ? 'true' : 'false')
-                    : ($loop->first ? 'true' : 'false') }}">
+                                    <a class="nav-link {{ $activeTab == $event ? 'active' : '' }}"
+                                       href="{{ route('license_logic_list', ['tab' => $event]) }}">
                                         {{ ucfirst($event) }}
-                                    </button>
+                                    </a>
                                 </li>
                             @endforeach
                         </ul>
 
                         <div class="tab-content mt-3">
                             @foreach($events as $event)
-                                <div class="tab-pane fade
-           {{ $activeTab
-                ? ($activeTab === $event ? 'show active' : '')
-                : ($loop->first ? 'show active' : '') }}"
-                                     id="tab-{{ $event }}" role="tabpanel"
-                                     aria-labelledby="{{ $event }}-tab">
-
-                                    <table class="table table-bordered datatable table-responsive mainTable text-center">
-                                        <thead class="thead-dark">
+                                <div class="tab-pane fade {{ $activeTab == $event ? 'show active' : '' }}">
+                                    <table class="table table-bordered">
+                                        <thead>
                                         <tr>
-                                            <th>SL</th>
-                                            <th>Name</th>
-                                            <th>Slug</th>
-                                            <th>Event</th>
+                                            <th>SL</th><th>Name</th><th>Slug</th><th>Event</th>
                                             @if($event === 'expiration' || $event === 'grace')
-                                                <th>Direction</th>
-                                                <th>From days</th>
-                                                <th>To days</th>
+                                                <th>Direction</th><th>From</th><th>To</th>
                                             @endif
-                                            <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
-                                                <i class="fas fa-cog"></i>
-                                            </th>
+                                            <th>Action</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         @php
                                             $serial = ($licenseLogicsByEvent[$event]->currentPage() - 1) * $licenseLogicsByEvent[$event]->perPage() + 1;
                                         @endphp
-                                        @foreach($licenseLogicsByEvent[$event] as $logics)
+                                        @foreach($licenseLogicsByEvent[$event] as $logic)
                                             <tr>
                                                 <td>{{ $serial++ }}</td>
-                                                <td>{{ $logics->name }}</td>
-                                                <td>{{ $logics->slug }}</td>
-                                                <td>{{ $logics->event }}</td>
+                                                <td>{{ $logic->name }}</td>
+                                                <td>{{ $logic->slug }}</td>
+                                                <td>{{ $logic->event }}</td>
                                                 @if($event === 'expiration' || $event === 'grace')
-                                                    <td>{{ $logics->direction }}</td>
-                                                    <td>{{ $logics->from_days }}</td>
-                                                    <td>{{ $logics->to_days }}</td>
+                                                    <td>{{ $logic->direction }}</td>
+                                                    <td>{{ $logic->from_days }}</td>
+                                                    <td>{{ $logic->to_days }}</td>
                                                 @endif
-                                                <td>
-                                                    <div class="btn-group" role="group" aria-label="Basic outlined example">
-                                                        <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('license_logic_edit',$logics->id)}}"><i class="fas fa-edit"></i></a>
-{{--                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$logics->id)}}"><i class="fas fa-trash"></i></a>--}}
-                                                        {{--@if(\Illuminate\Support\Facades\Auth::getUser()->user_type == 'DEVELOPER')
-                                                            <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_force_delete',$logics->id)}}">
-                                                                Force <i class="fas fa-trash"></i>
-                                                            </a>
-                                                        @endif--}}
-
-                                                    </div>
-                                                </td>
+                                                <td><a href="{{ route('license_logic_edit', $logic->id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a></td>
                                             </tr>
                                         @endforeach
                                         </tbody>
                                     </table>
 
                                     {{-- Pagination --}}
-                                    {{ $licenseLogicsByEvent[$event]->links('layouts.pagination') }}
-
+                                    <div class="d-flex justify-content-end">
+                                        {{ $licenseLogicsByEvent[$event]->withQueryString()->links('layouts.pagination') }}
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -124,5 +86,14 @@
 @endsection
 
 @section('footer.scripts')
-{{--    <script src="{{Module::asset('appfiy:js/employee.js')}}"></script>--}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = '{{ $activeTab }}';
+            if(activeTab) {
+                const tabEl = document.getElementById(`tab-${activeTab}-tab`);
+                if(tabEl) new bootstrap.Tab(tabEl).show();
+            }
+        });
+    </script>
 @endsection
+

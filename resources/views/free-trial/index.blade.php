@@ -8,7 +8,7 @@
 
                     <div class="card-header">
                         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                        <h6>{{__('messages.SetupList')}}</h6>
+                        <h6>{{__('messages.FreeTrial')}}</h6>
                         <div class="btn-toolbar mb-2 mb-md-0">
                             <div class="btn-group me-2">
                                 {{--<a href="{{route('setup_add')}}" title="" class="module_button_header">

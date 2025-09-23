@@ -28,9 +28,7 @@ class LeadController extends Controller
     public function index(Request $request)
     {
         // Key = slug, Value = name
-        $products = FluentInfo::select('product_slug', 'product_name')
-            ->distinct('product_slug')
-            ->pluck('product_name', 'product_slug');
+        $products = FluentInfo::getProductDropdown();
 
         $leads = [];
         foreach ($products as $slug => $name) {

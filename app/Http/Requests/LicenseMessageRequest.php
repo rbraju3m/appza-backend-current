@@ -68,7 +68,7 @@ class LicenseMessageRequest extends FormRequest
                         return $query->where('license_logic_id', $this->license_logic_id)
                             ->where('license_type', $this->license_type);
                     })
-                    ->ignore($this->route('license_message'), 'id'),
+                    ->ignore($this->route('id'), 'id'),
             ],
 
             // at least one message must be provided

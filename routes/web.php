@@ -208,7 +208,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
             Route::get('create',[LicenseMessageController::class,'create'])->name('license_message_add');
             Route::POST('store',[LicenseMessageController::class,'store'])->name('license_message_store');
             Route::get('edit/{id}',[LicenseMessageController::class, 'edit'])->name('license_message_edit');
-            Route::PATCH('update/{page}',[LicenseMessageController::class, 'update'])->name('license_message_update');
+            Route::PATCH('update/{id}',[LicenseMessageController::class, 'update'])->name('license_message_update');
             Route::get('delete/{id}',[LicenseMessageController::class,'destroy'])->name('license_message_delete');
         });
     });
