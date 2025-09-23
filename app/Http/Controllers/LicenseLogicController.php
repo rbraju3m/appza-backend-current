@@ -73,13 +73,23 @@ class LicenseLogicController extends Controller
         return view('license-logic.add', compact('eventDropdown','directionDropdown','fromDaysDropdown','toDaysDropdown'));
     }
 
-    public function store(LicenseLogicRequest $request)
+    /*public function store(LicenseLogicRequest $request)
     {
         $inputs = $request->validated();
 
         try {
             // Start database transaction
             DB::beginTransaction();
+
+            if (in_array($inputs['event'], ['expiration','grace'])) {
+                $inputs['event_combination'] = $inputs['event'].'_'.$inputs['direction'].'_'.$inputs['from_days'].'_'.$inputs['to_days'];
+            } else {
+                $inputs['event_combination'] = null;
+                $inputs['direction'] = null;
+                $inputs['from_days'] = null;
+                $inputs['to_days'] = null;
+            }
+
 
             LicenseLogic::create($inputs);
 
@@ -96,9 +106,35 @@ class LicenseLogicController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return redirect()->route('license_logic_list')->with('error', 'Failed to create the page. Please try again.');
+            return redirect()->route('license_logic_list')->with('success', 'Failed to create the page. Please try again.');
+        }
+    }*/
+
+    public function store(LicenseLogicRequest $request)
+    {
+        $inputs = $request->validated();
+
+        try {
+            DB::beginTransaction();
+
+            LicenseLogic::create($inputs);
+
+            DB::commit();
+
+            return redirect()->route('license_logic_list')
+                ->with('success', 'Matrix created successfully.')
+                ->with('active_tab', $inputs['event']);
+            ;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error creating logic: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()->withErrors('Failed to create the matrix. Please try again.');
         }
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -108,83 +144,64 @@ class LicenseLogicController extends Controller
 
     public function edit($id)
     {
-        $data = Page::find($id);
-        $pluginDropdown = SupportsPlugin::getPluginDropdown();
-        $data['page_scope'] = Scope::where('plugin_slug', $data->plugin_slug)
-            ->where('slug', $data['slug'])
-            ->first()?->exists ?? false;
-        return view('page.edit', compact('data', 'pluginDropdown'));
+        $licenseLogic = LicenseLogic::findOrFail($id);
+        $eventDropdown = [
+            'expiration' => 'Expiration',
+            'grace' => 'Grace',
+            'invalid' => 'Invalid'
+        ];
+        $directionDropdown = [
+            'equal' => 'Equal',
+            'before' => 'Before',
+            'after' => 'After'
+        ];
+
+        $fromDaysDropdown = [];
+        $toDaysDropdown = [];
+        for ($day = 0; $day <= 31; $day++) {
+            $fromDaysDropdown[$day] = $day;
+            $toDaysDropdown[$day] = $day;
+        }
+        return view('license-logic.edit', compact('eventDropdown','directionDropdown','fromDaysDropdown','toDaysDropdown','licenseLogic'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     * @param Request $request
-     * @param int $id
-     * @return RedirectResponse
-     */
-
-    public function update(PageRequest $request, $id)
+    public function update(LicenseLogicRequest $request, $id)
     {
-        // Get validated input
+        $licenseLogic = LicenseLogic::findOrFail($id);
+
         $inputs = $request->validated();
-        $page = Page::findOrFail($id); // Use findOrFail for better error handling
-
-        // Handle 'persistent_footer_buttons'
-        $inputs['persistent_footer_buttons'] = $request->has('persistent_footer_buttons') ? '{}' : null;
-
-        // Set default value for 'component_limit' if null
-        $inputs['component_limit'] = $inputs['component_limit'] ?? null;
-
-        $scope = Scope::where('page_id', $id)->firstOrFail();
 
         try {
-            DB::beginTransaction(); // Start transaction
+            // Start database transaction
+            DB::beginTransaction();
 
-            // Check if slug needs to be updated
-            if (isset($inputs['slug']) && $page->slug === $inputs['slug']) {
-                // Update the Page and Scope (no slug changes)
-                $page->update($inputs);
-                $scope->update($inputs);
+            if (in_array($inputs['event'], ['expiration','grace'])) {
+                $inputs['event_combination'] = $inputs['event'].'_'.$inputs['direction'].'_'.$inputs['from_days'].'_'.$inputs['to_days'];
             } else {
-                // Update components with old slug in the scope field if slug changes
-                $scopeWiseComponent = Component::where('scope', 'LIKE', '%' . $scope->slug . '%')
-                    ->where('plugin_slug', $scope->plugin_slug) // Direct comparison
-                    ->get(); // Retrieve matching components
-
-                if ($scopeWiseComponent->isNotEmpty()) {
-                    foreach ($scopeWiseComponent as $component) {
-                        if (isset($component['scope'])) {
-                            $scopeArray = json_decode($component['scope'], true); // Decode 'scope' JSON
-
-                            if (is_array($scopeArray)) {
-                                // Replace the slug with the new slug
-                                $updatedScope = array_map(function ($item) use ($scope, $inputs) {
-                                    return $item === $scope->slug ? $inputs['slug'] : $item;
-                                }, $scopeArray);
-
-                                // Encode back to JSON and update
-                                $component->update([
-                                    'scope' => json_encode($updatedScope),
-                                ]);
-                            }
-                        }
-                    }
-                }
-
-                // Update Scope and Page with new slug
-                $scope->update($inputs);
-                $page->update($inputs);
+                $inputs['event_combination'] = null;
+                $inputs['direction'] = null;
+                $inputs['from_days'] = null;
+                $inputs['to_days'] = null;
             }
 
-            DB::commit(); // Commit the transaction
-            return redirect()->route('page_list')->with('success', 'Page updated successfully.');
+            $licenseLogic->update($inputs);
+
+            // Commit the transaction if everything is successful
+            DB::commit();
+
+            return redirect()->route('license_logic_list')
+                ->with('success', 'Matrix update successfully.')
+                ->with('active_tab', $inputs['event']);
         } catch (\Exception $e) {
-            DB::rollBack(); // Rollback on error
-            \Log::error('Error updating page: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'inputs' => $inputs,
+            // Rollback the transaction on error
+            DB::rollBack();
+
+            // Log the error for debugging
+            \Log::error('Error creating page: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->route('page_list')->with('error', 'Failed to update the page. Please try again.');
+
+            return redirect()->route('license_logic_list')->with('success', 'Failed to create the page. Please try again.');
         }
     }
 

@@ -11,7 +11,7 @@ class LicenseLogic extends Model
     public $timestamps = true;
     protected $guarded = ['id'];
     protected $dates = ['deleted_at','created_at','updated_at'];
-    protected $fillable = ['name', 'slug','event','direction','from_days','to_days'];
+    protected $fillable = ['name', 'slug','event','direction','from_days','to_days','event_combination'];
 
     /**
      * Automatically clear cache when logics are saved, deleted, or restored.

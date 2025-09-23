@@ -31,6 +31,7 @@ return [
     'event' => 'Event',
     'scope' => 'Scope',
     'list' => 'List',
+    'UpdateMatrix' => 'Update Matrix',
     'image' => 'Image',
     'gallery' => 'Gallery',
     'style-group' => 'Style Group',

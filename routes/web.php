@@ -200,7 +200,7 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
             Route::get('create',[LicenseLogicController::class,'create'])->name('license_logic_add');
             Route::POST('store',[LicenseLogicController::class,'store'])->name('license_logic_store');
             Route::get('edit/{id}',[LicenseLogicController::class, 'edit'])->name('license_logic_edit');
-            Route::PATCH('update/{page}',[LicenseLogicController::class, 'update'])->name('license_logic_update');
+            Route::PATCH('update/{id}',[LicenseLogicController::class, 'update'])->name('license_logic_update');
             Route::get('delete/{id}',[LicenseLogicController::class,'destroy'])->name('license_logic_delete');
         });
         Route::prefix('message')->group(function () {

@@ -25,16 +25,25 @@
                         @include('layouts.message')
 
                         {{-- Bootstrap Tabs --}}
+                        @php
+                            $activeTab = session('active_tab'); // could be null
+                        @endphp
+
                         <ul class="nav nav-tabs" id="eventTabs" role="tablist">
                             @foreach($events as $event)
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                    <button class="nav-link
+                {{ $activeTab
+                    ? ($activeTab === $event ? 'active' : '')
+                    : ($loop->first ? 'active' : '') }}"
                                             id="{{ $event }}-tab"
                                             data-bs-toggle="tab"
                                             data-bs-target="#tab-{{ $event }}"
                                             type="button" role="tab"
                                             aria-controls="tab-{{ $event }}"
-                                            aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                            aria-selected="{{ $activeTab
+                    ? ($activeTab === $event ? 'true' : 'false')
+                    : ($loop->first ? 'true' : 'false') }}">
                                         {{ ucfirst($event) }}
                                     </button>
                                 </li>
@@ -43,7 +52,12 @@
 
                         <div class="tab-content mt-3">
                             @foreach($events as $event)
-                                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="tab-{{ $event }}" role="tabpanel" aria-labelledby="{{ $event }}-tab">
+                                <div class="tab-pane fade
+           {{ $activeTab
+                ? ($activeTab === $event ? 'show active' : '')
+                : ($loop->first ? 'show active' : '') }}"
+                                     id="tab-{{ $event }}" role="tabpanel"
+                                     aria-labelledby="{{ $event }}-tab">
 
                                     <table class="table table-bordered datatable table-responsive mainTable text-center">
                                         <thead class="thead-dark">
@@ -57,6 +71,9 @@
                                                 <th>From days</th>
                                                 <th>To days</th>
                                             @endif
+                                            <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
+                                                <i class="fas fa-cog"></i>
+                                            </th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -74,6 +91,18 @@
                                                     <td>{{ $logics->from_days }}</td>
                                                     <td>{{ $logics->to_days }}</td>
                                                 @endif
+                                                <td>
+                                                    <div class="btn-group" role="group" aria-label="Basic outlined example">
+                                                        <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('license_logic_edit',$logics->id)}}"><i class="fas fa-edit"></i></a>
+{{--                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$logics->id)}}"><i class="fas fa-trash"></i></a>--}}
+                                                        {{--@if(\Illuminate\Support\Facades\Auth::getUser()->user_type == 'DEVELOPER')
+                                                            <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_force_delete',$logics->id)}}">
+                                                                Force <i class="fas fa-trash"></i>
+                                                            </a>
+                                                        @endif--}}
+
+                                                    </div>
+                                                </td>
                                             </tr>
                                         @endforeach
                                         </tbody>
