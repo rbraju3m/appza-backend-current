@@ -26,7 +26,7 @@ class LeadController extends Controller
      * Display a listing of the resource.
      */
 
-    public function index(Request $request)
+    /*public function index(Request $request)
     {
         $products = FluentInfo::getProductTab(); // now keyed by slug
 
@@ -39,7 +39,48 @@ class LeadController extends Controller
         }
 
         return view('lead.index', compact('leads', 'products'));
+    }*/
+
+    public function index(Request $request)
+    {
+        $products = FluentInfo::getProductTab(); // keyed by slug
+
+        // active tab comes from query ?tab=xxx or default first slug
+        $activeTab = $request->query('tab') ?: $products->keys()->first();
+        $search = $request->query('search');
+
+        $leads = [];
+        foreach ($products as $slug => $name) {
+            // Base query
+            $query = Lead::where('is_active', 1)
+                ->where('plugin_name', $name->product_slug)
+                ->orderByDesc('id');
+
+            // Apply search only for active tab
+            if ($activeTab === $name->product_slug && $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('domain', 'like', "%{$search}%")
+                        ->orWhere('note', 'like', "%{$search}%")
+                        ->orWhere('appza_hash', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            // Finalize pagination
+            $leads[$slug] = $query
+                ->paginate(20, ['*'], $name->product_slug . '_page')
+                ->appends([
+                    'tab' => $slug,
+                    'search' => $search, // 👈 keep search text during pagination
+                ]);
+        }
+
+        return view('lead.index', compact('leads', 'products', 'activeTab', 'search'));
     }
+
+
 
 
     public function destroy($id)

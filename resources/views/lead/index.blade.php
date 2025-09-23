@@ -8,34 +8,47 @@
 
                     <div class="card-header">
                         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                        <h6>{{__('messages.LeadList')}}</h6>
-                        <div class="btn-toolbar mb-2 mb-md-0">
-                            <div class="btn-group me-2">
-                                {{--<a href="{{route('setup_add')}}" title="" class="module_button_header">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-plus-circle"></i> {{__('messages.createSetup')}}
-                                    </button>
-                                </a>--}}
+                            <h6>{{ __('messages.LeadList') }}</h6>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    {{-- optional header button --}}
+                                </div>
                             </div>
-                        </div>
                         </div>
                     </div>
 
                     <div class="card-body">
                         @include('layouts.message')
 
+                        <!-- Search Form -->
+                        <form method="GET" action="{{ route('lead_list') }}" id="search-form" class="mb-3">
+                            <input type="hidden" name="tab" class="tab_search_field" value="{{ $activeTab }}">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="text" name="search" class="form-control"
+                                           placeholder="Search..." value="{{ $search }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary">Search</button>
+                                    <a href="{{ route('lead_list', ['tab' => $activeTab]) }}"
+                                       class="btn btn-secondary">Clear</a>
+                                </div>
+                            </div>
+                        </form>
+
                         {{-- Tabs --}}
                         <ul class="nav nav-tabs" id="eventTabs" role="tablist">
                             @foreach($products as $slug => $name)
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                    <button class="nav-link tabChange {{ $activeTab == $slug ? 'active' : '' }}"
                                             id="{{ $name->product_slug }}-tab"
                                             data-bs-toggle="tab"
                                             data-bs-target="#tab-{{ $name->product_slug }}"
                                             type="button" role="tab"
+                                            tab-name="{{ $name->product_slug }}"
                                             aria-controls="tab-{{ $name->product_slug }}"
-                                            aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                                        {{ $name->product_name }} {{-- show product_name --}}
+                                            aria-selected="{{ $activeTab == $slug ? 'true' : 'false' }}">
+                                        {{ $name->product_name }}
                                     </button>
                                 </li>
                             @endforeach
@@ -43,7 +56,7 @@
 
                         <div class="tab-content mt-3" id="eventTabsContent">
                             @foreach($products as $slug => $name)
-                                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                                <div class="tab-pane fade {{ $activeTab == $slug ? 'show active' : '' }}"
                                      id="tab-{{ $name->product_slug }}"
                                      role="tabpanel"
                                      aria-labelledby="{{ $name->product_slug }}-tab">
@@ -53,7 +66,7 @@
                                         <tr>
                                             <th>SL</th>
                                             <th>Information</th>
-                                            <th>SiteUrl</th>
+                                            <th>Site Url</th>
                                             <th>Note</th>
                                             <th><i class="fas fa-cog"></i></th>
                                         </tr>
@@ -86,20 +99,17 @@
                                         </tbody>
                                     </table>
 
-                                    {{-- pagination --}}
-                                    {{ $leads[$slug]->links('layouts.pagination') }}
+                                    <div class="d-flex justify-content-end">
+                                        {{ $leads[$slug]->links('layouts.pagination') }}
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
-
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-
 @endsection
 
 @section('footer.scripts')
@@ -114,4 +124,24 @@
             margin-right: 4px;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tabChange');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function () {
+                    const tabName = this.getAttribute('tab-name');
+
+                    // Update hidden input in search form
+                    document.querySelector('.tab_search_field').value = tabName;
+
+                    // Update URL without reloading
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', tabName);
+                    window.history.replaceState({}, '', url);
+                });
+            });
+        });
+    </script>
 @endsection

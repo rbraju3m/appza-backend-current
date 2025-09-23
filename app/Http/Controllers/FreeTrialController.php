@@ -28,16 +28,33 @@ class FreeTrialController extends Controller
             ->distinct('product_slug')
             ->pluck('product_name', 'product_slug');
 
+        // active tab from query ?tab=xxx or default first slug
+        $activeTab = $request->query('tab') ?: $products->keys()->first();
+        $search = $request->query('search');
+
         $freeTrials = [];
         foreach ($products as $slug => $name) {
-            $freeTrials[$slug] = FreeTrial::where('is_active', 1)
-                ->where('product_slug', $slug) // grouped by slug
-                ->orderByDesc('id')
-                ->paginate(20, ['*'], $slug . '_page');
+            $query = FreeTrial::where('is_active', 1)
+                ->where('product_slug', $slug)
+                ->orderByDesc('id');
+
+            // apply search only on active tab
+            if ($activeTab === $slug && $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                        ->orWhere('email', 'like', "%$search%")
+                        ->orWhere('site_url', 'like', "%$search%");
+                });
+            }
+
+            $freeTrials[$slug] = $query
+                ->paginate(20, ['*'], $slug . '_page')
+                ->appends(['tab' => $slug, 'search' => $search]);
         }
 
-        return view('free-trial.index', compact('freeTrials', 'products'));
+        return view('free-trial.index', compact('freeTrials', 'products', 'activeTab', 'search'));
     }
+
 
     public function destroy($id)
     {
