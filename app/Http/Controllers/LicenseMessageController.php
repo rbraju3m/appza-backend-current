@@ -32,37 +32,6 @@ class LicenseMessageController extends Controller
      * @return Renderable
      */
 
-    /*public function index(Request $request)
-    {
-        $products = FluentInfo::getProductTab();
-
-        $licenseMessages = [];
-
-        foreach ($products as $product) {
-            $licenseMessages[$product->product_slug] = LicenseMessage::with([
-                'product:id,product_name,product_slug',
-                'logic:id,name,slug',
-                'message_details:id,message_id,type,message'
-            ])
-                ->select([
-                    'id',
-                    'product_id',
-                    'addon_id',
-                    'license_logic_id',
-                    'license_type',
-                ])
-                ->where('is_active', 1)
-                ->where('product_id', $product->id)
-                ->orderByDesc('id')
-                ->paginate(10, ['*'], $product->product_slug)
-                ->withQueryString();
-        }
-
-        $activeTab = $request->query('tab') ?: ($products->first()->product_slug ?? null);
-
-        return view('license-message.index', compact('licenseMessages', 'products','activeTab'));
-    }*/
-
     public function index(Request $request)
     {
         $products = FluentInfo::getProductTab(); // your tabs

@@ -25,21 +25,22 @@ class LeadController extends Controller
     /**
      * Display a listing of the resource.
      */
+
     public function index(Request $request)
     {
-        // Key = slug, Value = name
-        $products = FluentInfo::getProductDropdown();
+        $products = FluentInfo::getProductTab(); // now keyed by slug
 
         $leads = [];
         foreach ($products as $slug => $name) {
             $leads[$slug] = Lead::where('is_active', 1)
-                ->where('plugin_name', $slug) // grouped by slug
+                ->where('plugin_name', $name->product_slug)
                 ->orderByDesc('id')
-                ->paginate(20, ['*'], $slug . '_page');
+                ->paginate(20, ['*'], $name->product_slug . '_page');
         }
 
         return view('lead.index', compact('leads', 'products'));
     }
+
 
     public function destroy($id)
     {

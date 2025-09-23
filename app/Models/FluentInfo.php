@@ -18,6 +18,8 @@ class FluentInfo extends Model
     }
     public static function getProductTab()
     {
-        return self::where('is_active', 1)->get(['id', 'product_name', 'product_slug']);
+        return self::where('is_active', 1)
+            ->get(['id', 'product_name', 'product_slug'])
+            ->keyBy('product_slug');
     }
 }

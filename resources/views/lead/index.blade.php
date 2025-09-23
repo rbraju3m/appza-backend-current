@@ -29,13 +29,13 @@
                             @foreach($products as $slug => $name)
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link {{ $loop->first ? 'active' : '' }}"
-                                            id="{{ $slug }}-tab"
+                                            id="{{ $name->product_slug }}-tab"
                                             data-bs-toggle="tab"
-                                            data-bs-target="#tab-{{ $slug }}"
+                                            data-bs-target="#tab-{{ $name->product_slug }}"
                                             type="button" role="tab"
-                                            aria-controls="tab-{{ $slug }}"
+                                            aria-controls="tab-{{ $name->product_slug }}"
                                             aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                                        {{ $name }} {{-- show product_name --}}
+                                        {{ $name->product_name }} {{-- show product_name --}}
                                     </button>
                                 </li>
                             @endforeach
@@ -44,9 +44,9 @@
                         <div class="tab-content mt-3" id="eventTabsContent">
                             @foreach($products as $slug => $name)
                                 <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
-                                     id="tab-{{ $slug }}"
+                                     id="tab-{{ $name->product_slug }}"
                                      role="tabpanel"
-                                     aria-labelledby="{{ $slug }}-tab">
+                                     aria-labelledby="{{ $name->product_slug }}-tab">
 
                                     <table class="table table-bordered text-center">
                                         <thead>
