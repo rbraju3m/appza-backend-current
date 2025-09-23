@@ -26,12 +26,25 @@ class RequestLogController extends Controller
      * Display a listing of the resource.
      * @return Renderable
      */
-    public function index(Request $request): Renderable
+    public function index(Request $request)
     {
-        // Retrieve active plugin entries
-        $requestLogs = RequestLog::orderByDesc('id')->paginate(20);
-        return view('request-log.index',compact('requestLogs'));
+        $filters = $request->query('search');
+
+        $requestLogs = RequestLog::orderByDesc('id');
+
+        if ($filters) {
+            $requestLogs = $requestLogs->where(function($query) use ($filters) {
+                $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(request_data, '$')) LIKE ?", ["%{$filters}%"])
+                    ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(response_data, '$')) LIKE ?", ["%{$filters}%"])
+                    ->orWhere('ip_address', 'like', "%{$filters}%");
+            });
+        }
+
+        $requestLogs = $requestLogs->paginate(20)->withQueryString();
+
+        return view('request-log.index', compact('requestLogs'));
     }
+
 
     public function destroy($id)
     {
