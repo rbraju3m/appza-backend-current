@@ -19,52 +19,52 @@ Route::prefix('/appza/v2')
     ->middleware([LogRequestResponse::class,LogActivity::class])
     ->group(function () {
         // lead api
-        Route::prefix('lead')->group(function () {
+        Route::prefix('lead')->name('v2_')->group(function () {
             Route::post('store/{product}', [LeadController::class, 'store'])
                 ->name('create_lead')
                 ->whereIn('product', ['appza', 'lazy_task','fcom_mobile']);
         });
 
         // theme api
-        Route::prefix('themes')->group(function () {
+        Route::prefix('themes')->name('v2_')->group(function () {
             Route::get('', [ThemeController::class,'index'])->name('themes');
             Route::get('get-theme', [ThemeController::class,'getTheme'])->name('get_theme');
         });
 
         // page component api
-        Route::prefix('page-component')->group(function () {
+        Route::prefix('page-component')->name('v2_')->group(function () {
             Route::get('', [PageComponentController::class,'index'])
                 ->name('page_component');
         });
 
         // global config api
-        Route::prefix('global-config')->group(function () {
+        Route::prefix('global-config')->name('v2_')->group(function () {
             Route::get('', [GlobalConfigController::class,'index'])
                 ->name('global_config');
         });
 
         // free trial request api
-        Route::prefix('free')->group(function () {
+        Route::prefix('free')->name('v2_')->group(function () {
             Route::post('trial/{product}', [FreeTrialController::class, 'store'])
                 ->name('create_free_trial')
                 ->whereIn('product', ['appza', 'lazy_task','fcom_mobile']);
         });
 
         // license api
-        Route::prefix('license')->group(function () {
+        Route::prefix('license')->name('v2_')->group(function () {
             Route::get('check', [LicenseControllerV2::class,'webLicenseCheck'])->name('license_check');
-            Route::post('activate', [LicenseControllerV1::class,'activate'])->name('license_activate');
+            Route::post('activate', [LicenseControllerV2::class,'activate'])->name('license_activate');
             Route::get('deactivate', [LicenseControllerV1::class,'deactivate'])->name('license_deactivate');
             Route::post('version/check', [LicenseControllerV1::class,'versionCheck'])->name('license_version_check');
         });
 
         // for app api
-        Route::prefix('app')->group(function () {
+        Route::prefix('app')->name('v2_')->group(function () {
             Route::get('license-check', [LicenseControllerV2::class,'appLicenseCheck'])->name('app_license_check');
         });
 
         // build api
-        Route::prefix('build')->group(function () {
+        Route::prefix('build')->name('v2_')->group(function () {
             Route::post('', [ApkBuildHistoryController::class,'apkBuild'])->name('create_building_apk');
             Route::get('history', [ApkBuildHistoryController::class,'apkBuildHistoryList'])->name('build_history_list');
             Route::post('resource', [ApkBuildResourceController::class,'buildResource'])->name('create_build_resource');
@@ -77,13 +77,13 @@ Route::prefix('/appza/v2')
         });
 
         // plugin api
-        Route::prefix('plugins')->group(function () {
+        Route::prefix('plugins')->name('v2_')->group(function () {
             Route::get('', [PluginController::class,'allPlugin'])->name('get_all_plugins');
         });
 
 
         // for app api
-        Route::prefix('plugin')->group(function () {
+        Route::prefix('plugin')->name('v2_')->group(function () {
             Route::get('check-disable', [PluginController::class,'checkDisablePlugin'])->name('check_disable_plugin');
             Route::get('version-check', [PluginController::class,'pluginVersionCheck'])->name('plugin_version_check');
         });
