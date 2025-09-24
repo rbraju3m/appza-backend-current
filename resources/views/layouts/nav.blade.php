@@ -168,6 +168,8 @@
                 <ul class="nav-sidebar">
                     <li class="nav-item ">
                         <a href="{{route('free_trial_list')}}" class="nav-link {{ Request::is('appza/free-trial/list') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.list')}}</span></a>
+                        <a href="{{route('report_free_trial')}}" class="nav-link {{ Request::is('appza/report/free-trial') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.report')}}</span></a>
+                        <a href="{{route('report_lead_wise')}}" class="nav-link {{ Request::is('appza/report/lead-wise') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.leadWise')}}</span></a>
                     </li>
                 </ul>
             </div>

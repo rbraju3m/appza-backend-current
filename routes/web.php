@@ -15,6 +15,7 @@ use App\Http\Controllers\LicenseLogicController;
 use App\Http\Controllers\LicenseMessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PluginController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequestLogController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\StyleGroupController;
@@ -242,6 +243,12 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     Route::prefix('free-trial')->group(function () {
         Route::get('list',[FreeTrialController::class,'index'])->name('free_trial_list');
         Route::get('delete/{id}',[FreeTrialController::class,'destroy'])->name('free_trial_delete');
+    });
+
+    Route::prefix('report')->group(function () {
+        Route::get('free-trial', [ReportController::class, 'freeTrialReport'])->name('report_free_trial');
+        Route::get('lead-wise', [ReportController::class, 'leadWiseReport'])->name('report_lead_wise');
+
     });
     /* request log route end */
 

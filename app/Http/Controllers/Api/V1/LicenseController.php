@@ -174,7 +174,7 @@ class LicenseController extends Controller
                 ->where('id', '!=', $buildDomain->id)
                 ->update(['is_app_license_check' => 0]);
 
-            FluentLicenseInfo::updateOrCreate(
+            $premiumLicenseInfo = FluentLicenseInfo::updateOrCreate(
                 [
                     'build_domain_id' => $buildDomain->id,
                     'site_url' => $normalizedSiteUrl,
@@ -192,7 +192,7 @@ class LicenseController extends Controller
                 ]
             );
 
-            $localLicenseData->update(['is_fluent_license_check' => true]);
+            $localLicenseData->update(['is_fluent_license_check' => true,'premium_license_id'=>$premiumLicenseInfo->id]);
 
             DB::commit();
 
