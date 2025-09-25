@@ -8,14 +8,9 @@
 
                     <div class="card-header">
                         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-                        <h6>{{__('messages.pageList')}}</h6>
+                        <h6>{{__('messages.ProductList')}}</h6>
                         <div class="btn-toolbar mb-2 mb-md-0">
                             <div class="btn-group me-2">
-                                <a href="{{route('page_add')}}" title="" class="module_button_header">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-plus-circle"></i> {{__('messages.createPage')}}
-                                    </button>
-                                </a>
                             </div>
                         </div>
                         </div>
@@ -29,35 +24,48 @@
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
-                                    <th>Plugin Name</th>
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
+                                    <th>{{__('messages.Url')}}</th>
+                                    <th>{{__('messages.ItemId')}}</th>
+                                    <th scope="col text-center" class="sorting_disabled" rowspan="1" colspan="1" aria-label style="width: 24px;">
+                                        <i class="fas fa-cog"></i>
+                                    </th>
                                 </tr>
                                 </thead>
 
-                                @if(sizeof($scopes)>0)
+                                @if(sizeof($products)>0)
                                     <tbody>
                                         @php
                                             $i=1;
-                                            $currentPage = $scopes->currentPage();
-                                            $perPage = $scopes->perPage();
+                                            $currentPage = $products->currentPage();
+                                            $perPage = $products->perPage();
                                             $serial = ($currentPage - 1) * $perPage + 1;
                                         @endphp
-                                        @foreach($scopes as $scope)
+                                        @foreach($products as $product)
                                             <tr>
                                                 <td>{{$serial++}}</td>
-                                                <td>{{$scope->plugin_name}}</td>
-                                                <td>{{$scope->name}}</td>
-                                                <td>{{$scope->slug}}</td>
+                                                <td>{{$product->product_name}}</td>
+                                                <td>{{$product->product_slug}}</td>
+                                                <td>{{$product->api_url}}</td>
+                                                <td>{{$product->item_id}}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group" aria-label="Basic outlined example">
+                                                        <a title="Edit" class="btn btn-outline-primary btn-sm" href="{{route('product_edit',$product->id)}}"><i class="fas fa-edit"></i></a>
+{{--                                                        <a title="Delete" onclick="return confirm('Are you sure?');" class="btn btn-outline-danger btn-sm" href="{{route('page_delete',$product->id)}}"><i class="fas fa-trash"></i></a>--}}
+
+
+                                                    </div>
+                                                </td>
                                             </tr>
                                             @php $i++; @endphp
                                         @endforeach
                                     </tbody>
                                 @endif
                             </table>
-                            @if(isset($scopes) && count($scopes)>0)
+                            @if(isset($products) && count($products)>0)
                                 <div class=" justify-content-right">
-                                    {{ $scopes->links('layouts.pagination') }}
+                                    {{ $products->links('layouts.pagination') }}
                                 </div>
                             @endif
                         </form>

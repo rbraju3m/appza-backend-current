@@ -212,19 +212,20 @@ class AddonController extends Controller
     public function addedVersionUpdate(VersionAddedRequest $request, $addonId): RedirectResponse
     {
         $inputs = $request->validated();
-//        $addonVersion  = AddonVersion::findOrFail($addonId);
+        $addonVersion = AddonVersion::findOrFail($addonId);
         $latestVersion = optional(
             AddonVersion::where('addon_id', $addonId)->latest()->first()
         )->version;
 
         if ($latestVersion && version_compare($inputs['version'], $latestVersion, '=')) {
-            return back()->with('validate', "Version must be equal {$latestVersion}");
+            return back()->with('validate', "Version must be different from {$latestVersion}");
         }
 
-        try {
+        DB::beginTransaction();
 
+        try {
             // Handle ZIP Upload
-            $this->handleFileUploadWithOriginalName(
+            $updateDownloadUrl = $this->handleFileUploadWithOriginalName(
                 $request,
                 null,
                 'addon_file',
@@ -232,11 +233,29 @@ class AddonController extends Controller
                 'r2'
             );
 
+            // Decode addon JSON
+            $jsonData = json_decode($addonVersion->version_json_info, true) ?? [];
+
+            $jsonData['download_url'] = config('app.image_public_path') . $updateDownloadUrl;
+
+            // Update AddonVersion JSON info
+            $addonVersion->update([
+                'addon_file' => $updateDownloadUrl,
+                'version_json_info' => json_encode($jsonData),
+            ]);
+
+            // Update main Addon JSON info
+            $findAddon = Addon::findOrFail($addonVersion->addon_id);
+            $findAddon->update(['addon_json_info' => json_encode($jsonData)]);
+
+            DB::commit();
+
             return redirect()
                 ->back()
                 ->with('message', 'Upload successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             \Log::error('Error creating addon version: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);

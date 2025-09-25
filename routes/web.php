@@ -15,6 +15,7 @@ use App\Http\Controllers\LicenseLogicController;
 use App\Http\Controllers\LicenseMessageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PluginController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequestLogController;
 use App\Http\Controllers\SetupController;
@@ -245,10 +246,17 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('delete/{id}',[FreeTrialController::class,'destroy'])->name('free_trial_delete');
     });
 
+    Route::prefix('product')->group(function () {
+        Route::get('list',[ProductController::class,'index'])->name('product_list');
+        Route::get('edit/{id}',[ProductController::class,'edit'])->name('product_edit');
+        Route::patch('update/{id}',[ProductController::class,'update'])->name('product_update');
+//        Route::get('delete/{id}',[FreeTrialController::class,'destroy'])->name('free_trial_delete');
+    });
+
     Route::prefix('report')->group(function () {
         Route::get('free-trial', [ReportController::class, 'freeTrialReport'])->name('report_free_trial');
         Route::get('lead-wise', [ReportController::class, 'leadWiseReport'])->name('report_lead_wise');
-
+        Route::get('lead-wise-graph', [ReportController::class, 'leadWiseGraph'])->name('report_lead_wise_graph');
     });
     /* request log route end */
 
