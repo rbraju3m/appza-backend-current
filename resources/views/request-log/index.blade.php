@@ -49,7 +49,7 @@
                                     $serial = ($requestLogs->currentPage() - 1) * $requestLogs->perPage() + 1;
                                 @endphp
                                 @foreach ($requestLogs as $log)
-                                    <tr>
+                                    <tr style="{{ $log->response_status != 200 ? 'background-color: #fdf674;' : '' }}">
                                         <td>{{ $serial++ }}</td>
 
                                         <td class="text-start meta-info">

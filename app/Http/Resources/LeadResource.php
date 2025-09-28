@@ -34,8 +34,6 @@ class LeadResource extends JsonResource
 
         return [
             'status' => 200, // HTTP OK
-            'url' => $request->getUri(),
-            'method' => $request->getMethod(),
             'message' => 'Created Successfully',
             'data' => [
                 $hashKey => $this->appza_hash,
