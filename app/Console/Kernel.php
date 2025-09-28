@@ -16,54 +16,16 @@ final class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Clean custom logs at 01:00 AM
-        $schedule->command('logs:clean-requests --days=10')
-            ->dailyAt('01:00')
-            ->onSuccess(function () {
-                \Log::info('✅ Manual log clean successfully at ' . now());
-            })
-            ->onFailure(function () {
-                \Log::error('❌ Manual log clean failed at ' . now());
-            });
+        $schedule->command('logs:clean-requests --days=10')->dailyAt('01:00');
 
         // Daily DB backup at 01:10 AM
-        $schedule->command('backup:run --only-db')
-            ->dailyAt('01:10')
-            ->onSuccess(function () {
-                \Log::info('✅ Backup completed successfully at ' . now());
-            })
-            ->onFailure(function () {
-                \Log::error('❌ Backup failed at ' . now());
-            });
+        $schedule->command('backup:run --only-db')->dailyAt('01:10');
 
         // Backup cleanup at 01:20 AM
-        $schedule->command('backup:clean')
-            ->dailyAt('01:20')
-            ->onSuccess(function () {
-                \Log::info('✅ Backup clean successfully at ' . now());
-            })
-            ->onFailure(function () {
-                \Log::error('❌ Backup clean failed at ' . now());
-            });
+        $schedule->command('backup:clean')->dailyAt('01:20');
 
         // Clean activity logs at 01:30 AM
-        $schedule->command('activitylog:clean --days=10 --force')
-            ->dailyAt('01:30')
-            ->onSuccess(function () {
-                \Log::info('✅ Activitylog clean successfully at ' . now());
-            })
-            ->onFailure(function () {
-                \Log::error('❌ Activitylog clean failed at ' . now());
-            });
-
-        /*$schedule->call(function () {
-            \Log::info('Environment: ' . app()->environment());
-            \Log::info('Timezone: ' . config('app.timezone'));
-            \Log::info('Current time: ' . now()->toDateTimeString());
-        })->everyMinute();
-        // Keep your test callback
-        $schedule->call(function () {
-            \Log::info('✅ Scheduler test at ' . now()->toDateTimeString());
-        })->everyMinute();*/
+        $schedule->command('activitylog:clean --days=10 --force')->dailyAt('01:30');
     }
 
     /**

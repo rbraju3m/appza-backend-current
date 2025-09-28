@@ -93,7 +93,7 @@ return [
         ],
     ],
 
-    'cleanup' => [
+    /*'cleanup' => [
         'strategy' => \Spatie\Backup\Tasks\Cleanup\Strategies\DefaultStrategy::class,
 
         'default_strategy' => [
@@ -107,6 +107,25 @@ return [
 
         'tries' => 1,
         'retry_delay' => 0,
+    ],*/
+
+    'cleanup' => [
+        'strategy' => \Spatie\Backup\Tasks\Cleanup\Strategies\DefaultStrategy::class,
+
+        'default_strategy' => [
+            // Keep all backups for 10 days
+            'keep_all_backups_for_days' => 10,
+
+            // After that, don’t keep any dailies/weeklies/monthlies/yearlies
+            'keep_daily_backups_for_days' => 0,
+            'keep_weekly_backups_for_weeks' => 0,
+            'keep_monthly_backups_for_months' => 0,
+            'keep_yearly_backups_for_years' => 0,
+
+            // Optional: limit total storage used (set null for unlimited)
+            'delete_oldest_backups_when_using_more_megabytes_than' => null,
+        ],
     ],
+
 
 ];
