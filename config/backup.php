@@ -213,7 +213,8 @@ return [
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => 'raju.rightbrainsolution@gmail.com',
+            'to' => '',
+//            'to' => 'raju.rightbrainsolution@gmail.com',
 
             /*'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
