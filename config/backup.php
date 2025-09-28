@@ -224,7 +224,7 @@ return [
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => '',
+            'to' => null,
 //            'to' => 'raju.rightbrainsolution@gmail.com',
 
             /*'from' => [
