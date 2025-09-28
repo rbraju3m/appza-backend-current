@@ -63,10 +63,10 @@ return [
 
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
-        // Not used anymore
-        'mail' => [
-            'to' => null,
-        ],
+        // Completely remove the mail block
+        // 'mail' => [
+        //     'to' => 'dummy@example.com',
+        // ],
 
         'slack' => [
             'webhook_url' => '',
