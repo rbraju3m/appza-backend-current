@@ -16,7 +16,7 @@
                         @include('layouts.message')
 
                         {{-- Search Form --}}
-                        <form method="GET" action="{{ route('report_lead_wise') }}" class="mb-3">
+                        <form method="GET" action="{{ route('report_lead_wise_details') }}" class="mb-3">
                             <input type="hidden" name="tab" value="{{ $activeTab }}">
                             <div class="row">
                                 <div class="col-md-8">
@@ -25,18 +25,28 @@
                                 </div>
                                 <div class="col-md-4">
                                     <button type="submit" class="btn btn-primary">Search</button>
-                                    <a href="{{ route('report_lead_wise', ['tab' => $activeTab]) }}"
+                                    <a href="{{ route('report_lead_wise_details', ['tab' => $activeTab]) }}"
                                        class="btn btn-secondary">Clear</a>
                                 </div>
                             </div>
                         </form>
+
+                        {{-- Export Buttons --}}
+                        {{--<div class="d-flex justify-content-end mb-3 gap-2">
+                            <button id="downloadPng" class="btn btn-sm btn-outline-primary">
+                                📸 Export PNG
+                            </button>
+                            <button id="downloadXlsx" class="btn btn-sm btn-outline-success">
+                                📑 Export XLSX
+                            </button>
+                        </div>--}}
 
                         {{-- Product Tabs --}}
                         <ul class="nav nav-tabs mb-3" id="productTabs" role="tablist">
                             @foreach($products as $slug => $title)
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link {{ $activeTab == $slug ? 'active' : '' }}"
-                                       href="{{ route('report_lead_wise', ['tab' => $slug, 'search' => $search]) }}">
+                                       href="{{ route('report_lead_wise_details', ['tab' => $slug, 'search' => $search]) }}">
                                         {{ $title->product_name }}
                                     </a>
                                 </li>
@@ -44,7 +54,7 @@
                         </ul>
 
                         {{-- Leads Table --}}
-                        <div class="table-responsive">
+                        <div class="table-responsive png-body" id="reportTable">
                             <table class="table table-bordered align-middle">
                                 <thead>
                                 <tr>
@@ -236,13 +246,10 @@
             box-shadow: 0 0 6px rgba(23,162,184,0.7);
         }
         .line-inactive { background: #d6d6d6; }
-        .line-to-trial-active {
-            background: linear-gradient(90deg,#007bff,#17a2b8);
-        }
-        .line-to-premium-active {
-            background: linear-gradient(90deg,#17a2b8,#28a745);
-        }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
         // Enable bootstrap tooltips
@@ -250,5 +257,62 @@
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
+
+        // XLSX download
+        document.getElementById("downloadXlsx").addEventListener("click", function () {
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.table_to_sheet(document.getElementById("reportTable"), { origin: "A3" });
+
+            // Report Name
+            let reportName = "Lead wise details report";
+            XLSX.utils.sheet_add_aoa(ws, [[reportName]], { origin: "A1" });
+
+            // Merge A1:E1 (5 columns) and make bold, centered
+            if(!ws['!merges']) ws['!merges'] = [];
+            ws['!merges'].push({ s: {r:0,c:0}, e: {r:0,c:4} });
+            ws['A1'].s = { font: { bold: true, sz: 14 }, alignment: { horizontal: "center" } };
+
+            // Make headers bold & centered
+            const headers = ['A3','B3','C3','D3','E3'];
+            headers.forEach(h => {
+                if(!ws[h]) return;
+                ws[h].s = { font: { bold: true }, alignment: { horizontal: "center", vertical: "center", wrapText: true } };
+            });
+
+            // Auto column width based on content length
+            const cols = ['A','B','C','D','E'];
+            ws['!cols'] = cols.map((col, i) => {
+                let maxLength = 10; // minimum width
+                for (let row = 4; row <= ws['!ref'].split(':')[1].replace(/\D+/g,''); row++) {
+                    const cell = ws[`${col}${row}`];
+                    if(cell && cell.v) {
+                        const length = cell.v.toString().length;
+                        if(length > maxLength) maxLength = length;
+                    }
+                }
+                return { wch: maxLength + 5 }; // add some padding
+            });
+
+            wb.Props = {
+                Title: reportName,
+                Author: "YourApp",
+                CreatedDate: new Date()
+            };
+
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, "lead-details.xlsx");
+        });
+
+
+        // PNG download
+        document.getElementById("downloadPng").addEventListener("click", function () {
+            html2canvas(document.querySelector(".png-body")).then(canvas => {
+                let link = document.createElement("a");
+                link.download = "lead-details.png";
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        });
     </script>
 @endsection
+

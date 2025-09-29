@@ -184,8 +184,9 @@
                     <div class="nav-group-label" style="font-size: 15px !important;color: red">{{__('messages.Reports')}}</div>
                     <ul class="nav-sidebar">
                         <li class="nav-item ">
-                            <a href="{{route('report_free_trial')}}" class="nav-link {{ Request::is('appza/report/free-trial') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.BarChart')}}</span></a>
-                            <a href="{{route('report_lead_wise')}}" class="nav-link {{ Request::is('appza/report/lead-wise') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.leadWise')}}</span></a>
+                            <a href="{{route('report_total_overview')}}" class="nav-link {{ Request::is('appza/report/total-overview') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.TotalOverview')}}</span></a>
+                            <a href="{{route('report_total_overview_table')}}" class="nav-link {{ Request::is('appza/report/total-overview-table') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.TotalOverviewTable')}}</span></a>
+                            <a href="{{route('report_lead_wise_details')}}" class="nav-link {{ Request::is('appza/report/lead-wise-details') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.leadWiseDetails')}}</span></a>
                             <a href="{{route('report_lead_wise_graph')}}" class="nav-link {{ Request::is('appza/report/lead-wise') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.leadWisGraph')}}</span></a>
                         </li>
                     </ul>

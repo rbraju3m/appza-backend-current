@@ -15,7 +15,7 @@ use Log;
 class ReportController extends Controller
 {
 
-    public function freeTrialReport(Request $request)
+    public function totalOverviewReport(Request $request)
     {
         $products = FluentInfo::getProductTab(); // product_slug => product_name
         $reportTypes = ['daily' => 'Daily', 'monthly' => 'Monthly', 'yearly' => 'Yearly'];
@@ -23,6 +23,15 @@ class ReportController extends Controller
         $activeTab = $request->query('tab') ?: ($products->keys()->first() ?? null);
         $type = $request->get('type', 'daily');
         $search = $request->get('search');
+
+        // ✅ Default search value if not provided
+        if (!$search) {
+            $search = match ($type) {
+                'monthly' => now()->format('Y-m'),
+                'yearly'  => now()->format('Y'),
+                default   => now()->format('Y-m-d'),
+            };
+        }
 
         // Define date format based on type
         $dateFormat = match ($type) {
@@ -33,6 +42,8 @@ class ReportController extends Controller
 
         // --- Free Trials ---
         $freeTrialsQuery = DB::table('appza_free_trial_request')
+            ->where('is_active', 1)
+            ->where('is_fluent_license_check',0)
             ->select('product_slug', DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"), DB::raw('COUNT(*) as total'))
             ->groupBy('period', 'product_slug')
             ->orderBy('period');
@@ -47,6 +58,8 @@ class ReportController extends Controller
 
         // --- Leads ---
         $leadsQuery = DB::table('appfiy_customer_leads')
+            ->where('is_active', 1)
+            ->where('is_close', 0)
             ->select('plugin_name as product_slug', DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"), DB::raw('COUNT(*) as total'))
             ->groupBy('period', 'plugin_name')
             ->orderBy('period');
@@ -61,6 +74,7 @@ class ReportController extends Controller
 
         // --- Premium ---
         $premiumQuery = DB::table('appza_free_trial_request')
+            ->where('is_active', 1)
             ->where('is_fluent_license_check', 1)
             ->select('product_slug', DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"), DB::raw('COUNT(*) as total'))
             ->groupBy('period', 'product_slug')
@@ -86,7 +100,119 @@ class ReportController extends Controller
             ];
         });
 
-        return view('reports.free-trial', compact(
+        return view('reports.total-overview', compact(
+            'products', 'activeTab', 'type', 'search', 'reportTypes', 'reportData'
+        ));
+    }
+    public function totalOverviewTableReport(Request $request)
+    {
+        $products = FluentInfo::getProductTab();
+        $reportTypes = ['daily' => 'Daily', 'monthly' => 'Monthly', 'yearly' => 'Yearly'];
+
+        $activeTab = $request->query('tab') ?: ($products->keys()->first() ?? null);
+        $type = $request->get('type', 'daily');
+        $search = $request->get('search');
+
+        if (!$search) {
+            $search = match ($type) {
+                'monthly' => now()->format('Y-m'),
+                'yearly'  => now()->format('Y'),
+                default   => now()->format('Y-m-d'),
+            };
+        }
+
+        // 👇 Define grouping format
+        $dateFormat = match ($type) {
+            'monthly' => '%Y-%m-%d', // show every day of month
+            'yearly'  => '%Y-%m',    // show every month of year
+            default   => '%Y-%m-%d', // single date
+        };
+
+        // Free Trials
+        $freeTrialsQuery = DB::table('appza_free_trial_request')
+            ->where('is_active', 1)
+            ->where('is_fluent_license_check',0)
+            ->select(
+                'product_slug',
+                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('period', 'product_slug')
+            ->orderBy('period');
+
+        if ($activeTab) $freeTrialsQuery->where('product_slug', $activeTab);
+
+        if ($type === 'daily') {
+            $freeTrialsQuery->whereDate('created_at', $search);
+        } elseif ($type === 'monthly') {
+            $freeTrialsQuery->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$search]);
+        } elseif ($type === 'yearly') {
+            $freeTrialsQuery->whereYear('created_at', $search);
+        }
+        $freeTrials = $freeTrialsQuery->get();
+
+        // Leads
+        $leadsQuery = DB::table('appfiy_customer_leads')
+            ->where('is_active', 1)
+            ->where('is_close', 0)
+            ->select(
+                'plugin_name as product_slug',
+                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('period', 'plugin_name')
+            ->orderBy('period');
+
+        if ($activeTab) $leadsQuery->where('plugin_name', $activeTab);
+
+        if ($type === 'daily') {
+            $leadsQuery->whereDate('created_at', $search);
+        } elseif ($type === 'monthly') {
+            $leadsQuery->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$search]);
+        } elseif ($type === 'yearly') {
+            $leadsQuery->whereYear('created_at', $search);
+        }
+        $leads = $leadsQuery->get();
+
+        // Premium
+        $premiumQuery = DB::table('appza_free_trial_request')
+            ->where('is_active', 1)
+            ->where('is_fluent_license_check',1)
+            ->select(
+                'product_slug',
+                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy('period', 'product_slug')
+            ->orderBy('period');
+
+        if ($activeTab) $premiumQuery->where('product_slug', $activeTab);
+
+        if ($type === 'daily') {
+            $premiumQuery->whereDate('created_at', $search);
+        } elseif ($type === 'monthly') {
+            $premiumQuery->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$search]);
+        } elseif ($type === 'yearly') {
+            $premiumQuery->whereYear('created_at', $search);
+        }
+        $premium = $premiumQuery->get();
+
+        // Merge
+        $periods = $freeTrials->pluck('period')
+            ->merge($leads->pluck('period'))
+            ->merge($premium->pluck('period'))
+            ->unique()->sort()->values();
+
+        $reportData = $periods->map(function($period) use ($freeTrials, $leads, $premium) {
+            return [
+                'period' => $period,
+                'free_trials' => $freeTrials->where('period', $period)->sum('total'),
+                'leads' => $leads->where('period', $period)->sum('total'),
+                'premium' => $premium->where('period', $period)->sum('total'),
+            ];
+        });
+
+        return view('reports.total-overview-table', compact(
             'products', 'activeTab', 'type', 'search', 'reportTypes', 'reportData'
         ));
     }
@@ -150,7 +276,7 @@ class ReportController extends Controller
         return view('reports.lead_wise', compact('products', 'leads', 'activeTab', 'search'));
     }*/
 
-    public function leadWiseReport(Request $request)
+    public function leadWiseDetailsReport(Request $request)
     {
         $activeTab = $request->get('tab');
         $search = $request->get('search');
@@ -215,7 +341,7 @@ class ReportController extends Controller
 
         $leads = $leadsQuery->paginate($perPage)->withQueryString();
 
-        return view('reports.lead_wise', compact('products', 'leads', 'activeTab', 'search'));
+        return view('reports.lead_wise_details', compact('products', 'leads', 'activeTab', 'search'));
     }
 
 

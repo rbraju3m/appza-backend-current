@@ -16,7 +16,7 @@
                             @foreach($products as $slug => $title)
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link {{ $activeTab == $slug ? 'active' : '' }}"
-                                       href="{{ route('report_free_trial', [
+                                       href="{{ route('report_total_overview', [
                                         'tab' => $slug,
                                         'type' => $type,
                                         'search' => $search
@@ -27,7 +27,7 @@
                             @endforeach
                         </ul>
 
-                        <form method="GET" action="{{ route('report_free_trial') }}" class="d-flex gap-2 mb-4">
+                        <form method="GET" action="{{ route('report_total_overview') }}" class="d-flex gap-2 mb-4">
                             <input type="hidden" name="tab" value="{{ $activeTab }}">
 
                             @if($type == 'daily')
@@ -59,49 +59,6 @@
 @section('footer.scripts')
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
-
-{{--
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            Highcharts.chart('barChart', {
-                chart: { type: 'column', backgroundColor: '#f8f9fa' },
-                title: { text: '{{ ucfirst($type) }} Report: Leads, Free Trials, Premium' },
-                subtitle: { text: 'Product: {{ $products[$activeTab]->product_name ?? "All" }}' },
-                xAxis: {
-                    categories: @json($reportData->pluck('period')), // daily/monthly/yearly periods
-                    crosshair: true
-                },
-                yAxis: {
-                    min: 0,
-                    title: { text: 'Count' },
-                    gridLineColor: '#e9ecef'
-                },
-                tooltip: { shared: true, backgroundColor: '#fff', borderColor: '#ddd' },
-                legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom' },
-                plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0,
-                        dataLabels: {
-                            enabled: true,        // always show data labels
-                            inside: true,         // show inside the bar
-                            style: {
-                                fontWeight: 'bold',
-                                color: '#fff'
-                            }
-                        }
-                    }
-                },
-                series: [
-                    { name: 'Leads', data: @json($reportData->pluck('leads')), color: '#198754' },
-                    { name: 'Free Trials', data: @json($reportData->pluck('free_trials')), color: '#0d6efd' },
-                    { name: 'Premium', data: @json($reportData->pluck('premium')), color: '#dc3545' }
-                ],
-                exporting: { enabled: true }
-            });
-        });
-    </script>
---}}
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -137,7 +94,7 @@
                     borderRadius: 6,
                     shadow: true,
                     formatter: function() {
-                        return `<b>${this.x}</b><br>
+                        return `<b>${""}</b><br>
                     <span style="color:#198754;">●</span> Leads: <b>${this.points[0].y}</b><br>
                     <span style="color:#0d6efd;">●</span> Free Trials: <b>${this.points[1].y}</b><br>
                     <span style="color:#dc3545;">●</span> Premium: <b>${this.points[2].y}</b>`;
@@ -202,6 +159,177 @@
             });
         });
     </script>
+
+    {{--<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Highcharts.chart('barChart', {
+                chart: {
+                    type: 'column',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: 8,
+                    zoomType: 'x',
+                    panning: true,
+                    panKey: 'shift',
+                    events: {
+                        load: function () {
+                            let chart = this;
+                            // ✅ Show tooltip initially for the first period
+                            chart.tooltip.refresh(chart.series.map(s => s.points[0]));
+                        }
+                    }
+                },
+                title: {
+                    text: '{{ ucfirst($type) }} Report: Leads, Free Trials, Premium'
+                },
+                subtitle: {
+                    text: 'Product: {{ $products[$activeTab]->product_name ?? "All" }}'
+                },
+                xAxis: {
+                    categories: @json($reportData->pluck('period')),
+                    crosshair: true,
+                    labels: { rotation: -45 }
+                },
+                yAxis: {
+                    min: 0,
+                    title: { text: 'Count' },
+                    gridLineColor: '#e9ecef'
+                },
+                tooltip: {
+                    shared: true,
+                    useHTML: true,
+                    backgroundColor: '#fff',
+                    borderColor: '#ddd',
+                    borderRadius: 6,
+                    shadow: true,
+                    formatter: function () {
+                        let period = this.x; // ✅ date/month/year
+                        let leads = this.points.find(p => p.series.name === 'Leads')?.y || 0;
+                        let trials = this.points.find(p => p.series.name === 'Free Trials')?.y || 0;
+                        let premium = this.points.find(p => p.series.name === 'Premium')?.y || 0;
+
+                        return `<b>${period}</b><br>
+                    <span style="color:#198754;">●</span> Leads: <b>${leads}</b><br>
+                    <span style="color:#0d6efd;">●</span> Free Trials: <b>${trials}</b><br>
+                    <span style="color:#dc3545;">●</span> Premium: <b>${premium}</b>`;
+                    }
+                },
+                legend: {
+                    layout: 'horizontal',
+                    align: 'center',
+                    verticalAlign: 'bottom',
+                    itemStyle: { fontWeight: '600' }
+                },
+                plotOptions: {
+                    column: {
+                        pointPadding: 0.2,
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        dataLabels: {
+                            enabled: true,
+                            style: { fontWeight: 'bold', color: '#fff' }
+                        },
+                        states: {
+                            hover: { brightness: 0.1 }
+                        }
+                    },
+                    series: {
+                        animation: { duration: 1200 }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Leads',
+                        data: @json($reportData->pluck('leads')),
+                        color: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, '#28a745'], [1, '#198754']] }
+                    },
+                    {
+                        name: 'Free Trials',
+                        data: @json($reportData->pluck('free_trials')),
+                        color: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, '#0dcaf0'], [1, '#0d6efd']] }
+                    },
+                    {
+                        name: 'Premium',
+                        data: @json($reportData->pluck('premium')),
+                        color: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, '#fd6b75'], [1, '#dc3545']] }
+                    }
+                ],
+                exporting: {
+                    enabled: true,
+                    buttons: {
+                        contextButton: {
+                            symbolStroke: '#6c757d',
+                            theme: { fill: '#f8f9fa', stroke: '#dee2e6' }
+                        }
+                    }
+                },
+                responsive: {
+                    rules: [{
+                        condition: { maxWidth: 768 },
+                        chartOptions: { xAxis: { labels: { rotation: -90 } } }
+                    }]
+                }
+            });
+        });
+    </script>--}}
+
+    {{--<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Highcharts.chart('barChart', {
+                chart: {
+                    type: 'column',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: 8
+                },
+                title: {
+                    text: '{{ ucfirst($type) }} Report: Leads, Free Trials, Premium'
+                },
+                subtitle: {
+                    text: 'Product: {{ $products[$activeTab]->product_name ?? "All" }}'
+                },
+                xAxis: {
+                    categories: @json($reportData->pluck('period')),
+                    labels: { rotation: -45 }
+                },
+                yAxis: {
+                    min: 0,
+                    title: { text: 'Count' }
+                },
+                tooltip: { enabled: false }, // disable hover-only tooltip
+                plotOptions: {
+                    column: {
+                        pointPadding: 0.2,
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        dataLabels: {
+                            enabled: true,
+                            useHTML: true,
+                            formatter: function () {
+                                return `<b>${this.category}</b><br/>${this.y}`;
+                            },
+                            style: { fontSize: '10px', fontWeight: 'bold', color: '#000' }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Leads',
+                        data: @json($reportData->pluck('leads')),
+                        color: '#198754'
+                    },
+                    {
+                        name: 'Free Trials',
+                        data: @json($reportData->pluck('free_trials')),
+                        color: '#0d6efd'
+                    },
+                    {
+                        name: 'Premium',
+                        data: @json($reportData->pluck('premium')),
+                        color: '#dc3545'
+                    }
+                ]
+            });
+        });
+    </script>--}}
 
 
 @endsection

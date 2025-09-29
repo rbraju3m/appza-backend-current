@@ -254,8 +254,9 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
     });
 
     Route::prefix('report')->group(function () {
-        Route::get('free-trial', [ReportController::class, 'freeTrialReport'])->name('report_free_trial');
-        Route::get('lead-wise', [ReportController::class, 'leadWiseReport'])->name('report_lead_wise');
+        Route::get('total-overview', [ReportController::class, 'totalOverviewReport'])->name('report_total_overview');
+        Route::get('total-overview-table', [ReportController::class, 'totalOverviewTableReport'])->name('report_total_overview_table');
+        Route::get('lead-wise-details', [ReportController::class, 'leadWiseDetailsReport'])->name('report_lead_wise_details');
         Route::get('lead-wise-graph', [ReportController::class, 'leadWiseGraph'])->name('report_lead_wise_graph');
     });
     /* request log route end */
