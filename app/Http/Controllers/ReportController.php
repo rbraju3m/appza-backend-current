@@ -425,6 +425,168 @@ class ReportController extends Controller
         ));
     }
 
+    public function licenseExpiryReport(Request $request)
+    {
+        $type = $request->get('type', 'monthly');
+        $search = $request->get('search');
+
+        $dateFormat = match ($type) {
+            'daily'   => '%Y-%m-%d',
+            'yearly'  => '%Y',
+            default   => '%Y-%m',
+        };
+
+        // Use expiration_date for grouping (convert valid date strings only)
+        $query = DB::table('appza_fluent_license_info')
+            ->select(
+                DB::raw("CASE
+                        WHEN expiration_date = 'lifetime' THEN 'Lifetime'
+                        ELSE DATE_FORMAT(STR_TO_DATE(expiration_date, '%Y-%m-%d'), '{$dateFormat}')
+                     END as period"),
+                DB::raw('COUNT(*) as total'),
+                DB::raw("
+                SUM(
+                    CASE
+                        WHEN expiration_date != 'lifetime'
+                             AND STR_TO_DATE(expiration_date, '%Y-%m-%d') < NOW()
+                        THEN 1
+                        ELSE 0
+                    END
+                ) as expired
+            "),
+                DB::raw("
+                SUM(
+                    CASE
+                        WHEN expiration_date = 'lifetime'
+                             OR (expiration_date != 'lifetime'
+                                 AND STR_TO_DATE(expiration_date, '%Y-%m-%d') >= NOW())
+                        THEN 1
+                        ELSE 0
+                    END
+                ) as active
+            ")
+            )
+            ->where('expiration_date', '!=', '')
+            ->where('expiration_date', '!=', 'lifetime')
+            ->groupBy('period')
+            ->orderBy('period', 'asc');
+
+        // Apply search filter based on expiration_date
+        if ($search) {
+            if ($type === 'daily') {
+                $query->whereRaw("STR_TO_DATE(expiration_date, '%Y-%m-%d') = ?", [$search]);
+            } elseif ($type === 'monthly') {
+                $query->whereRaw("DATE_FORMAT(STR_TO_DATE(expiration_date, '%Y-%m-%d'), '%Y-%m') = ?", [$search]);
+            } elseif ($type === 'yearly') {
+                $query->whereRaw("YEAR(STR_TO_DATE(expiration_date, '%Y-%m-%d')) = ?", [$search]);
+            }
+        }
+
+        $reportData = $query->get();
+//        dump($reportData);
+
+        // Summary (same as before)
+        $summary = DB::table('appza_fluent_license_info')
+            ->selectRaw("
+            SUM(
+                CASE
+                    WHEN expiration_date != 'lifetime'
+                         AND STR_TO_DATE(expiration_date, '%Y-%m-%d') < NOW()
+                    THEN 1 ELSE 0
+                END
+            ) as expired,
+            SUM(
+                CASE
+                    WHEN expiration_date = 'lifetime'
+                         OR (expiration_date != 'lifetime'
+                             AND STR_TO_DATE(expiration_date, '%Y-%m-%d') >= NOW())
+                    THEN 1 ELSE 0
+                END
+            ) as active,
+            COUNT(*) as total
+        ")
+            ->first();
+
+        $reportTypes = [
+            'daily' => 'Daily',
+            'monthly' => 'Monthly',
+            'yearly' => 'Yearly',
+        ];
+
+        $reportData = $query->get()->map(function ($item) {
+            $item->active = (int) $item->active;
+            $item->expired = (int) $item->expired;
+            $item->total = (int) $item->total;
+            return $item;
+        });
+
+        return view('reports.license_expire', compact('reportData', 'type', 'search', 'reportTypes','summary'));
+    }
+
+
+    public function licenseDurationReport(Request $request)
+    {
+        
+        $reportTypes = ['daily' => 'Daily', 'monthly' => 'Monthly', 'yearly' => 'Yearly'];
+        $type = $request->get('type', 'monthly');
+        $search = $request->get('search');
+
+        // Base query
+        $query = DB::table('appza_fluent_license_info');
+
+        // Apply search filter
+        if ($search) {
+            if ($type == 'daily') {
+                $query->whereDate('expiration_date', $search);
+            } elseif ($type == 'monthly') {
+                $query->whereRaw("DATE_FORMAT(expiration_date, '%Y-%m') = ?", [$search]);
+            } elseif ($type == 'yearly') {
+                $query->whereRaw("DATE_FORMAT(expiration_date, '%Y') = ?", [$search]);
+            }
+        }
+
+        // Group licenses by duration
+        $reportData = $query->get()->map(function ($item) {
+            $now = now();
+            if ($item->expiration_date == 'lifetime') {
+                $status = 'Lifetime';
+            } else {
+                $exp = \Carbon\Carbon::parse($item->expiration_date);
+                $diffDays = $exp->diffInDays($now, false);
+                if ($diffDays < 0) {
+                    $status = 'Expired';
+                } elseif ($diffDays <= 30) {
+                    $status = '0-30 Days';
+                } elseif ($diffDays <= 90) {
+                    $status = '31-90 Days';
+                } elseif ($diffDays <= 180) {
+                    $status = '91-180 Days';
+                } else {
+                    $status = '180+ Days';
+                }
+            }
+            return $status;
+        });
+
+        // Count per category
+        $reportData = $reportData->countBy()->map(function ($count, $label) {
+            return ['label' => $label, 'count' => $count];
+        })->values();
+
+        // Summary totals for donut chart
+        $summary = [
+            'Expired' => $reportData->where('label', 'Expired')->first()['count'] ?? 0,
+            'Active'  => $reportData->whereNotIn('label', ['Expired'])->sum('count'),
+            'Lifetime'=> $reportData->where('label', 'Lifetime')->first()['count'] ?? 0,
+        ];
+
+        return view('reports.license-duration', compact(
+            'reportData', 'summary', 'type', 'search', 'reportTypes'
+        ));
+    }
+
+
+
 
 
 }

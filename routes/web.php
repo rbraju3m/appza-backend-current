@@ -257,6 +257,8 @@ Route::prefix('/appza')->middleware(['auth'])->group(function() {
         Route::get('total-overview', [ReportController::class, 'totalOverviewReport'])->name('report_total_overview');
         Route::get('total-overview-table', [ReportController::class, 'totalOverviewTableReport'])->name('report_total_overview_table');
         Route::get('lead-wise-details', [ReportController::class, 'leadWiseDetailsReport'])->name('report_lead_wise_details');
+        Route::get('license-expiry', [ReportController::class, 'licenseExpiryReport'])->name('report_license_expiry');
+        Route::get('license-duration', [ReportController::class, 'licenseDurationReport'])->name('report_license_duration');
         Route::get('lead-wise-graph', [ReportController::class, 'leadWiseGraph'])->name('report_lead_wise_graph');
     });
     /* request log route end */

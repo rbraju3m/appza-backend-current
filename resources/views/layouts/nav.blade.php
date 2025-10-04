@@ -187,6 +187,9 @@
                             <a href="{{route('report_total_overview')}}" class="nav-link {{ Request::is('appza/report/total-overview') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.TotalOverview')}}</span></a>
                             <a href="{{route('report_total_overview_table')}}" class="nav-link {{ Request::is('appza/report/total-overview-table') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.TotalOverviewTable')}}</span></a>
                             <a href="{{route('report_lead_wise_details')}}" class="nav-link {{ Request::is('appza/report/lead-wise-details') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.leadWiseDetails')}}</span></a>
+                            <a href="{{route('report_license_expiry')}}" class="nav-link {{ Request::is('appza/report/license-expiry') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.licenseExpaire')}}</span></a>
+                            <a href="{{route('report_license_duration')}}" class="nav-link {{ Request::is('appza/report/license-duration') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.licenseDuration')}}</span></a>
+
                             <a href="{{route('report_lead_wise_graph')}}" class="nav-link {{ Request::is('appza/report/lead-wise') ? 'active' : ''}}"><i data-feather="arrow-right"></i><span>{{__('messages.leadWisGraph')}}</span></a>
                         </li>
                     </ul>
