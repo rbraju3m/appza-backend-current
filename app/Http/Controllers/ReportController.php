@@ -526,7 +526,7 @@ class ReportController extends Controller
 
     public function licenseDurationReport(Request $request)
     {
-        
+
         $reportTypes = ['daily' => 'Daily', 'monthly' => 'Monthly', 'yearly' => 'Yearly'];
         $type = $request->get('type', 'monthly');
         $search = $request->get('search');

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\ApkBuildHistoryController;
 use App\Http\Controllers\Api\V1\ApkBuildResourceController;
+use App\Http\Controllers\Api\V1\FirebaseController;
 use App\Http\Controllers\Api\V1\FreeTrialController;
 use App\Http\Controllers\Api\V1\GlobalConfigController;
 use App\Http\Controllers\Api\V1\LeadController;
@@ -47,6 +48,13 @@ Route::prefix('/appza/v1')
             Route::post('trial/{product}', [FreeTrialController::class, 'store'])
                 ->name('create_free_trial')
                 ->whereIn('product', ['appza', 'lazy_task','fcom_mobile']);
+        });
+
+        // firebase credential api
+        Route::prefix('firebase')->group(function () {
+            Route::get('credential/{product}', [FirebaseController::class,'credential'])
+                ->name('firebase_credential')
+                ->whereIn('product', ['appza', 'lazy_task','fcom_mobile']);;
         });
 
         // license api
