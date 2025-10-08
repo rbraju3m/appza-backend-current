@@ -65,12 +65,13 @@
                                             <th>Expiration Date</th>
                                             <th>Grace Period Date</th>
                                             <th>License Type</th>
+                                            <th>Status</th>
                                             <th><i class="fas fa-cog"></i></th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         @forelse($freeTrials[$slug] as $freeTrial)
-                                            <tr>
+                                            <tr style="background-color: {{$freeTrial->is_fluent_license_check == 0?'#ffffd9':'#ffdddd'}}">
                                                 <td>{{ $loop->iteration }}</td>
                                                 <td class="text-start meta-info">
                                                     <div><strong>Date:</strong> {{ $freeTrial->created_at->timezone('Asia/Dhaka')->format('d-M-Y h:i:s A') }}</div>
@@ -81,6 +82,38 @@
                                                 <td>{{ $freeTrial->expiration_date->timezone('Asia/Dhaka')->format('d-M-Y h:i:s A') }}</td>
                                                 <td>{{ $freeTrial->grace_period_date->timezone('Asia/Dhaka')->format('d-M-Y h:i:s A') }}</td>
                                                 <td>{{ $freeTrial->is_fluent_license_check == 0 ? "Free Trial" : "Premium" }}</td>
+                                                <td class="text-center">
+                                                    @if($freeTrial->product_slug)
+                                                        @php
+                                                            $now = \Carbon\Carbon::now();
+                                                            $expiration = \Carbon\Carbon::parse($freeTrial->expiration_date);
+                                                            $grace = \Carbon\Carbon::parse($freeTrial->grace_period_date);
+
+                                                            if ($now->lt($expiration)) {
+                                                                // Trial still valid
+                                                                $statusClass = 'bg-success';
+                                                                $statusText = 'Active';
+                                                            } elseif ($now->lt($grace)) {
+                                                                // Expired but still in grace period
+                                                                $statusClass = 'bg-warning';
+                                                                $statusText = 'Grace Period';
+                                                            } else {
+                                                                // Expired completely
+                                                                $statusClass = 'bg-danger';
+                                                                $statusText = 'Expired';
+                                                            }
+                                                        @endphp
+
+                                                        <span class="badge {{ $statusClass }}">
+            {{ $statusText }}
+        </span><br>
+
+{{--                                                        <strong>Expires:</strong> {{ $expiration->format('d-M-Y h:i A') }}<br>--}}
+{{--                                                        <strong>Grace End:</strong> {{ $grace->format('d-M-Y h:i A') }}--}}
+                                                    @else
+                                                        <span class="badge bg-secondary">No Free Trial</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     @if(auth()->user()->user_type === 'DEVELOPER' && $freeTrial->is_fluent_license_check == 0)
                                                         <a class="btn btn-outline-danger btn-sm"
