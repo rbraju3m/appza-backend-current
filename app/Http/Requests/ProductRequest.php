@@ -16,6 +16,7 @@ class ProductRequest extends FormRequest
         return [
             'api_url' => 'required|url',
             'item_id' => 'required|numeric',
+            'temp_firebase_json' => 'nullable|json',
         ];
     }
 

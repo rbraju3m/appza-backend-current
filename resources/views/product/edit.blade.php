@@ -63,6 +63,23 @@
                                         </div>
                                     </div>
 
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="" class="form-label">{{__('messages.FirebaseJson')}}</label>
+                                        </div>
+
+                                        <div class="col-sm-10">
+                                            {{html()
+                                                ->textarea('temp_firebase_json')
+                                                ->value($product->temp_firebase_json?json_encode(json_decode($product->temp_firebase_json, false), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES):null)
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.FirebaseJson'))
+                                                ->attribute('rows',10)
+                                            }}
+                                            <br><span class="textRed">{!! $errors->first('temp_firebase_json') !!}</span>
+                                        </div>
+                                    </div>
+
 
                                     <div class="row mg-top">
                                         <div class="col-md-2"></div>

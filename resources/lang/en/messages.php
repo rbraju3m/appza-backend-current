@@ -229,6 +229,7 @@ return [
     'EnterItemsJson' => 'Enter items json',
     'DevData' => 'Dev Data',
     'EnterDevData' => 'Enter dev data json',
+    'FirebaseJson' => 'Firebase Json',
     'Filters' => 'Filters',
     'EnterFiltersJson' => 'Enter filters json',
     'pagination' => 'Pagination',
