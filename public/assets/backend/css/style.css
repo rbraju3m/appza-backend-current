@@ -65,6 +65,7 @@ html, body, .full-page-container {
 
 .navbar,.navbar-expand,.navbar-light ,.bg-light{
 	padding-left: 15px;
+    background: #e5e5e5 !important;
 }
 .dashboard-area{
 	padding: 0px 15px;
@@ -146,8 +147,8 @@ input[type=radio]:checked ~ label{
 .footer-area{
     padding: 12px 0px;
     text-align: right;
-    background-color: #044CA3;
-    color: #fff;
+    background-color: #e5e5e5;
+    color: #000;
     position: fixed;
     bottom: 0px;
     left: 0px;
@@ -156,7 +157,7 @@ input[type=radio]:checked ~ label{
     margin-bottom: 0px;
 }
 .text-muted{
-    color: #fff !important;
+    color: #000 !important;
 }
 
 
