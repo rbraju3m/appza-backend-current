@@ -1,40 +1,48 @@
-
 @if ($paginator->hasPages())
-    <ul class="pager">
-
-        @if ($paginator->onFirstPage())
-            <li class="disabled"><span>← Previous</span></li>
-        @else
-            <li><a href="{{ $paginator->previousPageUrl() }}" rel="prev">← Previous</a></li>
-        @endif
-
-
-
-        @foreach ($elements as $element)
-
-            @if (is_string($element))
-                <li class="disabled"><span>{{ $element }}</span></li>
+    <div class="pagination-container">
+        <ul class="pagination-wrapper">
+            {{-- Prev --}}
+            @if ($paginator->onFirstPage())
+                <li class="pagination-btn disabled">
+                    <span><i data-feather="chevron-left"></i></span>
+                </li>
+            @else
+                <li class="pagination-btn">
+                    <a href="{{ $paginator->previousPageUrl() }}" rel="prev">
+                        <i data-feather="chevron-left"></i>
+                    </a>
+                </li>
             @endif
 
+            {{-- Pages --}}
+            @foreach ($elements as $element)
+                @if (is_string($element))
+                    <li class="pagination-ellipsis">{{ $element }}</li>
+                @endif
 
+                @if (is_array($element))
+                    @foreach ($element as $page => $url)
+                            <a href="{{ $url }}">
+                        <li class="pagination-page {{ $page == $paginator->currentPage() ? 'active' : '' }}">
+                            {{ $page }}
+                        </li>
+                            </a>
+                    @endforeach
+                @endif
+            @endforeach
 
-            @if (is_array($element))
-                @foreach ($element as $page => $url)
-                    @if ($page == $paginator->currentPage())
-                        <li class="active my-active pagination_custom_style"><span>{{ $page }}</span></li>
-                    @else
-                        <a href="{{ $url }}"><li class="pagination_custom_style">{{ $page }}</li></a>
-                    @endif
-                @endforeach
+            {{-- Next --}}
+            @if ($paginator->hasMorePages())
+                <li class="pagination-btn">
+                    <a href="{{ $paginator->nextPageUrl() }}" rel="next">
+                        <i data-feather="chevron-right"></i>
+                    </a>
+                </li>
+            @else
+                <li class="pagination-btn disabled">
+                    <span><i data-feather="chevron-right"></i></span>
+                </li>
             @endif
-        @endforeach
-
-
-
-        @if ($paginator->hasMorePages())
-            <li><a href="{{ $paginator->nextPageUrl() }}" rel="next">Next →</a></li>
-        @else
-            <li class="disabled"><span>Next →</span></li>
-        @endif
-    </ul>
+        </ul>
+    </div>
 @endif

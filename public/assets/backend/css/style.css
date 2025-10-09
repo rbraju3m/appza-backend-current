@@ -256,35 +256,151 @@ input[type=radio]:checked ~ label{
 }
 
 
-/*for pagination*/
+    /*for pagination*/
+ .pagination-container {
+     width: 100%;
+     display: flex;
+     justify-content: right;
+     margin-top: 10px;
+ }
 
-.pager{
-    padding: 0px;
-}
+ .pagination-wrapper {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     gap: 6px;
+     list-style: none;
+     padding: 0;
+     margin: 0;
+     flex-wrap: wrap;
+ }
 
-.pager li{
-    display: inline;
-}
-.pagination_custom_style{
-    border: 1px solid;
-    padding: 5px 10px;
-    font-size: 15px;
-    font-weight: bold;
-    background: #e8e5e5;
-}
+ .pagination-wrapper li {
+     cursor: pointer;
+     user-select: none;
+ }
 
-.form-image-padding{
-    text-align: center;
-    padding: 4px;
-}
+ .pagination-btn.disabled {
+     opacity: 0.5;
+     pointer-events: none;
+ }
 
-/*XY OVERFLOW OFF*/
-.table-xy-overflow{
-    overflow-x: unset;
-}
-.table-responsive{
-    overflow-x: initial;
-}
+ .pagination-page.active {
+     background: #F7921D;
+     color: #fff;
+     border-radius: 6px;
+ }
+
+ .pagination-btn,
+ .pagination-page {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     background: #f1f1f1;
+     color: #333;
+     border-radius: 8px;
+     padding: 6px 12px;
+     font-weight: 500;
+     font-size: 14px;
+     transition: all 0.2s ease-in-out;
+     cursor: pointer;
+ }
+
+ .pagination-btn a,
+ .pagination-page a {
+     text-decoration: none;
+     color: inherit;
+ }
+
+ .pagination-btn svg {
+     width: 18px;
+     height: 18px;
+     stroke: #3490dc;
+     stroke-width: 2.2;
+     transition: all 0.2s ease;
+ }
+
+ .pagination-btn:hover svg {
+     stroke: #ff4757;
+     transform: translateX(-2px);
+ }
+
+ .pagination-page:hover {
+     background: #3490dc;
+     color: #fff;
+ }
+
+ .pagination-page.active {
+     background: #F7921D;
+     color: #fff;
+     box-shadow: 0 0 0 3px rgba(247, 146, 29, 0.2);
+     cursor: default;
+ }
+
+ .pagination-btn.disabled {
+     opacity: 0.5;
+     cursor: not-allowed;
+     pointer-events: none;
+ }
+
+ .pagination-ellipsis {
+     padding: 5px 10px;
+     color: #888;
+ }
+ .pagination-btn:hover svg[data-feather="chevron-left"] {
+     transform: translateX(-3px);
+ }
+ .pagination-btn:hover svg[data-feather="chevron-right"] {
+     transform: translateX(3px);
+ }
+
+ /*for pagination end*/
+
+
+ /*.pager{
+     padding: 0px;
+ }
+
+ .pager li{
+     display: inline;
+ }
+ .pagination_custom_style{
+     padding: 5px 10px;
+     font-size: 15px;
+     font-weight: bold;
+     background: #e8e5e5;
+ }
+
+  .my-active {
+      color: #000000;
+      background: #F7921D;
+  }
+  .custom_style_for_p_button svg {
+      width: 20px;
+      height: 20px;
+      stroke: #3490dc; !* icon color *!
+      stroke-width: 2.5; !* thickness *!
+      transition: all 0.2s ease;
+      margin-left: 3px;
+  }
+
+  .custom_style_for_p_button:hover svg {
+      stroke: #ff4757; !* hover color *!
+      transform: scale(1.1);
+  }*/
+
+    .form-image-padding{
+        text-align: center;
+        padding: 4px;
+    }
+
+    /*XY OVERFLOW OFF*/
+    .table-xy-overflow{
+        overflow-x: unset;
+    }
+    .table-responsive{
+        overflow-x: initial;
+    }
 
 
 /*//these are the media queries used by bootstrap*/
