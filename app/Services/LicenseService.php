@@ -75,17 +75,21 @@ class LicenseService
         ];
     }
 
-    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null, ?string $licenseType = null): ?array
+    /*protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null, ?string $licenseType = null): ?array
     {
         $direction = $dayDiff > 0 ? 'before' : ($dayDiff < 0 ? 'after' : 'equal');
         $absDays = abs($dayDiff);
+//        dump($absDays);
 
         $logics = $this->getCachedLogicsForEvent($event);
+        dump($logics);
 
         $logic = collect($logics)->first(fn($l) => $l['direction'] === $direction
             && $l['from_days'] <= $absDays
             && $l['to_days'] >= $absDays
         );
+
+        dump($logic);
 
         if (!$logic) return null;
 
@@ -99,7 +103,60 @@ class LicenseService
             'admin' => ['message' => $msg['message_admin'], 'message_id' => $msg['message_admin_id']],
             'special' => ['message' => $msg['message_special'], 'message_id' => $msg['message_special_id']],
         ];
+    }*/
+    protected function findMatchedMessage(string $event, int $dayDiff, ?int $productId = null, ?string $licenseType = null): ?array
+    {
+        $direction = $dayDiff > 0 ? 'before' : ($dayDiff < 0 ? 'after' : 'equal');
+        $absDays = abs($dayDiff);
+
+        $logics = $this->getCachedLogicsForEvent($event);
+        if (empty($logics)) return null;
+
+        $matchingLogics = collect($logics)->filter(fn($l) =>
+            $l['direction'] === $direction &&
+            $l['from_days'] <= $absDays &&
+            $l['to_days'] >= $absDays
+        );
+
+        if ($matchingLogics->isEmpty()) return null;
+
+        // ✅ Step 1: Try to find an exact match
+        $exactLogic = $matchingLogics->first(fn($l) =>
+            $l['from_days'] === $absDays || $l['to_days'] === $absDays
+        );
+
+        $logic = $exactLogic
+            // ✅ Step 2: If no exact match, find the closest range
+            ?? $matchingLogics->sortBy(fn($l) =>
+            abs($absDays - (($l['from_days'] + $l['to_days']) / 2))
+            )->first();
+
+        if (!$logic) return null;
+
+        // Step 3: Get message
+        $msg = $this->getCachedMessageForLogic($logic['id'], $productId, $licenseType)
+            ?? $this->getCachedMessageForLogic($logic['id'], null, $licenseType);
+
+        if (!$msg) return null;
+
+        // Step 4: Build return data
+        return [
+            'user' => [
+                'message' => $msg['message_user'],
+                'message_id' => $msg['message_user_id']
+            ],
+            'admin' => [
+                'message' => $msg['message_admin'],
+                'message_id' => $msg['message_admin_id']
+            ],
+            'special' => [
+                'message' => $msg['message_special'],
+                'message_id' => $msg['message_special_id']
+            ],
+        ];
     }
+
+
 
     /* ---------- Caching Helpers ---------- */
 

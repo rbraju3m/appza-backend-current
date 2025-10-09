@@ -362,6 +362,7 @@ class LicenseController extends Controller
         $popupMessages = Cache::remember('active_popup_messages', 3600, function () {
             return PopupMessage::where('is_active', true)->get(['message_type as type', 'message'])->toArray();
         });
+        $popupMessages = [];
 
         $validator = Validator::make($request->all(), [
             'site_url' => 'required|string',
@@ -397,7 +398,7 @@ class LicenseController extends Controller
             ];
             $resp = $licenseService->evaluate($licenseData);
             $statusCode = $resp['status'] === 'expired' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'],'meta'=>$resp['meta'] ?? []]);
         }
 
         // premium for mobile: find build domain & license key stored server-side
