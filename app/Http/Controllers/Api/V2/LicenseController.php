@@ -186,7 +186,7 @@ class LicenseController extends Controller
                 return $this->jsonResponse(LicenseResponseStatus::Suspended->value, $errorMessage, ['sub_status' => $error]);
             }
         } catch (Exception $e) {
-            Log::error('API call failed', ['error' => $e->getMessage(), 'params' => $apiInput]);
+//            Log::error('API call failed', ['error' => $e->getMessage(), 'params' => $apiInput]);
             return $this->jsonResponse(
                 LicenseResponseStatus::Suspended->value,
                 "This site url is not registered due to configuration. Please contact support.",
@@ -235,11 +235,11 @@ class LicenseController extends Controller
 
             DB::commit();
 
-            Log::info("License activated successfully", [
+            /*Log::info("License activated successfully", [
                 'site_url' => $normalizedSiteUrl,
                 'license_key' => $data['license_key'],
                 'product' => $this->pluginName,
-            ]);
+            ]);*/
 
             return $this->jsonResponse(
                 LicenseResponseStatus::Activate->value,
@@ -249,7 +249,7 @@ class LicenseController extends Controller
             );
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('DB transaction failed', ['error' => $e->getMessage()]);
+//            Log::error('DB transaction failed', ['error' => $e->getMessage()]);
             return $this->jsonResponse(
                 LicenseResponseStatus::Suspended->value,
                 "This site url is not registered due to local license issue. Please contact support.",
@@ -279,7 +279,7 @@ class LicenseController extends Controller
 
         $productSlug = $this->pluginName;
         if (!$productSlug) {
-            Log::warning("WebLicenseCheck: authorization fail for site_url {$siteUrl} license_key {$licenseKey}");
+//            Log::warning("WebLicenseCheck: authorization fail for site_url {$siteUrl} license_key {$licenseKey}");
             $resp = $licenseService->formatInvalidResponse('unauthorized', 'Unauthorized');
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -290,7 +290,7 @@ class LicenseController extends Controller
             ->first();
 
         if (!$freeTrial) {
-            Log::warning("WebLicenseCheck: plugin not install for site_url {$siteUrl} license_key {$licenseKey}");
+//            Log::warning("WebLicenseCheck: plugin not install for site_url {$siteUrl} license_key {$licenseKey}");
             $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -310,7 +310,7 @@ class LicenseController extends Controller
 
         $fluentInfo = FluentInfo::where('product_slug', $productSlug)->where('is_active', true)->first();
         if (!$fluentInfo || !is_numeric($fluentInfo->item_id)) {
-            Log::warning("WebLicenseCheck: Fluent info missing for product {$productSlug}");
+//            Log::warning("WebLicenseCheck: Fluent info missing for product {$productSlug}");
             $resp = $licenseService->formatInvalidResponse('plugin_not_installed', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -320,7 +320,7 @@ class LicenseController extends Controller
             ->first();
 
         if (!$fluentLicense) {
-            Log::warning("WebLicenseCheck: FluentLicenseInfo not found for key {$licenseKey} and site {$siteUrl}");
+//            Log::warning("WebLicenseCheck: FluentLicenseInfo not found for key {$licenseKey} and site {$siteUrl}");
             $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -336,7 +336,7 @@ class LicenseController extends Controller
             );
 
             if (!$externalDto) {
-                Log::warning("WebLicenseCheck: External api response not found for key {$licenseKey} and site {$siteUrl}");
+//                Log::warning("WebLicenseCheck: External api response not found for key {$licenseKey} and site {$siteUrl}");
                 $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
                 return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
             }
@@ -348,7 +348,7 @@ class LicenseController extends Controller
             return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta'] ?? []]);
 
         } catch (\Exception $e) {
-            Log::error("WebLicenseCheck external error: " . $e->getMessage(), ['site' => $siteUrl, 'product' => $productSlug]);
+//            Log::error("WebLicenseCheck external error: " . $e->getMessage(), ['site' => $siteUrl, 'product' => $productSlug]);
             $resp = $licenseService->formatInvalidResponse('external_api_error', $e->getMessage(), $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -382,7 +382,7 @@ class LicenseController extends Controller
             ->first();
 
         if (! $freeTrial) {
-            Log::warning("AppLicenseCheck: plugin not install for site_url {$siteUrl} product {$productSlug}");
+//            Log::warning("AppLicenseCheck: plugin not install for site_url {$siteUrl} product {$productSlug}");
             $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -408,21 +408,21 @@ class LicenseController extends Controller
             ->first();
 
         if (! $buildDomain) {
-            Log::warning("AppLicenseCheck: BuildDomain not found and license not active for {$siteUrl} / {$productSlug}");
+//            Log::warning("AppLicenseCheck: BuildDomain not found and license not active for {$siteUrl} / {$productSlug}");
             $resp = $licenseService->formatInvalidResponse('plugin_not_installed', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
         $fluentLicense = FluentLicenseInfo::where('build_domain_id', $buildDomain->id)->select(['license_key','activation_hash'])->first();
         if (! $fluentLicense) {
-            Log::warning("AppLicenseCheck: FluentLicenseInfo missing for build_domain_id and license not active {$buildDomain->id}");
+//            Log::warning("AppLicenseCheck: FluentLicenseInfo missing for build_domain_id and license not active {$buildDomain->id}");
             $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
 
         $fluentInfo = FluentInfo::where('product_slug', $productSlug)->where('is_active', true)->first();
         if (! $fluentInfo || ! is_numeric($fluentInfo->item_id)) {
-            Log::warning("AppLicenseCheck: FluentInfo missing for product and configuration missing {$productSlug}");
+//            Log::warning("AppLicenseCheck: FluentInfo missing for product and configuration missing {$productSlug}");
             $resp = $licenseService->formatInvalidResponse('plugin_not_installed', null, $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
@@ -439,7 +439,7 @@ class LicenseController extends Controller
             );
 
             if (! $externalDto) {
-                Log::warning("AppLicenseCheck: External api response not found for product {$productSlug} and site {$siteUrl}");
+//                Log::warning("AppLicenseCheck: External api response not found for product {$productSlug} and site {$siteUrl}");
                 $resp = $licenseService->formatInvalidResponse('license_not_found', null, $productSlug);
                 return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
             }
@@ -450,7 +450,7 @@ class LicenseController extends Controller
             return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta'] ?? []]);
 
         } catch (\Exception $e) {
-            Log::error("AppLicenseCheck:: external error: " . $e->getMessage(), ['site' => $siteUrl, 'product' => $productSlug]);
+//            Log::error("AppLicenseCheck:: external error: " . $e->getMessage(), ['site' => $siteUrl, 'product' => $productSlug]);
             $resp = $licenseService->formatInvalidResponse('external_api_error', $e->getMessage(), $productSlug);
             return $this->licenseCheckJsonResponse(LicenseResponseStatus::Invalid->value, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
         }
