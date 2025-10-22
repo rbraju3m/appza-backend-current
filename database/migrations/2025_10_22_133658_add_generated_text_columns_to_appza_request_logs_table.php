@@ -12,9 +12,9 @@ return new class extends Migration
         // Add generated columns
         DB::statement("
             ALTER TABLE appza_request_logs
-            ADD COLUMN request_text TEXT
+            ADD COLUMN request_text MEDIUMTEXT
                 GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(request_data, '$'))) STORED,
-            ADD COLUMN response_text TEXT
+            ADD COLUMN response_text MEDIUMTEXT
                 GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(response_data, '$'))) STORED
         ");
 
