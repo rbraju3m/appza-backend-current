@@ -28,7 +28,7 @@ class RequestLogController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->query('search');
+        /*$filters = $request->query('search');
 
         $requestLogs = RequestLog::orderByDesc('id');
 
@@ -43,7 +43,25 @@ class RequestLogController extends Controller
             });
         }
 
+        $requestLogs = $requestLogs->paginate(20)->withQueryString();*/
+
+
+        $filters = trim($request->query('search', ''));
+
+        $requestLogs = RequestLog::orderByDesc('id');
+
+        if ($filters !== '') {
+            $requestLogs = $requestLogs->where(function($query) use ($filters) {
+                // Full string exact match (case-insensitive substring match)
+                $query->where('request_text', 'like', "%{$filters}%")
+                    ->orWhere('response_text', 'like', "%{$filters}%")
+                    ->orWhere('ip_address', 'like', "%{$filters}%");
+            });
+        }
+
         $requestLogs = $requestLogs->paginate(20)->withQueryString();
+        
+
 
         return view('request-log.index', compact('requestLogs'));
     }
