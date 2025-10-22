@@ -61,7 +61,7 @@
                                         </td>
 
 
-                                        <td class="text-start">
+                                        {{--<td class="text-start">
                                             @if (is_array($log->response_data))
                                                 <div class="json-cell">
                                                     <pre><code>{{ json_encode($log->response_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</code></pre>
@@ -69,7 +69,22 @@
                                             @else
                                                 <em>No valid data</em>
                                             @endif
+                                        </td>--}}
+
+                                        <td class="text-start">
+                                            @php
+                                                $decoded = json_decode($log->response_text, true);
+                                            @endphp
+
+                                            @if (json_last_error() === JSON_ERROR_NONE && $decoded)
+                                                <div class="json-cell">
+                                                    <pre><code>{{ json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</code></pre>
+                                                </div>
+                                            @else
+                                                <em>No valid data</em>
+                                            @endif
                                         </td>
+
 
                                         {{-- Request Headers --}}
                                         <td class="text-start">
@@ -83,7 +98,7 @@
                                         </td>
 
                                         {{-- Request Data --}}
-                                        <td class="text-start">
+                                        {{--<td class="text-start">
                                             @if(is_array($log->request_data))
                                                 <div class="json-cell">
                                                     <pre><code>{{ json_encode($log->request_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</code></pre>
@@ -91,7 +106,22 @@
                                             @else
                                                 <em>No valid data</em>
                                             @endif
+                                        </td>--}}
+
+                                        <td class="text-start">
+                                            @php
+                                                $decoded = json_decode($log->request_text, true);
+                                            @endphp
+
+                                            @if (json_last_error() === JSON_ERROR_NONE && $decoded)
+                                                <div class="json-cell">
+                                                    <pre><code>{{ json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</code></pre>
+                                                </div>
+                                            @else
+                                                <em>No valid data</em>
+                                            @endif
                                         </td>
+
                                     </tr>
                                 @endforeach
                                 </tbody>

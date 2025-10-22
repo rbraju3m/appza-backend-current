@@ -34,8 +34,11 @@ class RequestLogController extends Controller
 
         if ($filters) {
             $requestLogs = $requestLogs->where(function($query) use ($filters) {
-                $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(request_data, '$')) LIKE ?", ["%{$filters}%"])
-                    ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(response_data, '$')) LIKE ?", ["%{$filters}%"])
+//                $query->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(request_data, '$')) LIKE ?", ["%{$filters}%"])
+//                    ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(response_data, '$')) LIKE ?", ["%{$filters}%"])
+                $query->whereRaw("MATCH(request_text, response_text) AGAINST(? IN NATURAL LANGUAGE MODE)", [$filters])
+
+//                $query->whereRaw("MATCH(request_data, response_data) AGAINST(? IN NATURAL LANGUAGE MODE)", [$filters])
                     ->orWhere('ip_address', 'like', "%{$filters}%");
             });
         }

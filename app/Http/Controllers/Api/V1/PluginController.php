@@ -160,57 +160,6 @@ class PluginController extends Controller
         return response()->json($pluginData);
     }
 
-    public function pluginVersionCheck1(Request $request)
-    {
-        // Create validator
-        $validator = Validator::make($request->all(), [
-            'installed_version' => 'required',
-            'plugin_slug'       => 'required',
-        ]);
-
-        // Check for validation errors
-        if ($validator->fails()) {
-            return $this->jsonResponse(
-                Response::HTTP_BAD_REQUEST,
-                'Validation Error',
-                ['errors' => $validator->errors()]
-            );
-        }
-
-        // Get validated data as array
-        $validated = $validator->validated();
-
-        $findPluginJson = ProductAddon::where('addon_slug', $validated['plugin_slug'])->first();
-
-        if (!$findPluginJson) {
-            return $this->jsonResponse(Response::HTTP_NOT_FOUND, 'Plugin not found');
-        }
-
-        $pluginData = json_decode($findPluginJson->addon_json_info, true);
-
-        if (!$this->authorization) {
-            // Unauthorized → do not expose download URL
-            $pluginData['version'] = $validated['installed_version'];
-            $pluginData['download_url'] = null;
-        } else {
-            // Authorized → generate temporary signed URL for download
-            if (!empty($pluginData['download_url'])) {
-                try {
-                    $filePath = parse_url($pluginData['download_url'], PHP_URL_PATH);
-                    $filePath = ltrim($filePath, '/'); // remove leading slash
-
-                    $pluginData['download_url'] = Storage::disk('r2')->temporaryUrl(
-                        $filePath,
-                        now()->addMinutes(10) // expires in 5 minutes
-                    );
-                } catch (\Exception $e) {
-                    $pluginData['download_url'] = $pluginData['download_url'];
-                }
-            }
-        }
-        return response()->json($pluginData);
-    }
-
     protected function jsonResponse(int $statusCode, string $message, array $additionalData = []): JsonResponse
     {
         return response()->json(array_merge([
