@@ -61,8 +61,6 @@ class RequestLogController extends Controller
 
         $requestLogs = $requestLogs->paginate(20)->withQueryString();
         
-
-
         return view('request-log.index', compact('requestLogs'));
     }
 
