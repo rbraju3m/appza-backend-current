@@ -139,7 +139,28 @@
 
                                                     {{ html()->form()->close() }}
                                                 @endif
-                                                    <a href="{{config('app.image_public_path').$addon->addon_file}}" target="_blank">Download</a>
+                                                    <a
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        id="download_{{ $addon->id }}"
+                                                        data-bs-toggle="tooltip"
+                                                        data-bs-placement="top"
+                                                        title="Download"
+                                                        href="{{config('app.image_public_path').$addon->addon_file}}"
+                                                        target="_blank">Download</a>
+                                                    <!-- Toast container -->
+                                                    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
+                                                        <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+                                                            <div class="d-flex">
+                                                                <div class="toast-body">📋 Copied to clipboard!</div>
+                                                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <a href="#" class="btn btn-sm btn-outline-secondary"
+                                                       onclick="copyURLToast('{{ config('app.image_public_path') . $addon->addon_file }}'); return false;">
+                                                        Copy
+                                                    </a>
                                             </td>
 
 
@@ -173,33 +194,53 @@
 @endpush
 
 @section('footer.scripts')
-    <script type="text/javascript">
+    <script>
+
+        function copyURLToast(url) {
+            // Copy URL
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = url;
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+
+            // Show toast
+            let toastEl = document.getElementById('copyToast');
+            let toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        // Single file input handler
         const zipInp = document.getElementById("zipInp");
         const fileName = document.getElementById("fileName");
 
-        zipInp.onchange = () => {
-            if (zipInp.files.length > 0) {
-                fileName.textContent = "Selected file: " + zipInp.files[0].name;
-            } else {
-                fileName.textContent = "";
-            }
-        };
-    </script>
+        if(zipInp) {
+            zipInp.onchange = () => {
+                if (zipInp.files.length > 0) {
+                    fileName.textContent = "Selected file: " + zipInp.files[0].name;
+                } else {
+                    fileName.textContent = "";
+                }
+            };
+        }
 
-    @section('footer.scripts')
-        <script>
-            document.querySelectorAll('input[type="file"][id^="zipInp_"]').forEach(function(input) {
-                input.addEventListener('change', function() {
-                    let fileNameEl = document.getElementById("fileName_" + this.id.split("_")[1]);
-                    if (this.files.length > 0) {
-                        fileNameEl.textContent = "Selected file: " + this.files[0].name;
-                    } else {
-                        fileNameEl.textContent = "";
-                    }
-                });
+        // Multiple file inputs for edit forms
+        document.querySelectorAll('input[type="file"][id^="zipInp_"]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                let fileNameEl = document.getElementById("fileName_" + this.id.split("_")[1]);
+                if (this.files.length > 0) {
+                    fileNameEl.textContent = "Selected file: " + this.files[0].name;
+                } else {
+                    fileNameEl.textContent = "";
+                }
             });
-        </script>
-    @endsection
-
-
+        });
+    </script>
 @endsection
+
