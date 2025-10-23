@@ -293,6 +293,7 @@ return [
     'AddonFile' => 'Addon File',
     'ProductName' => 'Product Name',
     'version' => 'Version',
+    'UploadDate' => 'Upload Date',
     'action' => 'Action',
     'domainName' => 'Domain Name',
     'licenseKey' => 'License Key',

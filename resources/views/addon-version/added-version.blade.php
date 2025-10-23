@@ -89,6 +89,7 @@
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.version')}}</th>
+                                    <th>{{__('messages.UploadDate')}}</th>
                                     <th width="20%">{{__('messages.action')}}</th>
                                 </tr>
                                 </thead>
@@ -108,6 +109,8 @@
                                             <td>{{$addon->addon_name}}</td>
                                             <td>{{$addon->addon_slug}}</td>
                                             <td>{{$addon->version}}</td>
+                                            <td>{{ \Illuminate\Support\Carbon::parse($addon->created_at)->timezone('Asia/Dhaka')->format('d-M-Y h:i A') }}</td>
+
                                             <td>
                                                 @if($addon->is_edited)
                                                     {{ html()
