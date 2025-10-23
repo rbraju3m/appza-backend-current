@@ -63,7 +63,8 @@ Route::prefix('admin')
     });
 
 Route::post('/build-orders/{id}/delete-dir', [BuildOrderController::class, 'deleteBuildDir'])
-    ->name('build-orders.delete-dir');
+    ->name('build_orders.delete_dir');
+
 
 Route::prefix('/appza')->middleware(['auth'])->group(function() {
     // for download test

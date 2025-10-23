@@ -30,8 +30,18 @@
 
                         {{-- Charts --}}
 {{--                        <div id="licenseBarChart" style="height: 600px;"></div>--}}
-                        <hr>
-                        <div id="licenseDonutChart" style="height: 400px;"></div>
+{{--                        <hr>--}}
+{{--                        <div id="licenseDonutChart" style="height: 400px;"></div>--}}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div id="freeLicenseDonutChart" style="height: 400px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="premiumLicenseDonutChart" style="height: 400px;"></div>
+                            </div>
+                        </div>
+
 
                     </div>
                 </div>
@@ -47,63 +57,49 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            // --- Column Chart ---
-            /*Highcharts.chart('licenseBarChart', {
-                chart: { type: 'column', backgroundColor: '#f8f9fa' },
-                title: { text: '{{ ucfirst($type) }} License Expiry Report' },
-                subtitle: { text: 'Active vs Expired licenses grouped by {{ $type }}' },
-                xAxis: {
-                    categories: @json($reportData->pluck('period')),
-                    crosshair: true
-                },
-                yAxis: {
-                    min: 0,
-                    title: { text: 'License Count' },
-                    gridLineColor: '#e9ecef'
-                },
-                tooltip: { shared: true, backgroundColor: '#fff', borderColor: '#ddd' },
-                legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom' },
-                plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0,
-                        dataLabels: {
-                            enabled: true,
-                            style: { fontWeight: 'bold', color: '#000' }
-                        }
-                    }
-                },
-                series: [
-                    { name: 'Active', data: @json($reportData->pluck('active')), color: '#198754' },
-                    { name: 'Expired', data: @json($reportData->pluck('expired')), color: '#dc3545' },
-                ],
-                exporting: { enabled: true }
-            });*/
-
-            // --- Donut Chart (Summary) ---
-            Highcharts.chart('licenseDonutChart', {
+            // --- Free Trial Donut ---
+            Highcharts.chart('freeLicenseDonutChart', {
                 chart: { type: 'pie', backgroundColor: '#f8f9fa' },
-                title: { text: 'Overall License Status' },
+                title: { text: 'Free Trial License Status' },
                 plotOptions: {
                     pie: {
                         innerSize: '60%',
-                        dataLabels: {
-                            enabled: true,
-                            format: '<b>{point.name}</b>: {point.y}',
-                            style: { fontWeight: 'bold', color: '#000' }
-                        }
+                        dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.y}' }
                     }
                 },
                 series: [{
                     name: 'Licenses',
                     colorByPoint: true,
                     data: [
-                        { name: 'Active', y: {{ $summary->active }}, color: '#198754' },
-                        { name: 'Expired', y: {{ $summary->expired }}, color: '#dc3545' }
+                        { name: 'Active', y: {{ $freeSummary['active'] ?? 0 }}, color: '#198754' },
+                        { name: 'Expired', y: {{ $freeSummary['expired'] ?? 0 }}, color: '#dc3545' },
+                        { name: 'Grace', y: {{ $freeSummary['grace_period'] ?? 0 }}, color: '#ffc107' }
+                    ]
+                }]
+            });
+
+            // --- Premium License Donut ---
+            Highcharts.chart('premiumLicenseDonutChart', {
+                chart: { type: 'pie', backgroundColor: '#f8f9fa' },
+                title: { text: 'Premium License Status' },
+                plotOptions: {
+                    pie: {
+                        innerSize: '60%',
+                        dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.y}' }
+                    }
+                },
+                series: [{
+                    name: 'Licenses',
+                    colorByPoint: true,
+                    data: [
+                        { name: 'Active', y: {{ $premiumSummary['active'] ?? 0 }}, color: '#198754' },
+                        { name: 'Expired', y: {{ $premiumSummary['expired'] ?? 0 }}, color: '#dc3545' },
+                        { name: 'Grace', y: {{ $premiumSummary['grace_period'] ?? 0 }}, color: '#ffc107' }
                     ]
                 }]
             });
 
         });
     </script>
+
 @endsection

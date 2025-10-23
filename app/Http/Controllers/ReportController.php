@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FluentInfo;
+use App\Models\FluentLicenseInfo;
 use App\Models\FreeTrial;
 use App\Models\Lead;
 use App\Models\LicenseMessage;
@@ -425,7 +426,7 @@ class ReportController extends Controller
         ));
     }
 
-    public function licenseExpiryReport(Request $request)
+    public function licenseExpiryReport1(Request $request)
     {
         $type = $request->get('type', 'monthly');
         $search = $request->get('search');
@@ -522,6 +523,129 @@ class ReportController extends Controller
 
         return view('reports.license_expire', compact('reportData', 'type', 'search', 'reportTypes','summary'));
     }
+    public function licenseExpiryReport(Request $request)
+    {
+        $type = $request->get('type', 'monthly');
+        $search = $request->get('search');
+
+        $dateFormat = match ($type) {
+            'daily'   => '%Y-%m-%d',
+            'yearly'  => '%Y',
+            default   => '%Y-%m',
+        };
+
+        // -----------------------------
+        // Free Trial License Summary
+        // -----------------------------
+        $freeTrialQuery = FreeTrial::where('is_fluent_license_check', 0)
+            ->where('is_active', 1)
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw("SUM(CASE WHEN STR_TO_DATE(expiration_date, '%Y-%m-%d') >= NOW() THEN 1 ELSE 0 END) as active"),
+                DB::raw("SUM(CASE WHEN STR_TO_DATE(expiration_date, '%Y-%m-%d') < NOW() THEN 1 ELSE 0 END) as expired"),
+                DB::raw("
+                SUM(
+                    CASE
+                        WHEN STR_TO_DATE(expiration_date, '%Y-%m-%d') < NOW()
+                         AND STR_TO_DATE(grace_period_date, '%Y-%m-%d') >= NOW()
+                        THEN 1 ELSE 0
+                    END
+                ) as grace_period
+            ")
+            );
+
+        if ($search) {
+            if ($type === 'daily') {
+                $freeTrialQuery->whereRaw("STR_TO_DATE(expiration_date, '%Y-%m-%d') = ?", [$search]);
+            } elseif ($type === 'monthly') {
+                $freeTrialQuery->whereRaw("DATE_FORMAT(STR_TO_DATE(expiration_date, '%Y-%m-%d'), '%Y-%m') = ?", [$search]);
+            } elseif ($type === 'yearly') {
+                $freeTrialQuery->whereRaw("YEAR(STR_TO_DATE(expiration_date, '%Y-%m-%d')) = ?", [$search]);
+            }
+        }
+
+        $freeSummary = $freeTrialQuery->first()->toArray();
+
+        // -----------------------------
+        // Premium License Summary
+        // -----------------------------
+        // -----------------------------
+// Premium License Summary
+// -----------------------------
+        $premiumLicenseQuery = FluentLicenseInfo::query()
+            ->select(
+                DB::raw('COUNT(*) as total'),
+
+                // Active: all 'lifetime' or future expiration dates
+                DB::raw("
+            SUM(
+                CASE
+                    WHEN expiration_date = 'lifetime' THEN 1
+                    WHEN expiration_date <> 'lifetime' AND STR_TO_DATE(expiration_date, '%Y-%m-%d') >= NOW() THEN 1
+                    ELSE 0
+                END
+            ) as active
+        "),
+
+                // Expired: licenses with real dates older than 15 days
+                DB::raw("
+            SUM(
+                CASE
+                    WHEN expiration_date <> 'lifetime'
+                     AND STR_TO_DATE(expiration_date, '%Y-%m-%d') < DATE_SUB(NOW(), INTERVAL 15 DAY)
+                    THEN 1 ELSE 0
+                END
+            ) as expired
+        "),
+
+                // Grace period: licenses expired but within 15 days
+                DB::raw("
+            SUM(
+                CASE
+                    WHEN expiration_date <> 'lifetime'
+                     AND STR_TO_DATE(expiration_date, '%Y-%m-%d') < NOW()
+                     AND DATE_ADD(STR_TO_DATE(expiration_date, '%Y-%m-%d'), INTERVAL 15 DAY) >= NOW()
+                    THEN 1 ELSE 0
+                END
+            ) as grace_period
+        ")
+            );
+
+// Optional: filter only active licenses if needed
+// $premiumLicenseQuery->where('is_active', 1);
+
+// Optional: apply search filter
+        if ($search) {
+            if ($type === 'daily') {
+                $premiumLicenseQuery->whereRaw("STR_TO_DATE(expiration_date, '%Y-%m-%d') = ?", [$search]);
+            } elseif ($type === 'monthly') {
+                $premiumLicenseQuery->whereRaw("DATE_FORMAT(STR_TO_DATE(expiration_date, '%Y-%m-%d'), '%Y-%m') = ?", [$search]);
+            } elseif ($type === 'yearly') {
+                $premiumLicenseQuery->whereRaw("YEAR(STR_TO_DATE(expiration_date, '%Y-%m-%d')) = ?", [$search]);
+            }
+        }
+
+// Execute query
+        $premiumSummary = $premiumLicenseQuery->first()->toArray();
+
+        // -----------------------------
+        // Report Type Labels
+        // -----------------------------
+        $reportTypes = [
+            'daily' => 'Daily',
+            'monthly' => 'Monthly',
+            'yearly' => 'Yearly',
+        ];
+
+        return view('reports.license_expire', compact(
+            'type',
+            'search',
+            'reportTypes',
+            'freeSummary',
+            'premiumSummary'
+        ));
+    }
+
 
 
     public function licenseDurationReport(Request $request)

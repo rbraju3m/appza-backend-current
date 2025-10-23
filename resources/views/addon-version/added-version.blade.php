@@ -23,13 +23,69 @@
 
                     <div class="card-body">
                         @include('layouts.message')
+                        <h4>{{count($versions)>0 ? $versions[0]->product_name :''}}</h4>
+                        <hr style="margin-top: 20px">
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                {{ html()
+                                    ->form('POST', route('added_version_store',$addonId))
+                                    ->attribute('enctype', 'multipart/form-data')
+                                    ->attribute('files', true)
+                                    ->attribute('autocomplete', 'off')
+                                    ->open()
+                                }}
+                                <div class="row">
+
+                                    <div class="form-group row mg-top">
+                                        <div class="col-sm-2">
+                                            <label for="version" class="form-label">{{__('messages.version')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            {{html()
+                                                ->text('version')
+                                                ->class('form-control')
+                                                ->placeholder(__('messages.version'))
+                                                ->required()
+                                            }}
+                                            <span class="textRed">{!! $errors->first('version') !!}</span>
+                                        </div>
+
+                                        <div class="col-sm-2">
+                                            <label for="formFile" class="form-label">{{__('messages.AddonFile')}}</label>
+                                            <span class="textRed">*</span>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input class="form-control" name="addon_file" type="file" id="zipInp" accept=".zip" required>
+                                            <span class="textRed">{!! $errors->first('addon_file') !!}</span>
+                                            <p id="fileName" class="mt-2 text-info">Ex: appza-plugin-1.0.0.zip</p>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="row mg-top">
+                                        <div class="col-md-2"></div>
+                                        <div class="col-md-10" >
+                                            <div class="from-group">
+                                                <button type="submit" class="btn btn-primary " id="UserFormSubmit">Submit</button>
+                                                <button type="reset" class="btn submit-button">Reset</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{ html()->form()->close() }}
+                            </div>
+                        </div>
+                        <hr style="margin-top: 20px">
 
                             <table id="leave_settings" class="table table-bordered datatable table-responsive mainTable text-center">
 
                                 <thead class="thead-dark">
                                 <tr>
                                     <th>{{__('messages.SL')}}</th>
-                                    <th>{{__('messages.ProductName')}}</th>
+{{--                                    <th>{{__('messages.ProductName')}}</th>--}}
                                     <th>{{__('messages.name')}}</th>
                                     <th>{{__('messages.slug')}}</th>
                                     <th>{{__('messages.version')}}</th>
@@ -48,7 +104,7 @@
                                     @foreach($versions as $addon)
                                         <tr>
                                             <td>{{$serial++}}</td>
-                                            <td>{{$addon->product_name}}</td>
+{{--                                            <td>{{$addon->product_name}}</td>--}}
                                             <td>{{$addon->addon_name}}</td>
                                             <td>{{$addon->addon_slug}}</td>
                                             <td>{{$addon->version}}</td>
@@ -83,6 +139,7 @@
 
                                                     {{ html()->form()->close() }}
                                                 @endif
+                                                    <a href="{{config('app.image_public_path').$addon->addon_file}}" target="_blank">Download</a>
                                             </td>
 
 
@@ -97,61 +154,6 @@
                                     {{ $versions->links('layouts.pagination') }}
                                 </div>
                             @endif
-
-                        <hr style="margin-top: 20px">
-
-                        <div class="row">
-                                <div class="col-md-12">
-                                    {{ html()
-                                        ->form('POST', route('added_version_store',$addonId))
-                                        ->attribute('enctype', 'multipart/form-data')
-                                        ->attribute('files', true)
-                                        ->attribute('autocomplete', 'off')
-                                        ->open()
-                                    }}
-                                    <div class="row">
-
-                                        <div class="form-group row mg-top">
-                                            <div class="col-sm-2">
-                                                <label for="version" class="form-label">{{__('messages.version')}}</label>
-                                                <span class="textRed">*</span>
-                                            </div>
-
-                                            <div class="col-sm-4">
-                                                {{html()
-                                                    ->text('version')
-                                                    ->class('form-control')
-                                                    ->placeholder(__('messages.version'))
-                                                    ->required()
-                                                }}
-                                                <span class="textRed">{!! $errors->first('version') !!}</span>
-                                            </div>
-
-                                            <div class="col-sm-2">
-                                                <label for="formFile" class="form-label">{{__('messages.AddonFile')}}</label>
-                                                <span class="textRed">*</span>
-                                            </div>
-                                            <div class="col-sm-4">
-                                                <input class="form-control" name="addon_file" type="file" id="zipInp" accept=".zip" required>
-                                                <span class="textRed">{!! $errors->first('addon_file') !!}</span>
-                                                <p id="fileName" class="mt-2 text-info">Ex: appza-plugin-1.0.0.zip</p>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="row mg-top">
-                                            <div class="col-md-2"></div>
-                                            <div class="col-md-10" >
-                                                <div class="from-group">
-                                                    <button type="submit" class="btn btn-primary " id="UserFormSubmit">Submit</button>
-                                                    <button type="reset" class="btn submit-button">Reset</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {{ html()->form()->close() }}
-                                </div>
-                            </div>
                     </div>
                 </div>
             </div>
