@@ -146,7 +146,7 @@
                                                         data-bs-placement="top"
                                                         title="Download"
                                                         href="{{config('app.image_public_path').$addon->addon_file}}"
-                                                        target="_blank">Download</a>
+                                                        >Download</a>
                                                     <!-- Toast container -->
                                                     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
                                                         <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert">
