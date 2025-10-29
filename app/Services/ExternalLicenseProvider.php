@@ -59,7 +59,7 @@ class ExternalLicenseProvider
 
             $exp = Carbon::parse($data['expiration_date'])->startOfDay();
             // premium uses fixed 15-day grace
-            $grace = $exp->copy()->addDays(15);
+            $grace = $exp->copy()->addDays(7);
 
             return [
                 'product_slug' => $productSlug,

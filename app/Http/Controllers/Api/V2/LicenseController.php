@@ -47,6 +47,11 @@ class LicenseController extends Controller
 
         $response['message'] = $message;
 
+        if (isset($additionalData['license_data'])) {
+            $response['license_data'] = $additionalData['license_data'];
+            unset($additionalData['license_data']);
+        }
+
         return response()->json(array_merge($response, $additionalData));
     }
 
@@ -213,7 +218,7 @@ class LicenseController extends Controller
                 ->where('id', '!=', $buildDomain->id)
                 ->update(['is_app_license_check' => 0]);
 
-            FluentLicenseInfo::updateOrCreate(
+            $premiumLicenseInfo = FluentLicenseInfo::updateOrCreate(
                 [
                     'build_domain_id' => $buildDomain->id,
                     'site_url' => $normalizedSiteUrl,
@@ -231,7 +236,7 @@ class LicenseController extends Controller
                 ]
             );
 
-            $localLicenseData->update(['is_fluent_license_check' => true]);
+            $localLicenseData->update(['is_fluent_license_check' => true,'premium_license_id'=>$premiumLicenseInfo->id]);
 
             DB::commit();
 
@@ -305,7 +310,14 @@ class LicenseController extends Controller
 
             $resp = $licenseService->evaluate($licenseData);
             $statusCode = $resp['status'] === 'expired' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], [
+                'popup_message' => $popupMessages,
+                'sub_status' => $resp['sub_status'],
+                'license_data' => [
+                    'expiration_date' => $freeTrial->expiration_date->format('Y-m-d'),
+                    'grace_period_date' => $freeTrial->grace_period_date->format('Y-m-d'),
+                ],
+            ]);
         }
 
         $fluentInfo = FluentInfo::where('product_slug', $productSlug)->where('is_active', true)->first();
@@ -345,7 +357,15 @@ class LicenseController extends Controller
             $resp = $licenseService->evaluate($externalDto);
             $statusCode = $resp['status'] === 'expired' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
 
-            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta'] ?? []]);
+            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], [
+                'popup_message' => $popupMessages,
+                'sub_status' => $resp['sub_status'],
+                'license_data' => [
+                    'expiration_date' => $externalDto['expiration_date'],
+                    'grace_period_date' => $externalDto['grace_period_date'],
+                ],
+                'meta' => $resp['meta'] ?? []
+            ]);
 
         } catch (\Exception $e) {
 //            Log::error("WebLicenseCheck external error: " . $e->getMessage(), ['site' => $siteUrl, 'product' => $productSlug]);
@@ -397,7 +417,14 @@ class LicenseController extends Controller
             ];
             $resp = $licenseService->evaluate($licenseData);
             $statusCode = $resp['status'] === 'expired' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status']]);
+            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], [
+                'popup_message' => $popupMessages,
+                'sub_status' => $resp['sub_status'],
+                'license_data' => [
+                    'expiration_date' => $freeTrial->expiration_date->format('Y-m-d'),
+                    'grace_period_date' => $freeTrial->grace_period_date->format('Y-m-d'),
+                ],
+            ]);
         }
 
         // premium for mobile: find build domain & license key stored server-side
@@ -447,7 +474,15 @@ class LicenseController extends Controller
             $externalDto['license_type'] = "premium";
             $resp = $licenseService->evaluate($externalDto);
             $statusCode = $resp['status'] === 'expired' ? LicenseResponseStatus::Expired->value : LicenseResponseStatus::Active->value;
-            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], ['popup_message' => $popupMessages, 'sub_status' => $resp['sub_status'], 'meta' => $resp['meta'] ?? []]);
+            return $this->licenseCheckJsonResponse($statusCode, $resp['message'], [
+                'popup_message' => $popupMessages,
+                'sub_status' => $resp['sub_status'],
+                'license_data' => [
+                    'expiration_date' => $externalDto['expiration_date'],
+                    'grace_period_date' => $externalDto['grace_period_date'],
+                ],
+                'meta' => $resp['meta'] ?? []
+            ]);
 
         } catch (\Exception $e) {
 //            Log::error("AppLicenseCheck:: external error: " . $e->getMessage(), ['site' => $siteUrl, 'product' => $productSlug]);
