@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\PluginController;
 use App\Http\Controllers\Api\V1\ThemeController;
 use App\Http\Middleware\LogActivity;
 use App\Http\Middleware\LogRequestResponse;
+use App\Http\Middleware\V1DeprecateApiNotice;
 use Illuminate\Support\Facades\Route;
 
 
