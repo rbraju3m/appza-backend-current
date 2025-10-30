@@ -4,14 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\FreeTrialRequest;
 use App\Http\Resources\FreeTrialResource;
-use App\Http\Resources\LeadResource;
 use App\Models\FreeTrial;
-use App\Models\Lead;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 
 class FreeTrialController extends Controller
